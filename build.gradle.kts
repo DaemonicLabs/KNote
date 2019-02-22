@@ -4,6 +4,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     kotlin("jvm") version Kotlin.version
     kotlin("plugin.scripting") version Kotlin.version
+    kotlin("application") version Kotlin.version
     id("com.github.johnrengelman.shadow") version "4.0.0"
     application
     `maven-publish`
@@ -32,6 +33,7 @@ dependencies {
     implementation(kotlin("reflect", Kotlin.version))
 
     implementation("com.squareup:kotlinpoet:1.0.1")
+    implementation("no.tornado:tornadofx:1.7.17")
 }
 
 application {
