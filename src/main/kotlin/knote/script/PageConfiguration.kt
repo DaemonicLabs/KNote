@@ -1,5 +1,6 @@
 package knote.script
 
+import knote.annotations.FromPage
 import knote.annotations.Import
 import org.jetbrains.kotlin.script.InvalidScriptResolverAnnotation
 import kotlin.script.experimental.api.ResultWithDiagnostics
@@ -18,7 +19,8 @@ import kotlin.script.experimental.jvm.jvm
 
 class PageConfiguration : ScriptCompilationConfiguration({
     defaultImports(
-        Import::class
+        Import::class,
+        FromPage::class
     )
     jvm {
         // ensures that all dependencies are available to the script
@@ -28,14 +30,14 @@ class PageConfiguration : ScriptCompilationConfiguration({
     refineConfiguration {
         beforeParsing { context ->
             val reports = mutableListOf<ScriptDiagnostic>()
-            reports += ScriptDiagnostic("beforeParsing time: ${System.currentTimeMillis()}", ScriptDiagnostic.Severity.INFO)
+            reports += ScriptDiagnostic("beforeParsing time: ${System.currentTimeMillis()}", ScriptDiagnostic.Severity.DEBUG)
 
             context.compilationConfiguration.asSuccess(reports)
         }
 
         beforeCompiling { context ->
             val reports = mutableListOf<ScriptDiagnostic>()
-            reports += ScriptDiagnostic("beforeCompiling time: ${System.currentTimeMillis()}", ScriptDiagnostic.Severity.INFO)
+            reports += ScriptDiagnostic("beforeCompiling time: ${System.currentTimeMillis()}", ScriptDiagnostic.Severity.DEBUG)
 
             context.compilationConfiguration.asSuccess(reports)
         }

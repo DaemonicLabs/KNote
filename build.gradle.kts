@@ -1,4 +1,5 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version Kotlin.version
@@ -33,6 +34,16 @@ dependencies {
 
     implementation("com.squareup:kotlinpoet:1.0.1")
     api("no.tornado:tornadofx:1.7.18")
+}
+
+allprojects {
+    tasks.withType<KotlinCompile> {
+        kotlinOptions {
+            apiVersion = "1.3"
+            languageVersion = "1.3"
+            jvmTarget = "1.8"
+        }
+    }
 }
 
 configurations.all {

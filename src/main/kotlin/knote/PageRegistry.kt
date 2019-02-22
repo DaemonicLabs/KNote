@@ -5,6 +5,8 @@ import knote.host.evalScript
 import knote.script.NotebookScript
 import knote.script.PageScript
 import knote.util.MapLike
+import knote.util.watchActor
+import kotlinx.coroutines.runBlocking
 import java.io.File
 import kotlin.reflect.full.declaredFunctions
 import kotlin.reflect.full.findAnnotation
@@ -22,6 +24,7 @@ class PageRegistry(
         }
 
         // TODO: add file watcher for pages
+        startWatcher()
     }
 
     val result: MapLike<String, Any?> = object: MapLike<String, Any?> {
@@ -98,4 +101,19 @@ class PageRegistry(
 
     fun getResultOrEval(pageId: String): Any? = resultsMap[pageId] ?: evaluatePage(pageId)
 
+    fun startWatcher() {
+        runBlocking {
+            watchActor(File("pages").absoluteFile.toPath()) {
+                for (watchEvent in channel) {
+                    when (watchEvent.kind().name()) {
+                        "ENTRY_CREATE" -> println("${watchEvent.context()} was created")
+                        "ENTRY_MODIFY" -> println("${watchEvent.context()} was modified")
+                        "OVERFLOW" -> println("${watchEvent.context()} overflow")
+                        "ENTRY_DELETE" -> println("${watchEvent.context()} was deleted")
+                    }
+                }
+            }
+
+        }
+    }
 }

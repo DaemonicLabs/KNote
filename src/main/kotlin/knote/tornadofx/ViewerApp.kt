@@ -20,6 +20,8 @@ class ViewerApp : App(Workspace:: class) {
     companion object {
         @JvmStatic
         fun main(vararg args: String) {
+            KNote.notebookFilter = args.toList()
+            KNote.evalNotebooks()
             Application.launch(ViewerApp::class.java, *args)
         }
     }

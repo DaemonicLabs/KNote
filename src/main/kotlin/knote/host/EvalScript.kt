@@ -44,8 +44,6 @@ inline fun <reified T: Any> BasicJvmScriptingHost.evalScript(
 
             importScripts(importScripts)
 
-            println("importing ${libs?.absolutePath}")
-            println("exists ${libs?.absoluteFile?.exists()}")
             libs?.absoluteFile?.takeIf { it.exists() }?.apply {
                 listFiles { file -> file.name.endsWith(".jar")}
                     .forEach {

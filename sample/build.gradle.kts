@@ -112,7 +112,7 @@ val buildHost = task<GradleBuild>("buildHost") {
         hostRoot
             .resolve("build").resolve("libs")
             .resolve("KNote.jar")
-            .copyTo(jarFile)
+            .copyTo(jarFile, overwrite = true)
     }
 }
 
@@ -130,7 +130,7 @@ notebookDir
             dependsOn(buildHost)
 //            dependsOn(copyLibs)
             group = "application"
-            args = listOf(scriptFile.name)
+            args = listOf(id)
             workingDir = rootDir
             main = "knote.MainKt"
             classpath(jarFile)
@@ -142,8 +142,9 @@ notebookDir
         }
         task<JavaExec>("runViewer_$id") {
             dependsOn(buildHost)
-            group = "application"
 //    dependsOn(copyLibs)
+            group = "application"
+            args = listOf(id)
             main = "knote.tornadofx.ViewerApp"
             workingDir = rootDir
             classpath(jarFile)

@@ -36,14 +36,14 @@ class NotebookConfiguration : ScriptCompilationConfiguration({
     refineConfiguration {
         beforeParsing { context ->
             val reports = mutableListOf<ScriptDiagnostic>()
-            reports += ScriptDiagnostic("beforeParsing time: ${System.currentTimeMillis()}", ScriptDiagnostic.Severity.INFO)
+            reports += ScriptDiagnostic("beforeParsing time: ${System.currentTimeMillis()}", ScriptDiagnostic.Severity.DEBUG)
 
             context.compilationConfiguration.asSuccess(reports)
         }
 
         beforeCompiling { context ->
             val reports = mutableListOf<ScriptDiagnostic>()
-            reports += ScriptDiagnostic("beforeCompiling time: ${System.currentTimeMillis()}", ScriptDiagnostic.Severity.INFO)
+            reports += ScriptDiagnostic("beforeCompiling time: ${System.currentTimeMillis()}", ScriptDiagnostic.Severity.DEBUG)
 
             context.compilationConfiguration.asSuccess(reports)
         }
