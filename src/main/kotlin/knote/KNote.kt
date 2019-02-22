@@ -27,8 +27,8 @@ object KNote {
 
     var notebookFilter: List<String>? = null
 
-    private val pageRegistries: MutableMap<String, PageRegistry> = mutableMapOf()
-    private val notebooks: MutableList<NotebookScript> = mutableListOf()
+    val pageRegistries: MutableMap<String, PageRegistry> = mutableMapOf()
+    val notebooks: MutableList<NotebookScript> = mutableListOf()
 
     fun evalNotebooks() {
         val notebookFiles = notebooksDir.listFiles { file -> file.isFile && file.name.endsWith(".notebook.kts") }
@@ -51,9 +51,6 @@ object KNote {
                 }
             }
         }
-        pageRegistries = notebooks.associate {
-            it.id to PageRegistry(it, host)
-        }
         startWatcher()
     }
 
@@ -61,6 +58,7 @@ object KNote {
         val id = file.name.substringBeforeLast(".notebook.kts")
         val notebook = host.evalScript<NotebookScript>(file, args = *arrayOf(id), libs = workingDir.resolve("libs"))
 
+        pageRegistries[id] = PageRegistry(notebook, host)
     }
 
     fun findNotebook(id: String) = notebooks.find { it.id == id }

@@ -14,7 +14,6 @@ fun main(vararg args: String) {
         }
     }
 
-//    Thread.sleep(20000)
-
-    KNote.shutdown()
+    Thread.sleep(20000)
+//    KNote.shutdown()
 }

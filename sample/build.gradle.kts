@@ -57,18 +57,6 @@ afterEvaluate {
     }
 }
 
-
-//val copyLibs = task<AbstractTask>("copyVoodooLibs") {
-//    group = "build"
-//    doFirst {
-//        libs.deleteRecursively()
-//        libs.mkdirs()
-//        for (file in knoteConfiguration.resolve()) {
-//            file.copyTo(libs.resolve(file.name))
-//        }
-//    }
-//}
-
 val hostRoot = rootDir.absoluteFile.parentFile
 
 val ideaActive = System.getProperty("idea.active") == "true"
