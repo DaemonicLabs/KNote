@@ -1,14 +1,11 @@
 package knote
 
-import knote.host.createJvmScriptingHost
-import knote.host.evalScript
-import knote.script.NotebookScript
-import java.io.File
-import kotlin.system.exitProcess
-
 fun main(vararg args: String) {
     // TODO: start tornadofx application
     // TODO: file change listener
+
+    KNote.notebookFilter = args.toList()
+    KNote.evalNotebooks()
 
     KNote.notebooks.forEach { notebook ->
         val pageRegistry = KNote.pageRegistries[notebook.id]!!
@@ -16,4 +13,8 @@ fun main(vararg args: String) {
             println("[$pageId]: KClass: ${result::class} value: '$result'")
         }
     }
+
+//    Thread.sleep(20000)
+
+    KNote.shutdown()
 }
