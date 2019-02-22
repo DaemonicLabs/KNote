@@ -3,14 +3,14 @@ package knote.tornadofx
 import javafx.application.Application
 import knote.KNote
 import knote.tornadofx.view.MainView
-import tornadofx.App
+import tornadofx.*
 
-class ViewerApp : App() {
+class ViewerApp : App(Workspace:: class) {
     override val primaryView = MainView::class
 
     init {
         KNote.notebooks.forEach { notebook ->
-            val pageRegistry = KNote.pageRegistries[notebook.id]!!
+            val pageRegistry = KNote.pageRegistries.getValue(notebook.id)
             pageRegistry.allResults.forEach { pageId, result ->
                 println("[$pageId]: KClass: ${result::class} value: '$result'")
             }
