@@ -7,6 +7,7 @@ import knote.util.watchActor
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
 import java.io.File
+import kotlin.script.experimental.api.ScriptDiagnostic
 
 object KNote {
     //TODO: load, register and watch notebooks
@@ -14,6 +15,9 @@ object KNote {
     val cacheDir = File(System.getProperty("user.dir")).resolve("build").resolve(".knote-cache").apply { mkdirs() }
     private val host = createJvmScriptingHost(cacheDir)
     private val workingDir = File(System.getProperty("user.dir")).absoluteFile!!
+
+    val reportMap: MutableMap<String, List<ScriptDiagnostic>> = mutableMapOf()
+
 
     init {
         println("workingDir: $workingDir")
@@ -54,11 +58,33 @@ object KNote {
         startWatcher()
     }
 
+    /***
+     * evaluates a single notebook file
+     * and registers its pages
+     */
     fun evalNotebook(file: File) {
         val id = file.name.substringBeforeLast(".notebook.kts")
-        val notebook = host.evalScript<NotebookScript>(file, args = *arrayOf(id), libs = workingDir.resolve("libs"))
+        val (notebook, reports) = host.evalScript<NotebookScript>(
+            file,
+            args = *arrayOf(id),
+            libs = workingDir.resolve("libs")
+        )
+        reportMap[id] = reports
+        if(notebook == null) {
+            println("evaluation failed")
+            return
+        }
 
+        notebooks += notebook
         pageRegistries[id] = PageRegistry(notebook, host)
+    }
+
+    fun removeNotebook(id: String) {
+        val notebook = findNotebook(id) ?: return
+        notebooks -= notebook
+        val oldRegistry = pageRegistries[id]!!
+        oldRegistry.stopWatcher()
+        pageRegistries.remove(id)
     }
 
     fun findNotebook(id: String) = notebooks.find { it.id == id }
@@ -70,9 +96,10 @@ object KNote {
                 for (watchEvent in channel) {
                     val path = watchEvent.context()
                     val file = path.toFile()
+                    val id = file.name.substringBeforeLast(".notebook.kts")
                     if (!file.name.endsWith(".notebook.kts")) continue
                     val matches = notebookFilter?.let { filter ->
-                        file.name.substringBeforeLast(".notebook.kts") in filter
+                        id in filter
                     } ?: true
                     if (!matches) {
                         continue
@@ -80,13 +107,17 @@ object KNote {
                     when (watchEvent.kind().name()) {
                         "ENTRY_CREATE" -> {
                             println("$path was created")
+                            evalNotebook(file)
                         }
                         "ENTRY_MODIFY" -> {
                             println("$path was modified")
                             // TODO: delete all pages and readd
+                            removeNotebook(id)
+                            evalNotebook(file)
                         }
                         "ENTRY_DELETE" -> {
                             println("$path was deleted")
+                            removeNotebook(id)
                         }
                         "OVERFLOW" -> println("${watchEvent.context()} overflow")
                     }

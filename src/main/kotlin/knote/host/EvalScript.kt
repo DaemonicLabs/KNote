@@ -21,7 +21,6 @@ import kotlin.script.experimental.jvmhost.BasicJvmScriptEvaluator
 import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
 import kotlin.script.experimental.jvmhost.JvmScriptCompiler
 import kotlin.script.experimental.jvmhost.createJvmCompilationConfigurationFromTemplate
-import kotlin.system.exitProcess
 
 fun createJvmScriptingHost(cacheDir: File): BasicJvmScriptingHost {
     val cache = FileBasedScriptCache(cacheDir)
@@ -56,7 +55,7 @@ inline fun <reified T: Any> BasicJvmScriptingHost.evalScript(
 //            jdkHome(File(JDK_HOME))
         }
     }
-): T {
+): Pair<T?, List<ScriptDiagnostic>> {
     println("compilationConfig entries")
     compilationConfig.entries().forEach {
         println("    $it")
@@ -77,39 +76,39 @@ inline fun <reified T: Any> BasicJvmScriptingHost.evalScript(
     println("compiling script, please be patient")
     val result = eval(scriptSource, compilationConfig, evaluationConfig)
 
-    return result.get<T>(scriptFile)
+    return result.get<T?>()
 }
 
 fun SourceCode.Location.posToString() = "(${start.line}, ${start.col})"
 
-inline fun <reified T> ResultWithDiagnostics<EvaluationResult>.get(scriptFile: File): T {
+inline fun <reified T> ResultWithDiagnostics<EvaluationResult>.get(): Pair<T?, List<ScriptDiagnostic>> {
 
-    for (report in reports) {
-        val severityIndicator = when (report.severity) {
-            ScriptDiagnostic.Severity.FATAL -> "fatal"
-            ScriptDiagnostic.Severity.ERROR -> "e"
-            ScriptDiagnostic.Severity.WARNING -> "w"
-            ScriptDiagnostic.Severity.INFO -> "i"
-            ScriptDiagnostic.Severity.DEBUG -> "d"
-        }
-        println("$severityIndicator: ${report.sourcePath}: ${report.location?.posToString()}: ${report.message}")
-        report.exception?.apply {
-            println("exception: $message")
-            printStackTrace()
-            this.cause?.apply {
-                println("cause: $message")
-                printStackTrace()
-            }
-            this.suppressed.forEach {
-                println("suppressed exception: ${it.message}")
-                it.printStackTrace()
-            }
-        }
-    }
-    println(this)
+//    for (report in reports) {
+//        val severityIndicator = when (report.severity) {
+//            ScriptDiagnostic.Severity.FATAL -> "fatal"
+//            ScriptDiagnostic.Severity.ERROR -> "e"
+//            ScriptDiagnostic.Severity.WARNING -> "w"
+//            ScriptDiagnostic.Severity.INFO -> "i"
+//            ScriptDiagnostic.Severity.DEBUG -> "d"
+//        }
+//        println("$severityIndicator: ${report.sourcePath}: ${report.location?.posToString()}: ${report.message}")
+//        report.exception?.apply {
+//            println("exception: $message")
+//            printStackTrace()
+//            this.cause?.apply {
+//                println("cause: $message")
+//                printStackTrace()
+//            }
+//            this.suppressed.forEach {
+//                println("suppressed exception: ${it.message}")
+//                it.printStackTrace()
+//            }
+//        }
+//    }
+//    println(this)
     val evalResult = resultOrNull() ?: run {
         System.err.println("evaluation failed")
-        exitProcess(1)
+        return null to reports
     }
 
     val resultValue = evalResult.returnValue
@@ -127,11 +126,11 @@ inline fun <reified T> ResultWithDiagnostics<EvaluationResult>.get(scriptFile: F
 
             val env = resultValue.value as T
             println(env)
-            env
+            env to reports
         }
         is ResultValue.Unit -> {
             System.err.println("evaluation failed")
-            exitProcess(-1)
+            null to reports
         }
     }
 }

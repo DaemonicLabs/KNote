@@ -3,6 +3,6 @@ import kotlinx.html.html
 
 fun process(): Any? {
     return createHTML().html {
-        +"two"
+        +"two 2"
     }.replace("\n", "\\n")
 }

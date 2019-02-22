@@ -2,45 +2,86 @@ package knote
 
 import knote.annotations.FromPage
 import knote.host.evalScript
+import knote.poet.NotePage
 import knote.script.NotebookScript
 import knote.script.PageScript
 import knote.util.MapLike
 import knote.util.watchActor
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import kotlin.reflect.full.declaredFunctions
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.valueParameters
+import kotlin.script.experimental.api.ScriptDiagnostic
 import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
 
 class PageRegistry(
     val notebook: NotebookScript,
     val host: BasicJvmScriptingHost
 ) {
-    var pages: List<PageScript>
+    val pages: MutableMap<String, PageScript> = mutableMapOf()
+    private val resultsMap: MutableMap<String, Any> = mutableMapOf()
+    val dependencies: MutableMap<String, MutableSet<String>> = mutableMapOf()
+    val reportMap: MutableMap<String, List<ScriptDiagnostic>> = mutableMapOf()
+
     init {
-        pages = notebook.includes.map {
-            host.evalScript<PageScript>(it.file, it.id, libs = File("libs"))
-        }
+        notebook.includes.forEach(::evalPage)
 
         // TODO: add file watcher for pages
         startWatcher()
+
+        while((pages.keys - resultsMap.keys).isNotEmpty()) {
+            val pageIds = pages.keys - resultsMap.keys
+            pageIds.forEach { id ->
+                execPage(id)
+            }
+        }
+    }
+
+
+    fun evalPage(notePage: NotePage) {
+        require(notePage.file.exists()) {
+            "page: ${notePage.id} does not exist (${notePage.file})"
+        }
+        val (page , reports) = host.evalScript<PageScript>(
+            notePage.file,
+            notePage.id,
+            libs = File("libs")
+        )
+        reportMap[notePage.id] = reports
+        if(page == null) {
+            println("evaluation failed")
+            return
+        }
+        pages[notePage.id] = page
+
+        if(notePage.id in resultsMap)
+            resultsMap.remove(notePage.id)
+        execPage(notePage.id)
+    }
+
+    fun removePage(id: String) {
+        pages.remove(id)
+        resultsMap.remove(id)
+        dependencies.remove(id)
+//        dependencies.forEach { dependency, dependents ->
+//            dependents -= id
+//        }
     }
 
     val result: MapLike<String, Any?> = object: MapLike<String, Any?> {
         override operator fun get(key: String): Any? {
-            return getResultOrEval(key)
+            return getResultOrExec(key)
         }
     }
 
-    private val resultsMap: MutableMap<String, Any> = mutableMapOf()
-    val dependencies: MutableMap<String, MutableSet<String>> = mutableMapOf()
 
     val allResults: Map<String, Any>
     get() {
-        return pages.associate {
-            val result = getResultOrEval(it.id) ?: throw IllegalStateException("could not evaluate result for '${it.id}'")
-            it.id to result
+        return pages.keys.associate { id ->
+            val result = getResultOrExec(id) ?: throw IllegalStateException("could not evaluate result for '${id}'")
+            id to result
         }
     }
 
@@ -49,27 +90,18 @@ class PageRegistry(
         if (oldResult == null || oldResult != result)
             resultsMap[pageId] = result
 
-//        val continuations = notebook.dependencies.filter { it.first.id == pageId }.map { it.second.id }
-//
-//        continuations.forEach {
-//            evaluatePage(it)
-//        }
+        val continuations = dependencies[pageId]
+
+        continuations?.forEach {
+            execPage(it)
+        }
     }
 
-    private fun evaluatePage(pageId: String): Any? {
-        val scriptFile = File(System.getProperty("user.dir")).resolve("pages").resolve("$pageId.page.kts")
-        require(scriptFile.exists()) {
-            "page: $pageId does not exist ($scriptFile)"
+    private fun execPage(pageId: String): Any? {
+        val page = pages[pageId] ?: run {
+            println("page $pageId not evaluated yet")
+            return null
         }
-
-        val page = host.evalScript<PageScript>(scriptFile, pageId, libs = File("libs").absoluteFile)
-//        page::class.members.filterIsInstance(KMutableProperty::class.java).forEach {
-//            if(it.isLateinit) {
-//                val depId = it.name
-//                val result = getResultOrEval(depId)
-//                it.setter.call(page, result)
-//            }
-//        }
         val processFunction = page::class.declaredFunctions.find {
             it.name == "process"
         } ?: run {
@@ -84,8 +116,8 @@ class PageRegistry(
             require(pageResult != null) { "parameter: ${parameter.name} is not annotated with PageResult" }
             val sourceId = pageResult.source.takeIf { it.isNotBlank() } ?: parameter.name!!
             // TODO: register page as dependent on sourceId
-            dependencies.getOrPut(page.id) { mutableSetOf() } += sourceId
-            getResultOrEval(sourceId)
+            dependencies.getOrPut(pageId) { mutableSetOf() } += sourceId
+            getResultOrExec(sourceId) ?: return null
         }
         println("arguments: $parameters")
         val result = processFunction.call(page, *parameters.toTypedArray())
@@ -99,21 +131,41 @@ class PageRegistry(
         return result
     }
 
-    fun getResultOrEval(pageId: String): Any? = resultsMap[pageId] ?: evaluatePage(pageId)
+    fun getResultOrExec(pageId: String): Any? = resultsMap[pageId] ?: execPage(pageId)
 
+    private var watchJob: Job? = null
     fun startWatcher() {
         runBlocking {
-            watchActor(File("pages").absoluteFile.toPath()) {
+            watchJob = watchActor(File("pages").absoluteFile.toPath()) {
                 for (watchEvent in channel) {
+                    val path = watchEvent.context()
+                    val file = path.toFile()
+                    val id = file.name.substringBeforeLast(".page.kts")
+                    val notePage = notebook.includes.find { it.id == id } ?: continue
                     when (watchEvent.kind().name()) {
-                        "ENTRY_CREATE" -> println("${watchEvent.context()} was created")
-                        "ENTRY_MODIFY" -> println("${watchEvent.context()} was modified")
+                        "ENTRY_CREATE" -> {
+                            println("${watchEvent.context()} was created")
+                            evalPage(notePage)
+                        }
+                        "ENTRY_MODIFY" -> {
+                            println("${watchEvent.context()} was modified")
+                            removePage(id)
+                            evalPage(notePage)
+                        }
+                        "ENTRY_DELETE" -> {
+                            println("${watchEvent.context()} was deleted")
+                            removePage(id)
+                        }
                         "OVERFLOW" -> println("${watchEvent.context()} overflow")
-                        "ENTRY_DELETE" -> println("${watchEvent.context()} was deleted")
                     }
                 }
             }
 
         }
+    }
+
+    fun stopWatcher() {
+        watchJob?.cancel()
+        watchJob = null
     }
 }

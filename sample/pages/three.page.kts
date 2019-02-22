@@ -2,10 +2,10 @@ import kotlinx.html.body
 import kotlinx.html.stream.createHTML
 import kotlinx.html.html
 
-fun process(): Any? {
+fun process(@FromPage two: String): Any? {
     return createHTML().html {
         body {
-            +"two"
+            +"three"
         }
     }.replace("\n", "\\n")
 }

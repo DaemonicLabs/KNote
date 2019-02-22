@@ -2,6 +2,7 @@ package knote.util
 
 import knote.KNote
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.ActorScope
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.channels.actor
@@ -19,7 +20,7 @@ enum class WatchEvents {
     ENTRY_DELETE
 }
 
-fun watchActor(path: Path, actorScope: suspend ActorScope<WatchEvent<Path>>.() -> Unit): SendChannel<WatchEvent<Path>> {
+fun watchActor(path: Path, actorScope: suspend ActorScope<WatchEvent<Path>>.() -> Unit): Job {
     val actor = GlobalScope.actor(block = actorScope)
     val job = GlobalScope.launch {
         val watcher = path.watch()
@@ -36,7 +37,7 @@ fun watchActor(path: Path, actorScope: suspend ActorScope<WatchEvent<Path>>.() -
         }
     }
     KNote.cancelOnShutDown(job)
-    return actor
+    return job
 }
 
 internal fun Path.watch(): WatchService {
