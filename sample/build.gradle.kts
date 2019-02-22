@@ -53,7 +53,7 @@ afterEvaluate {
     val resolvedFiles = knoteConfiguration.resolve()
     logger.lifecycle("resolved files: $resolvedFiles")
     for (file in resolvedFiles) {
-        file.copyTo(libs.resolve(file.name))
+        file.copyTo(libs.resolve(file.name), overwrite = true)
     }
 }
 
@@ -73,7 +73,7 @@ val hostRoot = rootDir.absoluteFile.parentFile
 
 val ideaActive = System.getProperty("idea.active") == "true"
 
-if(ideaActive && false) {
+if(ideaActive) {
     class StreamGobbler(private val inputStream: InputStream, private val consumer: (String) -> Unit) :
         Runnable {
 
@@ -87,7 +87,7 @@ if(ideaActive && false) {
         Platform.isMac -> "./gradlew"
         else -> throw IllegalStateException("unsupported OS: ${Platform.osType}")
     }
-    val cmd = arrayOf(gradleWrapper, "publishToMavenLocal", "shadowJar")
+    val cmd = arrayOf(gradleWrapper, "publishToMavenLocal")
     logger.lifecycle("executing ${cmd.joinToString(" ", "[", "]")}")
     val command = ProcessBuilder(*cmd)
     val process = command
@@ -101,15 +101,21 @@ if(ideaActive && false) {
     logger.lifecycle("command finished with code: $result")
 }
 
+val jarFile = rootDir
+    .resolve("build").resolve(".knote-lib")
+    .resolve("KNote.jar")
 val buildHost = task<GradleBuild>("buildHost") {
-    tasks = listOf("publishToMavenLocal", "shadowJar")
+    tasks = listOf("shadowJar")
     dir = hostRoot
     buildFile = hostRoot.resolve("build.gradle.kts")
+    doLast {
+        hostRoot
+            .resolve("build").resolve("libs")
+            .resolve("KNote.jar")
+            .copyTo(jarFile)
+    }
 }
 
-val jarFile = hostRoot
-    .resolve("build").resolve("libs")
-    .resolve("KNote.jar")
 
 val pagesDir = rootDir.resolve("pages").apply { mkdirs() }
 val notebookDir = rootDir.resolve("notebooks").apply { mkdirs() }
@@ -119,7 +125,7 @@ val notebookDir = rootDir.resolve("notebooks").apply { mkdirs() }
 notebookDir
     .listFiles { _, name -> name.endsWith(".notebook.kts") }
     .forEach { scriptFile ->
-        val id = scriptFile.name.substringBeforeLast(".knote.kts")
+        val id = scriptFile.name.substringBeforeLast(".notebook.kts")
         task<JavaExec>("run_$id") {
             dependsOn(buildHost)
 //            dependsOn(copyLibs)
@@ -134,15 +140,16 @@ notebookDir
                 logger.lifecycle("\n")
             }
         }
+        task<JavaExec>("runViewer_$id") {
+            dependsOn(buildHost)
+            group = "application"
+//    dependsOn(copyLibs)
+            main = "knote.tornadofx.ViewerApp"
+            workingDir = rootDir
+            classpath(jarFile)
+        }
     }
 
-val run = task<JavaExec>("runViewer") {
-    group = "application"
-//    dependsOn(copyLibs)
-    main = "knote.tornadofx.ViewerApp"
-    workingDir = rootDir
-    classpath(jarFile)
-}
 
 //TODO: move to gradle plugin
 val generatedSrc = rootDir.resolve("build").resolve(".knote")
