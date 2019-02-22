@@ -53,6 +53,7 @@ inline fun <reified T: Any> BasicJvmScriptingHost.evalScript(
     }
 
     val evaluationConfig = ScriptEvaluationConfiguration {
+        args.forEach { println("constructorArg: $it  ${it!!::class}") }
         constructorArgs.append(*args)
     }
 

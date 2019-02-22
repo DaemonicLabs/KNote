@@ -3,18 +3,15 @@ package knote.script
 import kotlin.script.experimental.annotations.KotlinScript
 
 @KotlinScript(
-    displayName = "NoteBook",
-    fileExtension = "notebnook.kts",
-    compilationConfiguration = NotebookConfiguration::class
+    displayName = "Notebook Page",
+    fileExtension = "page.kts",
+    compilationConfiguration = PageConfiguration::class
 )
-open class PageScript(val args: Array<Any>) {
-    override fun toString() = "PageScript(args = ${args.joinToString(" ")})"
+open class PageScript(val id: String?) {
+    override fun toString() = "PageScript(id=$id)"
 
-    var result: Any = Unit
-
-    open fun doThings(id: String) {
-        //TODO("please override doThings(id: String)")
-        println("default doThings(\"$id\")")
+    open fun process() : Any? {
+        return null
     }
 
     // TODO: process data

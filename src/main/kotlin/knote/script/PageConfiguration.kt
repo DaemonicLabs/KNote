@@ -20,9 +20,6 @@ class PageConfiguration : ScriptCompilationConfiguration({
     defaultImports(
         Import::class
     )
-//    defaultImports.append(
-//        "knote.Constants"
-//    )
     jvm {
         // ensures that all dependencies are available to the script
         dependenciesFromCurrentContext(wholeClasspath = false)

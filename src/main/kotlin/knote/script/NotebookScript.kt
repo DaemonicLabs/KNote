@@ -11,13 +11,13 @@ import kotlin.script.experimental.annotations.KotlinScript
 open class NotebookScript(val args: Array<String>) {
     override fun toString() = "NotebookScript(args = ${args.joinToString(" ")})"
 
-    val start = NotePage("_")
-    val dependencies: MutableList<Pair<NotePage, NotePage>> = mutableListOf()
-
-    infix fun NotePage.continueWith(nextPage: NotePage): NotePage {
-        dependencies += this to nextPage
-        return nextPage
-    }
+//    val start = NotePage("_")
+//    val dependencies: MutableList<Pair<NotePage, NotePage>> = mutableListOf()
+//
+//    infix fun NotePage.continueWith(nextPage: NotePage): NotePage {
+//        dependencies += this to nextPage
+//        return nextPage
+//    }
 
     // TODO: add notebook title, descriptions, meta info
 }

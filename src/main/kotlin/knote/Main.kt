@@ -25,7 +25,11 @@ fun main(vararg args: String) {
     val notebook = host.evalScript<NotebookScript>(scriptFile, args = *arrayOf(arrayOf(workingDir.path)))
 
     println("notebook: $notebook")
-    println("dependencies: ${notebook.dependencies}")
+
+    val pageRegistry = PageRegistry(notebook, host)
+
+    val firstResult = pageRegistry.getResultOrEval("one")
+    println("one: $firstResult")
 
 //    val id = scriptFile.name.substringBeforeLast(".knote.kts")
 //    scriptEnv.doThings(id)
