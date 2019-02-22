@@ -7,7 +7,7 @@ import kotlin.script.experimental.annotations.KotlinScript
     fileExtension = "page.kts",
     compilationConfiguration = PageConfiguration::class
 )
-open class PageScript(val id: String?) {
+open class PageScript(val id: String) {
     override fun toString() = "PageScript(id=$id)"
 
     open fun process() : Any? {

@@ -5,8 +5,8 @@ import com.squareup.kotlinpoet.PropertySpec
 import java.io.File
 
 data class NotePage(
-                    val id: String,
-    val file: File? = null
+    val file: File,
+    val id: String
 ) {
     companion object {
         fun generate(output: File, pages: Array<out File>, fileName: String = "Pages"): List<File> {
@@ -18,12 +18,12 @@ data class NotePage(
                     val id = pageFile.name.substringBeforeLast(".page.kts")
                     addProperty(
                         PropertySpec.builder(id.capitalize(), NotePage::class)
-                            .initializer("%T(%S, %T(%S))", NotePage::class, id, File::class, pageFile.path)
+                            .initializer("%T(id = %S, file = %T(%S))", NotePage::class, id, File::class, pageFile.path)
                             .build()
                     )
                 }
             }.build()
-            filespec.writeTo(output )
+            filespec.writeTo(output)
 
             return listOf(output.resolve("$fileName.kt"))
         }

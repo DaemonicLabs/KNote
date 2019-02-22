@@ -10,11 +10,13 @@ import kotlin.script.experimental.api.ScriptCompilationConfiguration
 import kotlin.script.experimental.api.ScriptDiagnostic
 import kotlin.script.experimental.api.asSuccess
 import kotlin.script.experimental.api.defaultImports
+import kotlin.script.experimental.api.dependencies
 import kotlin.script.experimental.api.foundAnnotations
 import kotlin.script.experimental.api.importScripts
 import kotlin.script.experimental.api.refineConfiguration
 import kotlin.script.experimental.host.FileScriptSource
 import kotlin.script.experimental.host.toScriptSource
+import kotlin.script.experimental.jvm.JvmDependency
 import kotlin.script.experimental.jvm.dependenciesFromCurrentContext
 import kotlin.script.experimental.jvm.jvm
 
@@ -53,7 +55,7 @@ class NotebookConfiguration : ScriptCompilationConfiguration({
 
             val reports = mutableListOf<ScriptDiagnostic>()
             val annotations = context.collectedData?.get(ScriptCollectedData.foundAnnotations)?.also { annotations ->
-                reports += ScriptDiagnostic("annotations: $annotations", ScriptDiagnostic.Severity.INFO)
+                reports += ScriptDiagnostic("file_annotations: $annotations", ScriptDiagnostic.Severity.INFO)
 
                 if (annotations.any { it is InvalidScriptResolverAnnotation }) {
                     reports += ScriptDiagnostic(

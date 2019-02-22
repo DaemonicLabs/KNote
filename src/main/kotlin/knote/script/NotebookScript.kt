@@ -8,16 +8,17 @@ import kotlin.script.experimental.annotations.KotlinScript
     fileExtension = "notebook.kts",
     compilationConfiguration = NotebookConfiguration::class
 )
-open class NotebookScript(val args: Array<String>) {
-    override fun toString() = "NotebookScript(args = ${args.joinToString(" ")})"
+open class NotebookScript(val id: String) {
+    override fun toString() = "NotebookScript(id=$id)"
 
-//    val start = NotePage("_")
-//    val dependencies: MutableList<Pair<NotePage, NotePage>> = mutableListOf()
-//
-//    infix fun NotePage.continueWith(nextPage: NotePage): NotePage {
-//        dependencies += this to nextPage
-//        return nextPage
-//    }
+    var title: String = ""
+    var description: String = ""
+
+    val includes: MutableList<NotePage> = mutableListOf()
+
+    fun include(vararg pages: NotePage) {
+        includes.addAll(pages)
+    }
 
     // TODO: add notebook title, descriptions, meta info
 }

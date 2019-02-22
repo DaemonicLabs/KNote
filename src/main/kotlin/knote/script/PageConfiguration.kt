@@ -47,7 +47,7 @@ class PageConfiguration : ScriptCompilationConfiguration({
 
             val reports = mutableListOf<ScriptDiagnostic>()
             val annotations = context.collectedData?.get(ScriptCollectedData.foundAnnotations)?.also { annotations ->
-                reports += ScriptDiagnostic("annotations: $annotations", ScriptDiagnostic.Severity.INFO)
+                reports += ScriptDiagnostic("file_annotations: $annotations", ScriptDiagnostic.Severity.INFO)
 
                 if (annotations.any { it is InvalidScriptResolverAnnotation }) {
                     reports += ScriptDiagnostic(

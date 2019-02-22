@@ -1,15 +1,12 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version Kotlin.version
     kotlin("plugin.scripting") version Kotlin.version
-    kotlin("application") version Kotlin.version
     id("com.github.johnrengelman.shadow") version "4.0.0"
     application
     `maven-publish`
 }
-
 
 repositories {
     mavenCentral()
@@ -17,7 +14,9 @@ repositories {
 }
 
 dependencies {
-    implementation(kotlin("stdlib", Kotlin.version))
+    api(kotlin("stdlib", Kotlin.version))
+    api(kotlin("stdlib-jdk8", Kotlin.version))
+    api(kotlin("stdlib-jdk7", Kotlin.version))
 
     // script definition
     implementation(kotlin("scripting-jvm", Kotlin.version))
@@ -33,11 +32,20 @@ dependencies {
     implementation(kotlin("reflect", Kotlin.version))
 
     implementation("com.squareup:kotlinpoet:1.0.1")
-    implementation("no.tornado:tornadofx:1.7.17")
+    api("no.tornado:tornadofx:1.7.18")
+}
+
+configurations.all {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "org.jetbrains.kotlin") {
+            useVersion(Kotlin.version)
+            because("pin to kotlin version ${Kotlin.version}")
+        }
+    }
 }
 
 application {
-    mainClassName = "knote.MainKt"
+    mainClassName = "knote.tornadofx.ViewerApp"
 }
 
 val shadowJar by tasks.getting(ShadowJar::class) {

@@ -9,9 +9,11 @@ import kotlin.script.experimental.api.ScriptDiagnostic
 import kotlin.script.experimental.api.ScriptEvaluationConfiguration
 import kotlin.script.experimental.api.SourceCode
 import kotlin.script.experimental.api.constructorArgs
+import kotlin.script.experimental.api.dependencies
 import kotlin.script.experimental.api.importScripts
 import kotlin.script.experimental.api.resultOrNull
 import kotlin.script.experimental.host.toScriptSource
+import kotlin.script.experimental.jvm.JvmDependency
 import kotlin.script.experimental.jvm.defaultJvmScriptingHostConfiguration
 import kotlin.script.experimental.jvm.dependenciesFromCurrentContext
 import kotlin.script.experimental.jvm.jvm
@@ -32,6 +34,7 @@ fun createJvmScriptingHost(cacheDir: File): BasicJvmScriptingHost {
 inline fun <reified T: Any> BasicJvmScriptingHost.evalScript(
     scriptFile: File,
     vararg args: Any?,
+    libs: File? = null,
     importScripts: List<SourceCode> = listOf(),
     compilationConfig: ScriptCompilationConfiguration = createJvmCompilationConfigurationFromTemplate<T> {
         jvm {
@@ -41,6 +44,15 @@ inline fun <reified T: Any> BasicJvmScriptingHost.evalScript(
 
             importScripts(importScripts)
 
+            println("importing ${libs?.absolutePath}")
+            println("exists ${libs?.absoluteFile?.exists()}")
+            libs?.absoluteFile?.takeIf { it.exists() }?.apply {
+                listFiles { file -> file.name.endsWith(".jar")}
+                    .forEach {
+                        println("adding dependency: $it")
+                        dependencies.append(JvmDependency(it))
+                    }
+            }
 //            val JDK_HOME = System.getProperty("jdkHome") ?: System.getenv("JAVA_HOME")
 //                ?: throw IllegalStateException("please pass -DjdkHome=path/to/jdk or please set JAVA_HOME to the installed jdk")
 //            jdkHome(File(JDK_HOME))
