@@ -3,10 +3,10 @@ package knote.tornadofx
 import javafx.application.Application
 import knote.KNote
 import knote.tornadofx.view.MainView
+import knote.tornadofx.view.Workbench
 import tornadofx.*
 
 class ViewerApp : App(Workspace:: class) {
-    override val primaryView = MainView::class
 
     init {
         KNote.notebooks.forEach { notebook ->
@@ -15,6 +15,10 @@ class ViewerApp : App(Workspace:: class) {
                 println("[$pageId]: KClass: ${result::class} value: '$result'")
             }
         }
+    }
+
+    override fun onBeforeShow(view: UIComponent) {
+        workspace.dock<Workbench>()
     }
 
     companion object {
