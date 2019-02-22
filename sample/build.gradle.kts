@@ -112,7 +112,7 @@ val buildHost = task<GradleBuild>("buildHost") {
         hostRoot
             .resolve("build").resolve("libs")
             .resolve("KNote.jar")
-            .copyTo(jarFile)
+            .copyTo(jarFile, overwrite = true)
     }
 }
 
