@@ -7,7 +7,6 @@ plugins {
     kotlin("plugin.scripting") version Kotlin.version
     id("moe.nikky.persistentCounter") version "0.0.7-SNAPSHOT"
     id("com.github.johnrengelman.shadow") version "4.0.0" apply false
-    application
     `maven-publish`
     idea
     wrapper
@@ -117,13 +116,16 @@ subprojects {
     version = fullVersion
 
     runnableProjects[project]?.let { mainClass ->
-        apply<ApplicationPlugin>()
+//        apply<ApplicationPlugin>()
+        apply{
+            plugin("application")
+            plugin("com.github.johnrengelman.shadow")
+        }
 
         configure<JavaApplication> {
             mainClassName = mainClass
         }
 
-        apply(plugin = "com.github.johnrengelman.shadow")
 
 //        val runDir = rootProject.file("run")
 //
