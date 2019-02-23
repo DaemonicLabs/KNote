@@ -19,7 +19,11 @@ possibly annotations on method arguments
 - [ ] ShadowJar tasks
 
 
-# TornadoFx
+# GUI TornadoFx
+
+- [ ] Finish conversion layer to send data back to KNote module to compile and send results
+- [ ] Page dependency digraph drawer with clickable features
+- [ ] JVM dependency manager
 
 - [ ] RichTextFX  
       https://github.com/FXMisc/RichTextFX/wiki
