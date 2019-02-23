@@ -1,2 +1,0 @@
-package knote.tornadofx.view
-
