@@ -36,9 +36,10 @@ class Workbench : View() {
                                         is String -> add(text(page.results as String))
                                         else -> TODO()
                                     }
-                                    minHeight = 280.0
+                                    minHeight = 300.0
                                     style {
                                         backgroundColor += Color.WHITE
+                                        padding = box(10.px)
                                     }
                                 }
                             }
