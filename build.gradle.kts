@@ -1,20 +1,19 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import moe.nikky.counter.CounterExtension
 
 plugins {
-    kotlin("jvm") version Kotlin.version
-    kotlin("plugin.scripting") version Kotlin.version
+    kotlin("jvm") version Constants.Kotlin.version
+    kotlin("plugin.scripting") version Constants.Kotlin.version
     id("moe.nikky.persistentCounter") version "0.0.7-SNAPSHOT"
-    id("com.github.johnrengelman.shadow") version "4.0.0" apply false
+//    id("com.github.johnrengelman.shadow") version Constants.ShadowJar.version apply false
     `maven-publish`
     idea
     wrapper
 }
 
 val wrapper = tasks.getByName<Wrapper>("wrapper") {
-    gradleVersion = Gradle.version
-    distributionType = Gradle.distributionType
+    gradleVersion = Constants.Gradle.version
+    distributionType = Constants.Gradle.distributionType
 }
 
 val runnableProjects = mapOf(
@@ -62,8 +61,8 @@ tasks.create<Copy>("processMDTemplates") {
     filesMatching("**/*.template_md") {
         name = this.sourceName.substringBeforeLast(".template_md") + ".md"
         expand(
-            "KNOTE_VERSION" to KNote.version,
-            "GRADLE_VERSION" to Gradle.version
+            "KNOTE_VERSION" to Constants.KNote.version,
+            "GRADLE_VERSION" to Constants.Gradle.version
         )
     }
     destinationDir = rootDir
@@ -97,21 +96,21 @@ subprojects {
     configurations.all {
         resolutionStrategy.eachDependency {
             if (requested.group == "org.jetbrains.kotlin") {
-                useVersion(Kotlin.version)
-                because("pin to kotlin version ${Kotlin.version}")
+                useVersion(Constants.Kotlin.version)
+                because("pin to kotlin version ${Constants.Kotlin.version}")
             }
         }
     }
 
     counter {
-        variable(id = "buildnumber", key = "${KNote.version}${Env.branch}")
+        variable(id = "buildnumber", key = "${Constants.KNote.version}${Env.branch}")
     }
     val counter: CounterExtension = extensions.getByType()
     val buildnumber by counter.map
 
     val versionSuffix = if (Env.isCI) "-$buildnumber" else "-dev"
 
-    val fullVersion = "${KNote.version}$versionSuffix"
+    val fullVersion = "${Constants.KNote.version}$versionSuffix"
 
     version = fullVersion
 
@@ -119,7 +118,7 @@ subprojects {
 //        apply<ApplicationPlugin>()
         apply{
             plugin("application")
-            plugin("com.github.johnrengelman.shadow")
+//            plugin("com.github.johnrengelman.shadow")
         }
 
         configure<JavaApplication> {
@@ -137,13 +136,13 @@ subprojects {
 //            workingDir = runDir
 //        }
 
-        val shadowJar by tasks.getting(ShadowJar::class) {
-            archiveClassifier.set("")
-        }
+//        val shadowJar by tasks.getting(ShadowJar::class) {
+//            archiveClassifier.set("")
+//        }
 
-        val build by tasks.getting(Task::class) {
-            dependsOn(shadowJar)
-        }
+//        val build by tasks.getting(Task::class) {
+//            dependsOn(shadowJar)
+//        }
     }
 
     apply(plugin = "maven-publish")

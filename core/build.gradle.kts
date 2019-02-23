@@ -1,20 +1,20 @@
 dependencies {
-    api(kotlin("stdlib", Kotlin.version))
-    api(kotlin("stdlib-jdk8", Kotlin.version))
-    api(kotlin("stdlib-jdk7", Kotlin.version))
+    api(kotlin("stdlib", Constants.Kotlin.version))
+    api(kotlin("stdlib-jdk8", Constants.Kotlin.version))
+    api(kotlin("stdlib-jdk7", Constants.Kotlin.version))
 
     // script definition
-    implementation(kotlin("scripting-jvm", Kotlin.version))
+    implementation(kotlin("scripting-jvm", Constants.Kotlin.version))
 
     // host
-    implementation(kotlin("script-util", Kotlin.version))
-    implementation(kotlin("scripting-jvm-host-embeddable", Kotlin.version))
+    implementation(kotlin("script-util", Constants.Kotlin.version))
+    implementation(kotlin("scripting-jvm-host-embeddable", Constants.Kotlin.version))
 
 
-    implementation(kotlin("compiler-embeddable", Kotlin.version))
+    implementation(kotlin("compiler-embeddable", Constants.Kotlin.version))
 
     // not strictly necessary
-    implementation(kotlin("reflect", Kotlin.version))
+    implementation(kotlin("reflect", Constants.Kotlin.version))
 
-    implementation(KotlinPoet.dependency)
+    implementation(Constants.KotlinPoet.dependency)
 }

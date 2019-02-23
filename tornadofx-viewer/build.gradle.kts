@@ -1,4 +1,4 @@
 dependencies {
     api(project(":core"))
-    api(TornadoFX.dependency)
+    api(Constants.TornadoFX.dependency)
 }

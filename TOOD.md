@@ -1,11 +1,25 @@
-Filewatcher
+# Buildscripts
 
-watch folder -> register new notebooks
+- [ ] add constants generator
 
-watch notebook files -> relink pages
+# Core
+## PathWatcher
 
-watch pages -> rerun tasks and visualizations
+- [x] watch folder -> register new notebooks
+- [x] watch notebook files -> relink pages
+- [x] watch pages -> rerun tasks and visualizations
 
-Dependencies
+## Dependencies
 
 possibly annotations on method arguments
+
+## Gradle Plugin
+
+- [ ] Extension
+- [ ] ShadowJar tasks
+
+
+# TornadoFx
+
+- [ ] RichTextFX  
+      https://github.com/FXMisc/RichTextFX/wiki

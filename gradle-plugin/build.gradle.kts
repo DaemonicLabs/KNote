@@ -10,7 +10,9 @@ plugins {
 
 dependencies {
     implementation(project(":core"))
-    implementation(kotlin("stdlib", Kotlin.version))
+    implementation(kotlin("stdlib", Constants.Kotlin.version))
+    implementation(kotlin("gradle-plugin", Constants.Kotlin.version))
+    api(Constants.ShadowJar.dependency)
 }
 val pluginId = "daemoniclabs.knote"
 gradlePlugin {
@@ -103,7 +105,7 @@ publishing {
             }
 
             this.artifactId = "$pluginId.gradle.plugin"
-            this.version = KNote.version + "-SNAPSHOT"
+            this.version = Constants.KNote.version + "-SNAPSHOT"
         }
         // TODO add gradle plugin marker SNAPSHOT pointing to real plugin marker
     }
