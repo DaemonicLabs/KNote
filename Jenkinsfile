@@ -23,8 +23,8 @@ pipeline {
             when {
                 branch 'master'
             }
-            withCredentials([file(credentialsId: 'gradlePluginProperties', variable: 'PROPERTIES')]) {
-                steps {
+            steps {
+                withCredentials([file(credentialsId: 'gradlePluginProperties', variable: 'PROPERTIES')]) {
                     sh '''
                     cat "$PROPERTIES" >> gradle.properties
                     ./gradlew publishPlugins
