@@ -1,8 +1,8 @@
 package knote.tornadofx.view
 
 import javafx.geometry.Side
+import javafx.scene.layout.Priority
 import javafx.scene.paint.Color
-import knote.tornadofx.ViewerApp
 import knote.tornadofx.model.Page
 import knote.tornadofx.model.PageModel
 import tornadofx.*
@@ -15,18 +15,36 @@ class Workbench : View() {
 
     init {
         params.entries.forEach {
-            val page = Page(it.key, params[it.key] as String)
-            pages.add(page)
+            pages.add(params[it.key] as Page)
         }
     }
 
     override val root = tabpane {
-        pages.forEach {
-            tab(it.name) {
+        pages.forEach {page ->
+            tab(page.name) {
                 borderpane {
-                    center = stackpane {
-                        textarea(it.script)
+                    center {
+                        vbox {
+                            hbox {
+                                pane { hboxConstraints { hGrow = Priority.ALWAYS } }
+                                button("Rerun")
+                            }
+                            vbox {
+                                textarea(page.script)
+                                vbox {
+                                    when (page.results) {
+                                        is String -> add(text(page.results as String))
+                                        else -> TODO()
+                                    }
+                                    minHeight = 280.0
+                                    style {
+                                        backgroundColor += Color.WHITE
+                                    }
+                                }
+                            }
+                        }
                     }
+
                     right {
                         vbox {
                             maxWidth = 300.0
@@ -51,11 +69,14 @@ class Workbench : View() {
                                         }
                                     }
                                 }
+                                item("Page Dependencies") {
+                                    text("List of dependencies here")
+                                }
+                                item("JVM Dependencies") {
+                                    text("List of JVM dependencies here")
+                                }
                             }
                         }
-                    }
-                    bottom {
-                        textarea("Compiled results here")
                     }
                 }
             }

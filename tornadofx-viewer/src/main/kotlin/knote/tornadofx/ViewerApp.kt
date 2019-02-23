@@ -3,21 +3,25 @@ package knote.tornadofx
 import javafx.application.Application
 import knote.KNote
 import knote.poet.NotePage
+import knote.tornadofx.model.Page
 import knote.tornadofx.view.Workbench
 import tornadofx.*
 import java.io.BufferedReader
 
 class ViewerApp : App(Workspace:: class) {
 
-    private val pages: MutableMap<String, String> = mutableMapOf()
+    private val pages: MutableMap<String, Page> = mutableMapOf()
 
     init {
         // evaluate
         KNote.notebooks.forEach { notebook ->
-            notebook.includes.forEach{ notePage -> convertNotebookScriptToParams(notePage) }
             val pageRegistry = KNote.pageRegistries.getValue(notebook.id)
             pageRegistry.allResults.forEach { pageId, result ->
                 println("[$pageId]: KClass: ${result::class} value: '$result'")
+            }
+            notebook.includes.forEach{ notePage ->
+                val result = pageRegistry.result[notePage.id]
+                convertNotebookScriptToParams(notePage, result)
             }
         }
     }
@@ -26,9 +30,10 @@ class ViewerApp : App(Workspace:: class) {
         workspace.dock<Workbench>(params = pages)
     }
 
-    private fun convertNotebookScriptToParams(notePage: NotePage) {
+    private fun convertNotebookScriptToParams(notePage: NotePage, results: Any?) {
         val fileText = notePage.file.bufferedReader().use(BufferedReader::readText)
-        pages[notePage.id] = fileText
+        val page = Page(notePage.id, fileText, results)
+        pages["${notePage.id}.page.kts"] = page
     }
 
     companion object {
