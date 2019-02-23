@@ -6,8 +6,10 @@ pipeline {
 
         }
         stage("build") {
-            sh './gradlew clean'
-            sh './gradlew build'
+            steps {
+                sh './gradlew clean'
+                sh './gradlew build'
+            }
         }
         stage('publish') {
             when {
@@ -22,10 +24,12 @@ pipeline {
                 branch 'master'
             }
             withCredentials([file(credentialsId: 'gradlePluginProperties', variable: 'PROPERTIES')]) {
-                sh '''
-                cat "$PROPERTIES" >> gradle.properties
-		        ./gradlew publishPlugins
-	            '''
+                steps {
+                    sh '''
+                    cat "$PROPERTIES" >> gradle.properties
+                    ./gradlew publishPlugins
+                    '''
+                }
             }
         }
         stage('counter') {
