@@ -1,13 +1,10 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import moe.nikky.counter.CounterExtension
-import plugin.ConstantsExtension
-import plugin.GenerateConstantsTask
 
 plugins {
     kotlin("jvm") version Constants.Kotlin.version
     kotlin("plugin.scripting") version Constants.Kotlin.version
     id("moe.nikky.persistentCounter") version "0.0.7-SNAPSHOT"
-    constantsGenerator apply false
 //    id("com.github.johnrengelman.shadow") version Constants.ShadowJar.version apply false
     `maven-publish`
     idea
@@ -116,41 +113,6 @@ subprojects {
     val fullVersion = "${Constants.KNote.version}$versionSuffix"
 
     version = fullVersion
-
-
-    apply {
-        plugin("constantsGenerator")
-    }
-    val folder = listOf("knote") + project.name.split('-')
-
-    configure<ConstantsExtension> {
-        constantsObject(
-            pkg = folder.joinToString("."),
-            className = project.name
-                .split("-")
-                .joinToString("") {
-                    it.capitalize()
-                } + "Constants"
-        ) {
-//            field("JENKINS_URL") value Jenkins.url
-//            field("JENKINS_JOB") value Jenkins.job
-//            field("JENKINS_BUILD_NUMBER") value (System.getenv("BUILD_NUMBER")?.toIntOrNull() ?: -1)
-            field("GRADLE_VERSION") value Constants.Gradle.version
-            field("KOTLIN_VERSION") value Constants.Kotlin.version
-//            field("BUILD") value versionSuffix
-            field("VERSION") value Constants.KNote.version
-            field("FULL_VERSION") value fullVersion
-            field("BUILD_NUMBER") value buildnumber
-        }
-    }
-
-    val generateConstants by tasks.getting(GenerateConstantsTask::class) {
-        kotlin.sourceSets["main"].kotlin.srcDir(outputFolder)
-    }
-
-    tasks.withType<KotlinCompile> {
-        dependsOn(generateConstants)
-    }
 
     runnableProjects[project]?.let { mainClass ->
 //        apply<ApplicationPlugin>()

@@ -10,8 +10,8 @@ object HostUtil {
             else -> throw IllegalStateException("unsupported OS: ${Platform.osType}")
         }
         val cmd = arrayOf(gradleWrapper, "publishToMavenLocal")
-        println("executing ${cmd.joinToString(" ", "[", "]")} in ${hostRoot}")
-        System.err.println("executing ${cmd.joinToString(" ", "[", "]")} in ${hostRoot}")
+        println("executing ${cmd.joinToString(" ", "[", "]")} in ${hostRoot.parentFile}")
+        System.err.println("executing ${cmd.joinToString(" ", "[", "]")} in ${hostRoot.parentFile}")
         val command = ProcessBuilder(*cmd)
         val process = command
             .directory(hostRoot.parentFile)
