@@ -2,20 +2,23 @@ package knote.tornadofx
 
 import javafx.application.Application
 import knote.KNote
+import knote.PageRegistry
 import knote.poet.NotePage
 import knote.tornadofx.model.Page
+import knote.tornadofx.model.PageRegistryScope
 import knote.tornadofx.view.Workbench
 import tornadofx.*
 import java.io.BufferedReader
 
 class ViewerApp : App(Workspace:: class) {
 
-    private val pages: MutableMap<String, Page> = mutableMapOf()
+    lateinit var pageRegistry: PageRegistry
+    private val pages: ArrayList<Page> = arrayListOf()
 
     init {
-        // evaluate
+        // TODO() make sure every workspace is one notebook
         KNote.notebooks.forEach { notebook ->
-            val pageRegistry = KNote.pageRegistries.getValue(notebook.id)
+            pageRegistry = KNote.pageRegistries.getValue(notebook.id)
             pageRegistry.allResults.forEach { pageId, result ->
                 println("[$pageId]: KClass: ${result::class} value: '$result'")
             }
@@ -27,13 +30,13 @@ class ViewerApp : App(Workspace:: class) {
     }
 
     override fun onBeforeShow(view: UIComponent) {
-        workspace.dock<Workbench>(params = pages)
+        workspace.dock<Workbench>(PageRegistryScope(pageRegistry, pages))
     }
 
-    private fun convertNotebookScriptToParams(notePage: NotePage, results: String?) {
+    private fun convertNotebookScriptToParams(notePage: NotePage, results: String?)  {
         val fileText = notePage.file.bufferedReader().use(BufferedReader::readText)
-        val page = Page(notePage.id, fileText, results)
-        pages["${notePage.id}.page.kts"] = page
+        val page = Page(notePage.file, notePage.id, fileText, results)
+        pages.add(page)
     }
 
     companion object {
