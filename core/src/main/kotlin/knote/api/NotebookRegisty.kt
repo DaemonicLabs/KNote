@@ -1,7 +1,9 @@
 package knote.api
 
 import knote.script.NotebookScript
+import knote.util.KObservableMap
 import java.io.File
+import kotlin.script.experimental.api.ScriptDiagnostic
 
 interface NotebookRegisty {
 
@@ -19,4 +21,5 @@ interface NotebookRegisty {
      */
     val notebooks: List<NotebookScript>
     val notebookFiles: Array<out File>
+    val reportMap: KObservableMap<String, List<ScriptDiagnostic>>
 }

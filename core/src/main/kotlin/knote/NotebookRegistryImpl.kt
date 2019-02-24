@@ -4,10 +4,12 @@ import knote.api.NotebookRegisty
 import knote.host.createJvmScriptingHost
 import knote.host.evalScript
 import knote.script.NotebookScript
+import knote.util.MutableKObservableMap
 import knote.util.watchActor
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
 import java.io.File
+import kotlin.script.experimental.api.ScriptDiagnostic
 
 object NotebookRegistryImpl : NotebookRegisty {
     private val host = createJvmScriptingHost(KNote.cacheDir)
@@ -17,6 +19,9 @@ object NotebookRegistryImpl : NotebookRegisty {
         mkdirs()
         println("notebooksDir: $this")
     }
+
+
+    override val reportMap: MutableKObservableMap<String, List<ScriptDiagnostic>> = MutableKObservableMap()
 
     override var notebookFilter: List<String>? = null
 
@@ -57,23 +62,24 @@ object NotebookRegistryImpl : NotebookRegisty {
             args = *arrayOf(id, workingDir),
             libs = workingDir.resolve("libs")
         )
-        KNote.reportMap[id] = reports
+        reportMap[id] = reports
         if(notebook == null) {
             println("evaluation failed")
             return null
         }
 
         notebooks += notebook
-        KNote.pageRegistries[id] = PageRegistryImpl(notebook, host)
+        (KNote.pageRegistries as MutableKObservableMap)[id] = PageRegistryImpl(notebook, host)
         return notebook
     }
 
     private fun invalidateNotebook(id: String) {
         val notebook = findNotebook(id) ?: return
         notebooks -= notebook
+        reportMap -= id
         val oldRegistry = KNote.pageRegistries[id]!! as PageRegistryImpl
         oldRegistry.stopWatcher()
-        KNote.pageRegistries.remove(id)
+        (KNote.pageRegistries as MutableKObservableMap).remove(id)
     }
 
     override fun findNotebook(notebookId: String) = notebooks.find { it.id == notebookId }
