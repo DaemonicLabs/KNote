@@ -1,10 +1,10 @@
 package knote
 
 import knote.annotations.FromPage
+import knote.api.PageRegistry
 import knote.host.evalScript
 import knote.script.NotebookScript
 import knote.script.PageScript
-import knote.util.MapLike
 import knote.util.watchActor
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
@@ -15,32 +15,36 @@ import kotlin.reflect.full.valueParameters
 import kotlin.script.experimental.api.ScriptDiagnostic
 import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
 
-class PageRegistry(
+internal class PageRegistryImpl(
     val notebook: NotebookScript,
     val host: BasicJvmScriptingHost
-) {
-    val pages: MutableMap<String, PageScript> = mutableMapOf()
-    private val resultsMap: MutableMap<String, Any> = mutableMapOf()
+) : PageRegistry {
+    override val compiledPages: MutableMap<String, PageScript> = mutableMapOf()
+    override val results: MutableMap<String, Any> = mutableMapOf()
     val dependencies: MutableMap<String, MutableSet<String>> = mutableMapOf()
     val reportMap: MutableMap<String, List<ScriptDiagnostic>> = mutableMapOf()
 
     init {
-        notebook.pageFiles.forEach(::evalPage)
+        notebook.pageFiles.forEach {
+            evalPage(it)
+        }
 
-        // TODO: add file watcher for pages
         startWatcher()
 
-        while((pages.keys - resultsMap.keys).isNotEmpty()) {
-            val pageIds = pages.keys - resultsMap.keys
+        while((compiledPages.keys - results.keys).isNotEmpty()) {
+            val pageIds = compiledPages.keys - results.keys
             pageIds.forEach { id ->
                 execPage(id)
             }
         }
     }
 
+    override fun evalPage(pageId: String): Pair<PageScript, Any?>? {
+        val file = notebook.fileForPage(pageId) ?: return null
+        return evalPage(file, pageId)
+    }
 
-    fun evalPage(file: File) {
-        val id = file.name.substringBeforeLast(".page.kts")
+    fun evalPage(file: File, id: String = file.name.substringBeforeLast(".page.kts")): Pair<PageScript, Any?>? {
         require(file.exists()) {
             "page: $id does not exist ($file)"
         }
@@ -52,42 +56,36 @@ class PageRegistry(
         reportMap[id] = reports
         if(page == null) {
             println("evaluation failed")
-            return
+            return null
         }
-        pages[id] = page
+        compiledPages[id] = page
 
-        if(id in resultsMap)
-            resultsMap.remove(id)
-        execPage(id)
+        if(id in results)
+            results.remove(id)
+        return page to execPage(id)
     }
 
-    fun removePage(id: String) {
-        pages.remove(id)
-        resultsMap.remove(id)
+    private fun invalidatePage(id: String) {
+        compiledPages.remove(id)
+        results.remove(id)
         dependencies.remove(id)
 //        dependencies.forEach { dependency, dependents ->
 //            dependents -= id
 //        }
     }
 
-    val result: MapLike<String, Any?> = object: MapLike<String, Any?> {
-        override operator fun get(key: String): Any? {
-            return getResultOrExec(key)
-        }
-    }
-
-    val allResults: Map<String, Any>
+    override val allResults: Map<String, Any>
     get() {
-        return pages.keys.associate { id ->
+        return compiledPages.keys.associate { id ->
             val result = getResultOrExec(id) ?: throw IllegalStateException("could not evaluate result for '${id}'")
             id to result
         }
     }
 
-    fun updateResult(pageId: String, result: Any) {
-        val oldResult = resultsMap[pageId]
+    private fun updateResult(pageId: String, result: Any) {
+        val oldResult = results[pageId]
         if (oldResult == null || oldResult != result)
-            resultsMap[pageId] = result
+            results[pageId] = result
 
         val continuations = dependencies[pageId]
 
@@ -96,8 +94,8 @@ class PageRegistry(
         }
     }
 
-    private fun execPage(pageId: String): Any? {
-        val page = pages[pageId] ?: run {
+    override fun execPage(pageId: String): Any? {
+        val page = compiledPages[pageId] ?: run {
             println("page $pageId not evaluated yet")
             return null
         }
@@ -130,10 +128,10 @@ class PageRegistry(
         return result
     }
 
-    fun getResultOrExec(pageId: String): Any? = resultsMap[pageId] ?: execPage(pageId)
+    override fun getResultOrExec(pageId: String): Any? = results[pageId] ?: execPage(pageId)
 
     private var watchJob: Job? = null
-    fun startWatcher() {
+    private fun startWatcher() {
         runBlocking {
             watchJob = watchActor(File("pages").absoluteFile.toPath()) {
                 for (watchEvent in channel) {
@@ -148,12 +146,12 @@ class PageRegistry(
                         }
                         "ENTRY_MODIFY" -> {
                             println("${watchEvent.context()} was modified")
-                            removePage(id)
+                            invalidatePage(id)
                             evalPage(file)
                         }
                         "ENTRY_DELETE" -> {
                             println("${watchEvent.context()} was deleted")
-                            removePage(id)
+                            invalidatePage(id)
                         }
                         "OVERFLOW" -> println("${watchEvent.context()} overflow")
                     }
@@ -163,7 +161,7 @@ class PageRegistry(
         }
     }
 
-    fun stopWatcher() {
+    internal fun stopWatcher() {
         watchJob?.cancel()
         watchJob = null
     }

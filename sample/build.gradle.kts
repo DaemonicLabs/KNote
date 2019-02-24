@@ -44,11 +44,6 @@ dependencies {
         dependencyNotation = "$group:$name:$version"
     )
 
-
-    implementation(kotlin("stdlib", Kotlin.version))
-//    add("knote", kotlin("stdlib", Kotlin.version))
-
-
     knote(group = "org.jetbrains.kotlinx", name = "kotlinx-html-jvm", version = "0.6.12")
 }
 

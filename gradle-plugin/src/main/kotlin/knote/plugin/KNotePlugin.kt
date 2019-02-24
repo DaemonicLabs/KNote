@@ -29,17 +29,13 @@ open class KNotePlugin : Plugin<Project> {
 
         val implementation = project.configurations.getByName("implementation")
         val knoteConfiguration = project.configurations.create("knote")
-        knoteConfiguration.extendsFrom(implementation)
+        implementation.extendsFrom(knoteConfiguration)
 
-        val shadowCoreConfiguration = project.configurations.create("knote-shadow-core"){
-            extendsFrom(implementation)
-            isVisible = false
+        val shadowViewerConfiguration = project.configurations.create("knote-shadow-viewer")
+        val shadowCoreConfiguration = project.configurations.create("knote-shadow-core") {
+            extendsFrom(shadowViewerConfiguration)
         }
-
-        val shadowViewerConfiguration = project.configurations.create("knote-shadow-viewer") {
-            extendsFrom(shadowCoreConfiguration)
-            isVisible = false
-        }
+        implementation.extendsFrom(shadowCoreConfiguration)
 
         project.dependencies {
             add(
@@ -50,14 +46,14 @@ open class KNotePlugin : Plugin<Project> {
                     version = GradlePluginConstants.FULL_VERSION
                 )
             )
-            add(
-                configurationName = implementation.name,
-                dependencyNotation = create(
-                    group = "daemoniclabs.knote",
-                    name = "core",
-                    version = GradlePluginConstants.FULL_VERSION
-                )
-            )
+//            add(
+//                configurationName = implementation.name,
+//                dependencyNotation = create(
+//                    group = "daemoniclabs.knote",
+//                    name = "core",
+//                    version = GradlePluginConstants.FULL_VERSION
+//                )
+//            )
             add(
                 configurationName = shadowViewerConfiguration.name,
                 dependencyNotation = create(
@@ -66,14 +62,14 @@ open class KNotePlugin : Plugin<Project> {
                     version = GradlePluginConstants.FULL_VERSION
                 )
             )
-            add(
-                configurationName = implementation.name,
-                dependencyNotation = create(
-                    group = "daemoniclabs.knote",
-                    name = "tornadofx-viewer",
-                    version = GradlePluginConstants.FULL_VERSION
-                )
-            )
+//            add(
+//                configurationName = implementation.name,
+//                dependencyNotation = create(
+//                    group = "daemoniclabs.knote",
+//                    name = "tornadofx-viewer",
+//                    version = GradlePluginConstants.FULL_VERSION
+//                )
+//            )
         }
 
         val shadowCore = project.tasks.create<ShadowJar>("shadowCore") {
@@ -88,6 +84,7 @@ open class KNotePlugin : Plugin<Project> {
         }
 
         val libs = project.rootDir.resolve("libs")
+
 
         val copyLibs = project.task<AbstractTask>("copyLibs") {
             group = "build"

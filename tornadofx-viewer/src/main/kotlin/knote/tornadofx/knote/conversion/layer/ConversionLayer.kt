@@ -7,7 +7,7 @@ import java.io.File
 
 class ConversionLayer {
     fun KNote.addNewPageToNoteBookFromGUI(notebookId: String, page: Page) {
-        val notebook = KNote.findNotebook(notebookId)
+        val notebook = KNote.notebookRegistry.findNotebook(notebookId)
         val file = File("${page.pageName}.page.kts")
 
         file.printWriter().use { out -> out.println(page.script)}
