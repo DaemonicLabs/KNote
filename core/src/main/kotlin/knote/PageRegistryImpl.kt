@@ -5,6 +5,7 @@ import knote.api.PageRegistry
 import knote.host.evalScript
 import knote.script.NotebookScript
 import knote.script.PageScript
+import knote.util.MutableKObservableMap
 import knote.util.watchActor
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
@@ -19,8 +20,9 @@ internal class PageRegistryImpl(
     val notebook: NotebookScript,
     val host: BasicJvmScriptingHost
 ) : PageRegistry {
-    override val compiledPages: MutableMap<String, PageScript> = mutableMapOf()
-    override val results: MutableMap<String, Any> = mutableMapOf()
+    override val compiledPages: MutableKObservableMap<String, PageScript> = MutableKObservableMap()
+    override val results: MutableKObservableMap<String, Any> = MutableKObservableMap()
+
     val dependencies: MutableMap<String, MutableSet<String>> = mutableMapOf()
     val reportMap: MutableMap<String, List<ScriptDiagnostic>> = mutableMapOf()
 

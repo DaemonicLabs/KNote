@@ -1,13 +1,12 @@
 package knote.api
 
 import knote.script.PageScript
-import java.io.File
+import knote.util.KObservableMap
 
 interface PageRegistry {
 
-    val compiledPages: Map<String, PageScript>
-
-    val results: Map<String, Any>
+    val compiledPages: KObservableMap<String, PageScript>
+    val results: KObservableMap<String, Any>
     val allResults: Map<String, Any>
 
     /**
