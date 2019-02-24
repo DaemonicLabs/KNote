@@ -4,7 +4,6 @@ import knote.host.createJvmScriptingHost
 import knote.host.evalScript
 import knote.poet.NotePage
 import knote.script.NotebookScript
-import knote.tornadofx.model.Page
 import knote.util.watchActor
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
@@ -35,15 +34,6 @@ object KNote {
 
     val pageRegistries: MutableMap<String, PageRegistry> = mutableMapOf()
     val notebooks: MutableList<NotebookScript> = mutableListOf()
-
-    fun addNewPageToNoteBookFromGUI(notebookId: String, page: Page) {
-        val notebook = findNotebook(notebookId)
-        val file = File("${page.name}.page.kts")
-
-        file.printWriter().use { out -> out.println(page.script)}
-        val notePage = NotePage(file, file.name)
-        // add to notebook, then execute script to generate Pages and also add to the notebook
-    }
 
     fun evalNotebooks() {
         val notebookFiles = notebooksDir.listFiles { file -> file.isFile && file.name.endsWith(".notebook.kts") }
