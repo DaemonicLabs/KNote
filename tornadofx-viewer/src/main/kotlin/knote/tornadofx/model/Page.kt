@@ -2,7 +2,7 @@ package knote.tornadofx.model
 
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
-import knote.api.PageRegistry
+import knote.PageRegistry
 import tornadofx.*
 import java.io.File
 

@@ -47,7 +47,7 @@ class Workbench : View() {
                             hbox {
                                 pane { hboxConstraints { hGrow = Priority.ALWAYS } }
                                 button("Rerun") {
-                                    setOnAction { scope.registry.execPage(page.pageName) }
+                                    setOnAction { KNote.evalNotebook(page.file) }
                                 }
                             }
                         }
