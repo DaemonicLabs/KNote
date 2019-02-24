@@ -76,7 +76,6 @@ class PageRegistry(
         }
     }
 
-
     val allResults: Map<String, Any>
     get() {
         return pages.keys.associate { id ->

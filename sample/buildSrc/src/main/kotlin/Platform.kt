@@ -1,7 +1,3 @@
-package knote.util
-
-// TODO: move into gradle plugin
-
 enum class OSType {
     UNSPECIFIED,
     MAC,

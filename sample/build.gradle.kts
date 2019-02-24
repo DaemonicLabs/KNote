@@ -1,16 +1,21 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import knote.util.Platform
-import org.gradle.api.internal.AbstractTask
-import java.io.BufferedReader
-import java.io.InputStream
-import java.io.InputStreamReader
-import java.util.concurrent.Executors
 
 plugins {
-    kotlin("jvm") version Kotlin.version
-    kotlin("plugin.scripting") version Kotlin.version
-    idea
-//    application
+//    kotlin("jvm") version Kotlin.version
+//    kotlin("plugin.scripting") version Kotlin.version
+//    id("com.github.johnrengelman.shadow") version "4.0.0"
+    HostUtil.publishToMavenLocal(File(System.getProperty("user.dir")).absoluteFile)
+    id("daemoniclabs.knote") version "1.0.0-dev"
+}
+
+knote {
+
+}
+
+val wrapper = tasks.getByName<Wrapper>("wrapper") {
+    gradleVersion = Gradle.version
+    distributionType = Gradle.distributionType
 }
 
 allprojects {
@@ -33,129 +38,73 @@ repositories {
     jcenter()
 }
 
-val knoteConfiguration = project.configurations.create("knote")
-
 dependencies {
+    fun add(
+        configuration: Configuration,
+        group: String,
+        name: String, version: String
+    ) = add(
+        configurationName = configuration.name,
+        dependencyNotation = "$group:$name:$version"
+    )
+
+
     implementation(kotlin("stdlib", Kotlin.version))
 //    add("knote", kotlin("stdlib", Kotlin.version))
 
-    // TODO: add to plugin
-    implementation(group = "daemoniclabs", name = "knote", version = "1.0-SNAPSHOT")
-    implementation(group = "org.jetbrains.kotlinx", name ="kotlinx-html-jvm", version = "0.6.12")
-    add(knoteConfiguration.name, "org.jetbrains.kotlinx:kotlinx-html-jvm:0.6.12")
+
+    knote(group = "org.jetbrains.kotlinx", name = "kotlinx-html-jvm", version = "0.6.12")
 }
-
-val libs = rootDir.resolve("libs")
-
-afterEvaluate {
-    libs.deleteRecursively()
-    libs.mkdirs()
-    val resolvedFiles = knoteConfiguration.resolve()
-    logger.lifecycle("resolved files: $resolvedFiles")
-    for (file in resolvedFiles) {
-        file.copyTo(libs.resolve(file.name), overwrite = true)
-    }
-}
-
-val hostRoot = rootDir.absoluteFile.parentFile
 
 val ideaActive = System.getProperty("idea.active") == "true"
 
-if(ideaActive) {
-    class StreamGobbler(private val inputStream: InputStream, private val consumer: (String) -> Unit) :
-        Runnable {
+val hostRoot = rootDir.absoluteFile.parentFile
 
-        override fun run() {
-            BufferedReader(InputStreamReader(inputStream)).forEachLine(consumer)
-        }
-    }
-    val gradleWrapper = when {
-        Platform.isWindows -> "gradlew"
-        Platform.isLinux -> "./gradlew"
-        Platform.isMac -> "./gradlew"
-        else -> throw IllegalStateException("unsupported OS: ${Platform.osType}")
-    }
-    val cmd = arrayOf(gradleWrapper, "publishToMavenLocal")
-    logger.lifecycle("executing ${cmd.joinToString(" ", "[", "]")}")
-    val command = ProcessBuilder(*cmd)
-    val process = command
-        .directory(hostRoot)
-        .start()
-    val outStreamGobbler = StreamGobbler(process.inputStream) { line -> logger.lifecycle("% $line") }
-    val errStreamGobbler = StreamGobbler(process.errorStream) { line -> logger.error("% $line") }
-    val f1 = Executors.newSingleThreadExecutor().submit(outStreamGobbler)
-    val f2 = Executors.newSingleThreadExecutor().submit(errStreamGobbler)
-    val result = process.waitFor()
-    logger.lifecycle("command finished with code: $result")
-}
+//if (ideaActive) {
+//    val gradleWrapper = when {
+//        Platform.isWindows -> "gradlew.bat"
+//        Platform.isLinux -> "./gradlew"
+//        Platform.isMac -> "./gradlew"
+//        else -> throw IllegalStateException("unsupported OS: ${Platform.osType}")
+//    }
+//    val cmd = arrayOf(gradleWrapper, "publishToMavenLocal")
+//    logger.lifecycle("executing ${cmd.joinToString(" ", "[", "]")} in $hostRoot")
+//    val command = ProcessBuilder(*cmd)
+//    val process = command
+//        .directory(hostRoot)
+//        .start()
+//    val outStreamGobbler = Runnable {
+//        process.inputStream.bufferedReader().use {
+//            it.forEachLine { line -> logger.lifecycle("% $line") }
+//        }
+//    }
+//    val errStreamGobbler = Runnable {
+//        process.errorStream.bufferedReader().use {
+//            it.forEachLine { line -> logger.error("% $line") }
+//        }
+//    }
+//    Executors.newSingleThreadExecutor().submit(outStreamGobbler)
+//    Executors.newSingleThreadExecutor().submit(errStreamGobbler)
+//    val result = process.waitFor()
+//    logger.lifecycle("command finished with code: $result")
+//}
 
-val jarFile = rootDir
-    .resolve("build").resolve(".knote-lib")
-    .resolve("KNote.jar")
-val buildHost = task<GradleBuild>("buildHost") {
-    tasks = listOf("shadowJar")
+
+val publishHost = task<GradleBuild>("publishHost") {
+    tasks = listOf("publishToMavenLocal")
     dir = hostRoot
     buildFile = hostRoot.resolve("build.gradle.kts")
-    doLast {
-        hostRoot
-            .resolve("build").resolve("libs")
-            .resolve("KNote.jar")
-            .copyTo(jarFile, overwrite = true)
-    }
 }
 
+val shadowCore = tasks.getByName<ShadowJar>("shadowCore") {
+    dependsOn += publishHost
+}
+val shadowViewer = tasks.getByName<ShadowJar>("shadowViewer") {
+    dependsOn += publishHost
+}
 
 val pagesDir = rootDir.resolve("pages").apply { mkdirs() }
 val notebookDir = rootDir.resolve("notebooks").apply { mkdirs() }
-
-//val runDir = rootDir.resolve("run").apply { mkdirs() }
-
-notebookDir
-    .listFiles { _, name -> name.endsWith(".notebook.kts") }
-    .forEach { scriptFile ->
-        val id = scriptFile.name.substringBeforeLast(".notebook.kts")
-        task<JavaExec>("run_$id") {
-            dependsOn(buildHost)
-//            dependsOn(copyLibs)
-            group = "application"
-            args = listOf(id)
-            workingDir = rootDir
-            main = "knote.MainKt"
-            classpath(jarFile)
-            doFirst {
-                logger.lifecycle("executing")
-                logger.lifecycle("java -jar ${jarFile.path} ${(args as List<String>).joinToString(" ")}")
-                logger.lifecycle("\n")
-            }
-        }
-        task<JavaExec>("runViewer_$id") {
-            dependsOn(buildHost)
-//    dependsOn(copyLibs)
-            group = "application"
-            args = listOf(id)
-            main = "knote.tornadofx.ViewerApp"
-            workingDir = rootDir
-            classpath(jarFile)
-        }
-    }
-
-
-//TODO: move to gradle plugin
-val generatedSrc = rootDir.resolve("build").resolve(".knote")
-
-kotlin {
-    sourceSets.maybeCreate("main").kotlin.apply {
-        srcDir(pagesDir)
-        srcDir(notebookDir)
-        srcDir(generatedSrc)
-    }
-}
-
-//idea {
-//    module {
-//        generatedSourceDirs.add(generatedSrc)
-//    }
-//}
 
 task<DefaultTask>("depsize") {
     group = "help"
