@@ -1,6 +1,8 @@
 package knote.plugin
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import knote.gradle.plugin.GradlePluginConstants
+import knote.poet.PageMarker
 import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -13,6 +15,7 @@ import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.task
 import org.gradle.plugins.ide.idea.model.IdeaModel
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
+import java.io.File
 
 open class KNotePlugin : Plugin<Project> {
     override fun apply(project: Project) {
@@ -26,18 +29,13 @@ open class KNotePlugin : Plugin<Project> {
 
         val implementation = project.configurations.getByName("implementation")
         val knoteConfiguration = project.configurations.create("knote")
-        knoteConfiguration.extendsFrom(implementation)
+        implementation.extendsFrom(knoteConfiguration)
 
-        val shadowCoreConfiguration = project.configurations.create("knote-shadow-core"){
-            extendsFrom(implementation)
-            isVisible = false
+        val shadowViewerConfiguration = project.configurations.create("knote-shadow-viewer")
+        val shadowCoreConfiguration = project.configurations.create("knote-shadow-core") {
+            extendsFrom(shadowViewerConfiguration)
         }
-
-        val shadowViewerConfiguration = project.configurations.create("knote-shadow-viewer") {
-            extendsFrom(shadowCoreConfiguration)
-            isVisible = false
-        }
-
+        implementation.extendsFrom(shadowCoreConfiguration)
 
         project.dependencies {
             add(
@@ -45,17 +43,33 @@ open class KNotePlugin : Plugin<Project> {
                 dependencyNotation = create(
                     group = "daemoniclabs.knote",
                     name = "core",
-                    version = "1.0.0-dev" // TODO: use generated constant
+                    version = GradlePluginConstants.FULL_VERSION
                 )
             )
+//            add(
+//                configurationName = implementation.name,
+//                dependencyNotation = create(
+//                    group = "daemoniclabs.knote",
+//                    name = "core",
+//                    version = GradlePluginConstants.FULL_VERSION
+//                )
+//            )
             add(
                 configurationName = shadowViewerConfiguration.name,
                 dependencyNotation = create(
                     group = "daemoniclabs.knote",
                     name = "tornadofx-viewer",
-                    version = "1.0.0-dev" // TODO: use generated constant
+                    version = GradlePluginConstants.FULL_VERSION
                 )
             )
+//            add(
+//                configurationName = implementation.name,
+//                dependencyNotation = create(
+//                    group = "daemoniclabs.knote",
+//                    name = "tornadofx-viewer",
+//                    version = GradlePluginConstants.FULL_VERSION
+//                )
+//            )
         }
 
         val shadowCore = project.tasks.create<ShadowJar>("shadowCore") {
@@ -70,7 +84,7 @@ open class KNotePlugin : Plugin<Project> {
         }
 
         val libs = project.rootDir.resolve("libs")
-        val generatedSrc = project.rootDir.resolve("build").resolve(".knote")
+
 
         val copyLibs = project.task<AbstractTask>("copyLibs") {
             group = "build"
@@ -78,7 +92,7 @@ open class KNotePlugin : Plugin<Project> {
                 libs.deleteRecursively()
                 libs.mkdirs()
                 for (file in knoteConfiguration.resolve()) {
-                    file.copyTo(libs.resolve(file.name))
+                    file.copyTo(libs.resolve(file.name), overwrite = true)
                 }
             }
         }
@@ -92,26 +106,40 @@ open class KNotePlugin : Plugin<Project> {
             }
 
             extensions.configure<KotlinJvmProjectExtension> {
-                sourceSets.maybeCreate("main").kotlin.apply {
-                    srcDir(notebookDir)
-                    srcDir(generatedSrc)
-                }
-            }
-
-            extensions.configure<IdeaModel> {
-                module {
-                    generatedSourceDirs.add(generatedSrc)
+                sourceSets.maybeCreate("main").apply {
+                    kotlin.srcDir(notebookDir)
                 }
             }
 
             // TODO: loop through registered notebooks (in extension)
 
-
-
             notebookDir
                 .listFiles { _, name -> name.endsWith(".notebook.kts") }
                 .forEach { scriptFile ->
                     val id = scriptFile.name.substringBeforeLast(".notebook.kts")
+
+                    val generatedSrc = project.rootDir.resolve("build").resolve(".knote").resolve(id).apply { mkdirs() }
+                    val pagesSrc = rootDir.resolve("${id}_pages").apply { mkdirs() }
+                    val pages = pagesSrc.listFiles { file -> file.isFile && file.name.endsWith(".page.kts") } ?: run {
+                        logger.error("no files found in $pagesSrc")
+                        arrayOf<File>()
+                    }
+                    PageMarker.generate(generatedSrc, pages, fileName = id.capitalize())
+
+                    extensions.configure<KotlinJvmProjectExtension> {
+                        sourceSets.maybeCreate("main").apply {
+                            kotlin.srcDir(pagesSrc)
+                            kotlin.srcDir(generatedSrc)
+//                            dependsOn(sourceSets.getByName("main"))
+                        }
+                    }
+
+                    extensions.configure<IdeaModel> {
+                        module {
+                            generatedSourceDirs.add(generatedSrc)
+                        }
+                    }
+
                     task<JavaExec>("run_$id") {
                         dependsOn(shadowCore)
                         dependsOn(copyLibs)

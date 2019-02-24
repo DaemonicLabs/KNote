@@ -3,6 +3,13 @@
 - [ ] add constants generator
 
 # Core
+
+## Script COmpiler
+
+- [ ] use withObject on scripts to pass previous compiled scripts ?  
+  NOTE: would not allow access to functions defined in other scripts.. (i think)  
+  NOTE: `@Import`/`@Include` seems like a cleaner solution
+
 ## PathWatcher
 
 - [x] watch folder -> register new notebooks

@@ -2,7 +2,7 @@ package knote.tornadofx
 
 import javafx.application.Application
 import knote.KNote
-import knote.PageRegistry
+import knote.api.PageRegistry
 import knote.poet.NotePage
 import knote.tornadofx.model.Page
 import knote.tornadofx.model.PageRegistryScope
@@ -16,14 +16,17 @@ class ViewerApp : App(Workspace:: class) {
     private val pages: ArrayList<Page> = arrayListOf()
 
     init {
+        KNote.notebookRegistry.evalNotebooks()
+        val notebooks = KNote.notebookRegistry.notebooks
+
         // TODO() make sure every workspace is one notebook
-        KNote.notebooks.forEach { notebook ->
+        notebooks.forEach { notebook ->
             pageRegistry = KNote.pageRegistries.getValue(notebook.id)
             pageRegistry.allResults.forEach { pageId, result ->
                 println("[$pageId]: KClass: ${result::class} value: '$result'")
             }
             notebook.includes.forEach{ notePage ->
-                val result = pageRegistry.result[notePage.id]
+                val result = pageRegistry.getResultOrExec(notePage.id)
                 convertNotebookScriptToParams(notePage, result.toString())
             }
         }
@@ -42,8 +45,7 @@ class ViewerApp : App(Workspace:: class) {
     companion object {
         @JvmStatic
         fun main(vararg args: String) {
-            KNote.notebookFilter = args.toList()
-            KNote.evalNotebooks()
+//            KNote.notebookRegistry.notebookFilter = args.toList()
             Application.launch(ViewerApp::class.java, *args)
         }
     }

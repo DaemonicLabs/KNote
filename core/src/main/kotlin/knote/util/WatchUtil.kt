@@ -7,6 +7,7 @@ import kotlinx.coroutines.channels.ActorScope
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.channels.actor
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.nio.file.Path
 import java.nio.file.StandardWatchEventKinds
@@ -27,6 +28,8 @@ fun watchActor(path: Path, actorScope: suspend ActorScope<WatchEvent<Path>>.() -
         while (true) {
             //The watcher blocks until an event is available
             val key = watcher.take()
+
+            if(!isActive) key.cancel()
 
             //Now go through each event on the folder
             key.pollEvents().forEach { it ->

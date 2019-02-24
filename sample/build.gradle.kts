@@ -2,10 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-//    kotlin("jvm") version Kotlin.version
-//    kotlin("plugin.scripting") version Kotlin.version
-//    id("com.github.johnrengelman.shadow") version "4.0.0"
-    HostUtil.publishToMavenLocal(File(System.getProperty("user.dir")).absoluteFile)
+//    HostUtil.publishToMavenLocal(File(System.getProperty("user.dir")).absoluteFile)
     id("daemoniclabs.knote") version "1.0.0-dev"
 }
 
@@ -26,7 +23,6 @@ allprojects {
             jvmTarget = "1.8"
         }
     }
-
 }
 
 repositories {
@@ -47,11 +43,6 @@ dependencies {
         configurationName = configuration.name,
         dependencyNotation = "$group:$name:$version"
     )
-
-
-    implementation(kotlin("stdlib", Kotlin.version))
-//    add("knote", kotlin("stdlib", Kotlin.version))
-
 
     knote(group = "org.jetbrains.kotlinx", name = "kotlinx-html-jvm", version = "0.6.12")
 }

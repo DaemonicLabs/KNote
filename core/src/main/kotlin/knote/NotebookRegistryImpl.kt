@@ -1,10 +1,11 @@
 package knote
 
+import javafx.collections.FXCollections
+import javafx.collections.ObservableMap
 import knote.api.NotebookRegisty
 import knote.host.createJvmScriptingHost
 import knote.host.evalScript
 import knote.script.NotebookScript
-import knote.util.MutableKObservableMap
 import knote.util.watchActor
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
@@ -21,21 +22,20 @@ object NotebookRegistryImpl : NotebookRegisty {
     }
 
 
-    override val reportMap: MutableKObservableMap<String, List<ScriptDiagnostic>> = MutableKObservableMap()
+    override val reportMap: ObservableMap<String, List<ScriptDiagnostic>> = FXCollections.observableHashMap()
+    override val compiledNotebooks: ObservableMap<String, NotebookScript> = FXCollections.observableHashMap()
 
     override var notebookFilter: List<String>? = null
 
-    override val notebookFiles: Array<out File>
+    override val listNotebookFiles: Array<out File>
         get() = notebooksDir.listFiles { file ->
             file.isFile && file.name.endsWith(".notebook.kts")
         }
 
-    override val notebooks: MutableList<NotebookScript> = mutableListOf()
-
     override fun evalNotebooks() {
-        println("notebookFiles: $notebookFiles")
+        println("listNotebookFiles: $listNotebookFiles")
 
-        notebookFiles
+        listNotebookFiles
             .map { it.name.substringBeforeLast(".notebook.kts") }
             .filter { id ->
                 notebookFilter?.let { filter -> id in filter } ?: true
@@ -68,18 +68,17 @@ object NotebookRegistryImpl : NotebookRegisty {
             return null
         }
 
-        notebooks += notebook
-        (KNote.pageRegistries as MutableKObservableMap)[id] = PageRegistryImpl(notebook, host)
+        compiledNotebooks[id] = notebook
+        KNote.pageRegistries[id] = PageRegistryImpl(notebook, host)
         return notebook
     }
 
     private fun invalidateNotebook(id: String) {
-        val notebook = findNotebook(id) ?: return
-        notebooks -= notebook
+        compiledNotebooks -= id
         reportMap -= id
         val oldRegistry = KNote.pageRegistries[id]!! as PageRegistryImpl
         oldRegistry.stopWatcher()
-        (KNote.pageRegistries as MutableKObservableMap).remove(id)
+        KNote.pageRegistries.remove(id)
     }
 
     override fun findNotebook(notebookId: String) = notebooks.find { it.id == notebookId }

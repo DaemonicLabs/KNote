@@ -3,8 +3,7 @@ package knote.tornadofx.view
 import javafx.geometry.Side
 import javafx.scene.layout.Priority
 import javafx.scene.paint.Color
-import javafx.scene.text.Text
-
+import knote.KNote
 import knote.tornadofx.model.Page
 import knote.tornadofx.model.PageRegistryScope
 import tornadofx.*
@@ -13,7 +12,6 @@ class Workbench : View() {
 
     var pages = arrayListOf<Page>().observable()
     val tools = (1..10).toList()
-    var evaluationText = Text()
     override val scope = super.scope as PageRegistryScope
 
     init {
@@ -31,23 +29,14 @@ class Workbench : View() {
                             children.bind(pages) {
                                 vbox {
                                     if (it == page) {
-                                        textarea(it.script) {
-                                            textProperty().addListener { _, _, new ->
-                                                it.dirtyState = true
-                                                it.script = new
-                                            }
-                                        }
+                                        textarea(it.script)
                                         vbox {
                                             when (it.results) {
-                                                is String -> {
-                                                    evaluationText = text(it.results)
-                                                    add(evaluationText)
-                                                }
+                                                is String -> add(text(it.results))
                                                 else -> TODO()
                                             }
                                             minHeight = 280.0
                                             style {
-                                                backgroundColor += Color.WHITE
                                                 backgroundColor += Color.WHITE
                                                 padding = box(10.px)
                                             }
@@ -58,21 +47,7 @@ class Workbench : View() {
                             hbox {
                                 pane { hboxConstraints { hGrow = Priority.ALWAYS } }
                                 button("Rerun") {
-<<<<<<< HEAD
-                                    setOnAction {
-                                        pages.forEach {page ->
-                                            if (page.dirtyState) {
-                                                page.file.printWriter().use {
-                                                    out -> out.println(page.script)
-                                                }
-                                            }
-                                        }
-                                        page.results = scope.registry.execPage(page.pageName).toString()
-                                        evaluationText = text(page.results)
-                                    }
-=======
-                                    setOnAction { KNote.evalNotebook(page.file) }
->>>>>>> eb19cba63766636ff2ffff5ff4dcc17f0cb57a04
+                                    setOnAction { scope.registry.execPage(page.pageName) }
                                 }
                             }
                         }
