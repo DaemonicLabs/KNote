@@ -63,8 +63,8 @@ object NotebookRegistryImpl : NotebookRegisty {
             libs = workingDir.resolve("libs")
         )
         reportMap[id] = reports
-        if(notebook == null) {
-            println("evaluation failed")
+        if (notebook == null) {
+            println("evaluation failed for notebook $id")
             return null
         }
 

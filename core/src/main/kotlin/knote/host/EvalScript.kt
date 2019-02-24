@@ -107,7 +107,7 @@ inline fun <reified T> ResultWithDiagnostics<EvaluationResult>.get(): Pair<T?, L
 //    }
 //    println(this)
     val evalResult = resultOrNull() ?: run {
-        System.err.println("evaluation failed")
+        System.err.println("evaluation result failed for notebook")
         return null to reports
     }
 
