@@ -138,10 +138,10 @@ internal class PageRegistryImpl(
     private var watchJob: Job? = null
     private fun startWatcher() {
         runBlocking {
-            watchJob = watchActor(File("pages").absoluteFile.toPath()) {
+            watchJob = watchActor(notebook.pageRoot.absoluteFile.toPath()) {
                 for (watchEvent in channel) {
                     val path = watchEvent.context()
-                    val file = path.toFile()
+                    val file = notebook.pageRoot.resolve(path.toFile()).absoluteFile
                     if(!file.name.endsWith(".page.kts")) continue
                     val id = file.name.substringBeforeLast(".page.kts")
                     when (watchEvent.kind().name()) {
