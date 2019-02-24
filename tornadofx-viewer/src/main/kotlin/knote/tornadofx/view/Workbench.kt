@@ -3,14 +3,15 @@ package knote.tornadofx.view
 import javafx.geometry.Side
 import javafx.scene.layout.Priority
 import javafx.scene.paint.Color
+import knote.KNote
 import knote.tornadofx.model.Page
-import knote.tornadofx.model.PageModel
+import knote.tornadofx.model.PageViewModel
 import tornadofx.*
 
 class Workbench : View() {
 
-    val pageModel: PageModel by inject()
     var pages = arrayListOf<Page>().observable()
+    val pageModel: PageViewModel by inject()
     val tools = (1..10).toList()
 
     init {
@@ -20,20 +21,25 @@ class Workbench : View() {
     }
 
     override val root = tabpane {
-        pages.forEach {page ->
-            tab(page.name) {
+        pages.forEach { page ->
+            tab(page.pageName) {
                 borderpane {
                     center {
                         vbox {
                             hbox {
                                 pane { hboxConstraints { hGrow = Priority.ALWAYS } }
-                                button("Rerun")
+                                button("Rerun") {
+                                    // setOnAction { KNote.sendToKNote }
+                                }
                             }
                             vbox {
                                 textarea(page.script)
                                 vbox {
                                     when (page.results) {
-                                        is String -> add(text(page.results as String))
+                                        is String -> add(text {
+                                            page.results
+                                            // textProperty().bind(pageModel.results)
+                                        })
                                         else -> TODO()
                                     }
                                     minHeight = 280.0

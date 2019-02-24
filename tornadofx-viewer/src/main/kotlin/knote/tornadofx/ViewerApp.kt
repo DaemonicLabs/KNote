@@ -21,7 +21,7 @@ class ViewerApp : App(Workspace:: class) {
             }
             notebook.includes.forEach{ notePage ->
                 val result = pageRegistry.result[notePage.id]
-                convertNotebookScriptToParams(notePage, result)
+                convertNotebookScriptToParams(notePage, result.toString())
             }
         }
     }
@@ -30,7 +30,7 @@ class ViewerApp : App(Workspace:: class) {
         workspace.dock<Workbench>(params = pages)
     }
 
-    private fun convertNotebookScriptToParams(notePage: NotePage, results: Any?) {
+    private fun convertNotebookScriptToParams(notePage: NotePage, results: String?) {
         val fileText = notePage.file.bufferedReader().use(BufferedReader::readText)
         val page = Page(notePage.id, fileText, results)
         pages["${notePage.id}.page.kts"] = page
