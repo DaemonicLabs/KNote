@@ -2,7 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    HostUtil.publishToMavenLocal(File(System.getProperty("user.dir")).absoluteFile)
+//    HostUtil.publishToMavenLocal(File(System.getProperty("user.dir")).absoluteFile)
     id("daemoniclabs.knote") version "1.0.0-dev"
 }
 

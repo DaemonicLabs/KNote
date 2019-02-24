@@ -38,23 +38,23 @@ object KNote {
         val notebookFiles = notebooksDir.listFiles { file -> file.isFile && file.name.endsWith(".notebook.kts") }
         println("notebookFiles: $notebookFiles")
 
-        notebookFiles
-            .filter {
-                notebookFilter?.let { filter ->
-                    it.name.substringBeforeLast(".notebook.kts") in filter
-                } ?: true
-            }
-            .forEach(::evalNotebook)
-        notebooks.forEach { notebook ->
-            val otherNotebooks = notebooks - notebook
-            val otherIds = otherNotebooks.flatMap { it.includes.map { it.id } }
-            val pageIds = notebook.includes.map { it.id }
-            pageIds.forEach { id ->
-                require(id !in otherIds) {
-                    "page with id: $id is included in multiple notebooks"
-                }
-            }
-        }
+//        notebookFiles
+//            .filter {
+//                notebookFilter?.let { filter ->
+//                    it.name.substringBeforeLast(".notebook.kts") in filter
+//                } ?: true
+//            }
+//            .forEach(::evalNotebook)
+//        notebooks.forEach { notebook ->
+//            val otherNotebooks = notebooks - notebook
+//            val otherIds = otherNotebooks.flatMap { it.includes.map { it.id } }
+//            val pageIds = notebook.includes.map { it.id }
+//            pageIds.forEach { id ->
+//                require(id !in otherIds) {
+//                    "page with id: $id is included in multiple notebooks"
+//                }
+//            }
+//        }
         startWatcher()
     }
 
@@ -66,7 +66,7 @@ object KNote {
         val id = file.name.substringBeforeLast(".notebook.kts")
         val (notebook, reports) = host.evalScript<NotebookScript>(
             file,
-            args = *arrayOf(id),
+            args = *arrayOf(id, workingDir),
             libs = workingDir.resolve("libs")
         )
         reportMap[id] = reports

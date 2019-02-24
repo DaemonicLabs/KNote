@@ -2,6 +2,7 @@ package knote.plugin
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import knote.gradle.plugin.GradlePluginConstants
+import knote.poet.PageMarker
 import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -14,6 +15,7 @@ import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.task
 import org.gradle.plugins.ide.idea.model.IdeaModel
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
+import java.io.File
 
 open class KNotePlugin : Plugin<Project> {
     override fun apply(project: Project) {
@@ -38,7 +40,6 @@ open class KNotePlugin : Plugin<Project> {
             extendsFrom(shadowCoreConfiguration)
             isVisible = false
         }
-
 
         project.dependencies {
             add(
@@ -71,7 +72,6 @@ open class KNotePlugin : Plugin<Project> {
         }
 
         val libs = project.rootDir.resolve("libs")
-        val generatedSrc = project.rootDir.resolve("build").resolve(".knote")
 
         val copyLibs = project.task<AbstractTask>("copyLibs") {
             group = "build"
@@ -93,26 +93,40 @@ open class KNotePlugin : Plugin<Project> {
             }
 
             extensions.configure<KotlinJvmProjectExtension> {
-                sourceSets.maybeCreate("main").kotlin.apply {
-                    srcDir(notebookDir)
-                    srcDir(generatedSrc)
-                }
-            }
-
-            extensions.configure<IdeaModel> {
-                module {
-                    generatedSourceDirs.add(generatedSrc)
+                sourceSets.maybeCreate("main").apply {
+                    kotlin.srcDir(notebookDir)
                 }
             }
 
             // TODO: loop through registered notebooks (in extension)
 
-
-
             notebookDir
                 .listFiles { _, name -> name.endsWith(".notebook.kts") }
                 .forEach { scriptFile ->
                     val id = scriptFile.name.substringBeforeLast(".notebook.kts")
+
+                    val generatedSrc = project.rootDir.resolve("build").resolve(".knote").resolve(id).apply { mkdirs() }
+                    val pagesSrc = rootDir.resolve("${id}_pages").apply { mkdirs() }
+                    val pages = pagesSrc.listFiles { file -> file.isFile && file.name.endsWith(".page.kts") } ?: run {
+                        logger.error("no files found in $pagesSrc")
+                        arrayOf<File>()
+                    }
+                    PageMarker.generate(generatedSrc, pages, fileName = id.capitalize())
+
+                    extensions.configure<KotlinJvmProjectExtension> {
+                        sourceSets.maybeCreate("main").apply {
+                            kotlin.srcDir(pagesSrc)
+                            kotlin.srcDir(generatedSrc)
+//                            dependsOn(sourceSets.getByName("main"))
+                        }
+                    }
+
+                    extensions.configure<IdeaModel> {
+                        module {
+                            generatedSourceDirs.add(generatedSrc)
+                        }
+                    }
+
                     task<JavaExec>("run_$id") {
                         dependsOn(shadowCore)
                         dependsOn(copyLibs)

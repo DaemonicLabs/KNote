@@ -3,10 +3,12 @@ package knote.tornadofx
 import javafx.application.Application
 import knote.KNote
 import knote.poet.NotePage
+import knote.poet.PageMarker
 import knote.tornadofx.model.Page
 import knote.tornadofx.view.Workbench
 import tornadofx.*
 import java.io.BufferedReader
+import java.io.File
 
 class ViewerApp : App(Workspace:: class) {
 

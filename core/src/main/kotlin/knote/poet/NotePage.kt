@@ -1,31 +1,13 @@
 package knote.poet
 
-import com.squareup.kotlinpoet.FileSpec
-import com.squareup.kotlinpoet.PropertySpec
+import knote.script.NotebookScript
 import java.io.File
 
+/**
+ * This is just supposed to use for marking included pages
+ */
+@Deprecated("this was just supposed to be used by KotlinPoet to generate markers")
 data class NotePage(
-    val file: File,
-    val id: String
-) {
-    companion object {
-        fun generate(output: File, pages: Array<out File>, fileName: String = "Pages"): List<File> {
-            pages.map {
-
-            }
-            val filespec = FileSpec.builder(packageName = "", fileName = fileName).apply {
-                pages.forEach { pageFile ->
-                    val id = pageFile.name.substringBeforeLast(".page.kts")
-                    addProperty(
-                        PropertySpec.builder(id.capitalize(), NotePage::class)
-                            .initializer("%T(id = %S, file = %T(%S))", NotePage::class, id, File::class, pageFile.path)
-                            .build()
-                    )
-                }
-            }.build()
-            filespec.writeTo(output)
-
-            return listOf(output.resolve("$fileName.kt"))
-        }
-    }
-}
+    val id: String,
+    val file: File
+)

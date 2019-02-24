@@ -2,7 +2,7 @@ package knote
 
 import knote.annotations.FromPage
 import knote.host.evalScript
-import knote.poet.NotePage
+import knote.poet.PageMarker
 import knote.script.NotebookScript
 import knote.script.PageScript
 import knote.util.MapLike
@@ -26,7 +26,7 @@ class PageRegistry(
     val reportMap: MutableMap<String, List<ScriptDiagnostic>> = mutableMapOf()
 
     init {
-        notebook.includes.forEach(::evalPage)
+        notebook.pageFiles.forEach(::evalPage)
 
         // TODO: add file watcher for pages
         startWatcher()
@@ -40,25 +40,26 @@ class PageRegistry(
     }
 
 
-    fun evalPage(notePage: NotePage) {
-        require(notePage.file.exists()) {
-            "page: ${notePage.id} does not exist (${notePage.file})"
+    fun evalPage(file: File) {
+        val id = file.name.substringBeforeLast(".page.kts")
+        require(file.exists()) {
+            "page: $id does not exist ($file)"
         }
         val (page , reports) = host.evalScript<PageScript>(
-            notePage.file,
-            notePage.id,
+            file,
+            id,
             libs = File("libs")
         )
-        reportMap[notePage.id] = reports
+        reportMap[id] = reports
         if(page == null) {
             println("evaluation failed")
             return
         }
-        pages[notePage.id] = page
+        pages[id] = page
 
-        if(notePage.id in resultsMap)
-            resultsMap.remove(notePage.id)
-        execPage(notePage.id)
+        if(id in resultsMap)
+            resultsMap.remove(id)
+        execPage(id)
     }
 
     fun removePage(id: String) {

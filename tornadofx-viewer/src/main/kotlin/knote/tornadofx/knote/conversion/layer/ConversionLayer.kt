@@ -11,7 +11,7 @@ class ConversionLayer {
         val file = File("${page.pageName}.page.kts")
 
         file.printWriter().use { out -> out.println(page.script)}
-        val notePage = NotePage(file, file.name)
+        val notePage = NotePage(file = file, id = page.pageName)
         // add to notebook, then execute script to generate Pages and also add to the notebook
     }
 
