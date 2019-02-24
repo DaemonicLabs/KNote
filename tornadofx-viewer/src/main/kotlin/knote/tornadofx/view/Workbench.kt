@@ -58,7 +58,6 @@ class Workbench : View() {
                             hbox {
                                 pane { hboxConstraints { hGrow = Priority.ALWAYS } }
                                 button("Rerun") {
-<<<<<<< HEAD
                                     setOnAction {
                                         pages.forEach {page ->
                                             if (page.dirtyState) {
@@ -70,9 +69,6 @@ class Workbench : View() {
                                         page.results = scope.registry.execPage(page.pageName).toString()
                                         evaluationText = text(page.results)
                                     }
-=======
-                                    setOnAction { KNote.evalNotebook(page.file) }
->>>>>>> eb19cba63766636ff2ffff5ff4dcc17f0cb57a04
                                 }
                             }
                         }
