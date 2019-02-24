@@ -5,6 +5,9 @@ import knote.api.PageRegistry
 import knote.host.createJvmScriptingHost
 import knote.host.evalScript
 import knote.script.NotebookScript
+import knote.util.KObservableMap
+import knote.util.MutableKObservableList
+import knote.util.MutableKObservableMap
 import knote.util.watchActor
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
@@ -16,13 +19,12 @@ object KNote {
 
     val cacheDir = File(System.getProperty("user.dir")).resolve("build").resolve(".knote-cache").apply { mkdirs() }
 
-    val reportMap: MutableMap<String, List<ScriptDiagnostic>> = mutableMapOf()
 
     init {
         println("workingDir: $workingDir")
     }
 
-    val pageRegistries: MutableMap<String, PageRegistry> = mutableMapOf()
+    val pageRegistries: KObservableMap<String, PageRegistry> = MutableKObservableMap()
     val notebookRegistry: NotebookRegisty = NotebookRegistryImpl
 
     private val jobs: MutableList<Job> = mutableListOf()
