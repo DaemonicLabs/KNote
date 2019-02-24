@@ -3,7 +3,9 @@ package knote.poet
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.asClassName
 import java.io.File
 
 interface PageMarker {
@@ -25,7 +27,7 @@ interface PageMarker {
 //                        )
                         addType(
                             TypeSpec.objectBuilder(id.capitalize())
-                                .superclass(PageMarker::class)
+                                .addSuperinterfaces(listOf(PageMarker::class.asClassName()))
                                 .addProperty(
                                     PropertySpec.builder("id", String::class)
                                         .initializer("%S", id)
@@ -34,6 +36,7 @@ interface PageMarker {
                                 )
                                 .build()
                         )
+                        Unit
                     }
                 }.build()
                 addType(pages)

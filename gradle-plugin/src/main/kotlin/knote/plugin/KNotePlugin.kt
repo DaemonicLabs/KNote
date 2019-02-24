@@ -51,7 +51,23 @@ open class KNotePlugin : Plugin<Project> {
                 )
             )
             add(
+                configurationName = implementation.name,
+                dependencyNotation = create(
+                    group = "daemoniclabs.knote",
+                    name = "core",
+                    version = GradlePluginConstants.FULL_VERSION
+                )
+            )
+            add(
                 configurationName = shadowViewerConfiguration.name,
+                dependencyNotation = create(
+                    group = "daemoniclabs.knote",
+                    name = "tornadofx-viewer",
+                    version = GradlePluginConstants.FULL_VERSION
+                )
+            )
+            add(
+                configurationName = implementation.name,
                 dependencyNotation = create(
                     group = "daemoniclabs.knote",
                     name = "tornadofx-viewer",
