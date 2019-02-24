@@ -1,6 +1,7 @@
 package knote.plugin
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import knote.gradle.plugin.GradlePluginConstants
 import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -45,7 +46,7 @@ open class KNotePlugin : Plugin<Project> {
                 dependencyNotation = create(
                     group = "daemoniclabs.knote",
                     name = "core",
-                    version = "1.0.0-dev" // TODO: use generated constant
+                    version = GradlePluginConstants.FULL_VERSION
                 )
             )
             add(
@@ -53,7 +54,7 @@ open class KNotePlugin : Plugin<Project> {
                 dependencyNotation = create(
                     group = "daemoniclabs.knote",
                     name = "tornadofx-viewer",
-                    version = "1.0.0-dev" // TODO: use generated constant
+                    version = GradlePluginConstants.FULL_VERSION
                 )
             )
         }
