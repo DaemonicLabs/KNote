@@ -2,7 +2,6 @@ package knote
 
 import knote.annotations.FromPage
 import knote.host.evalScript
-import knote.poet.PageMarker
 import knote.script.NotebookScript
 import knote.script.PageScript
 import knote.util.MapLike
@@ -140,17 +139,17 @@ class PageRegistry(
                 for (watchEvent in channel) {
                     val path = watchEvent.context()
                     val file = path.toFile()
+                    if(!file.name.endsWith(".page.kts")) continue
                     val id = file.name.substringBeforeLast(".page.kts")
-                    val notePage = notebook.includes.find { it.id == id } ?: continue
                     when (watchEvent.kind().name()) {
                         "ENTRY_CREATE" -> {
                             println("${watchEvent.context()} was created")
-                            evalPage(notePage)
+                            evalPage(file)
                         }
                         "ENTRY_MODIFY" -> {
                             println("${watchEvent.context()} was modified")
                             removePage(id)
-                            evalPage(notePage)
+                            evalPage(file)
                         }
                         "ENTRY_DELETE" -> {
                             println("${watchEvent.context()} was deleted")

@@ -5,18 +5,18 @@ import javafx.scene.layout.Priority
 import javafx.scene.paint.Color
 import knote.KNote
 import knote.tornadofx.model.Page
-import knote.tornadofx.model.PageViewModel
+import knote.tornadofx.model.PageRegistryScope
 import tornadofx.*
 
 class Workbench : View() {
 
     var pages = arrayListOf<Page>().observable()
-    val pageModel: PageViewModel by inject()
     val tools = (1..10).toList()
+    override val scope = super.scope as PageRegistryScope
 
     init {
-        params.entries.forEach {
-            pages.add(params[it.key] as Page)
+        scope.pages.forEach {
+            pages.add(it)
         }
     }
 
@@ -26,26 +26,28 @@ class Workbench : View() {
                 borderpane {
                     center {
                         vbox {
+                            children.bind(pages) {
+                                vbox {
+                                    if (it == page) {
+                                        textarea(it.script)
+                                        vbox {
+                                            when (it.results) {
+                                                is String -> add(text(it.results))
+                                                else -> TODO()
+                                            }
+                                            minHeight = 280.0
+                                            style {
+                                                backgroundColor += Color.WHITE
+                                                padding = box(10.px)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                             hbox {
                                 pane { hboxConstraints { hGrow = Priority.ALWAYS } }
                                 button("Rerun") {
-                                    // setOnAction { KNote.sendToKNote }
-                                }
-                            }
-                            vbox {
-                                textarea(page.script)
-                                vbox {
-                                    when (page.results) {
-                                        is String -> add(text {
-                                            page.results
-                                            // textProperty().bind(pageModel.results)
-                                        })
-                                        else -> TODO()
-                                    }
-                                    minHeight = 280.0
-                                    style {
-                                        backgroundColor += Color.WHITE
-                                    }
+                                    setOnAction { KNote.evalNotebook(page.file) }
                                 }
                             }
                         }
