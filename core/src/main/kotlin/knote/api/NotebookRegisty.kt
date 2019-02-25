@@ -2,13 +2,14 @@ package knote.api
 
 import javafx.collections.ObservableMap
 import knote.script.NotebookScript
+import knote.util.KObservableMap
 import mu.KLogging
 import java.io.File
 import kotlin.script.experimental.api.ScriptDiagnostic
 
 interface NotebookRegisty {
-    val compiledNotebooks: ObservableMap<String, NotebookScript>
-    val reportMap: ObservableMap<String, List<ScriptDiagnostic>>
+    val compiledNotebooks: KObservableMap<String, NotebookScript>
+    val reportMap: KObservableMap<String, List<ScriptDiagnostic>>
     /**
      * list of notebook ids to get evaluated
      */

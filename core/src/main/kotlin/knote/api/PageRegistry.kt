@@ -3,17 +3,18 @@ package knote.api
 import javafx.collections.ObservableMap
 import javafx.collections.ObservableSet
 import knote.script.PageScript
+import knote.util.KObservableMap
 import kotlin.script.experimental.api.ScriptDiagnostic
 
 interface PageRegistry {
 
-    val compiledPages: ObservableMap<String, PageScript>
-    val results: ObservableMap<String, Any>
+    val compiledPages: KObservableMap<String, PageScript>
+    val results: KObservableMap<String, Any>
 
     val allResults: Map<String, Any>
 
-    val reportMap: ObservableMap<String, List<ScriptDiagnostic>>
-    val dependencies: ObservableMap<String, ObservableSet<String>>
+    val reportMap: KObservableMap<String, List<ScriptDiagnostic>>
+    val dependencies: KObservableMap<String, Set<String>>
 
     /**
      * Evaluate and Execute a page
@@ -26,5 +27,7 @@ interface PageRegistry {
      * Execute Page without recompiling the script
      */
     fun execPage(pageId: String): Any?
+
+    fun updateSourceCode(pageId: String, content: String)
 
 }

@@ -1,5 +1,6 @@
 package knote.script
 
+import mu.KLogging
 import kotlin.script.experimental.annotations.KotlinScript
 
 @KotlinScript(
@@ -8,6 +9,7 @@ import kotlin.script.experimental.annotations.KotlinScript
     compilationConfiguration = PageConfiguration::class
 )
 open class PageScript(val id: String) {
+    companion object : KLogging()
     override fun toString() = "PageScript(id=$id)"
 
     open fun process() : Any? {

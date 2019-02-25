@@ -1,10 +1,9 @@
 package knote
 
-import javafx.collections.FXCollections
-import javafx.collections.ObservableMap
 import knote.api.NotebookRegisty
 import knote.host.EvalScript
 import knote.script.NotebookScript
+import knote.util.MutableKObservableMap
 import knote.util.watchActor
 import kotlinx.coroutines.Job
 import mu.KLogging
@@ -20,8 +19,8 @@ object NotebookRegistryImpl : NotebookRegisty, KLogging() {
         logger.info("notebooksDir: $this")
     }
 
-    override val reportMap: ObservableMap<String, List<ScriptDiagnostic>> = FXCollections.observableHashMap()
-    override val compiledNotebooks: ObservableMap<String, NotebookScript> = FXCollections.observableHashMap()
+    override val reportMap: MutableKObservableMap<String, List<ScriptDiagnostic>> = MutableKObservableMap()
+    override val compiledNotebooks: MutableKObservableMap<String, NotebookScript> = MutableKObservableMap()
 
     override var notebookFilter: List<String>? = null
 
@@ -117,5 +116,6 @@ object NotebookRegistryImpl : NotebookRegisty, KLogging() {
                 }
             }
         }
+        logger.debug("started notebook watcher")
     }
 }
