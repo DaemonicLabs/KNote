@@ -11,6 +11,7 @@ import knote.script.PageScript
 import knote.util.watchActor
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
+import mu.KLogging
 import java.io.File
 import kotlin.reflect.full.declaredFunctions
 import kotlin.reflect.full.findAnnotation
@@ -22,6 +23,8 @@ internal class PageRegistryImpl(
     val notebook: NotebookScript,
     val host: BasicJvmScriptingHost
 ) : PageRegistry {
+    companion object : KLogging()
+
     override val compiledPages: ObservableMap<String, PageScript> = FXCollections.observableHashMap()
     override val results: ObservableMap<String, Any> = FXCollections.observableHashMap()
 
@@ -45,7 +48,7 @@ internal class PageRegistryImpl(
     }
 
     override fun evalPage(pageId: String): Pair<PageScript, Any?>? {
-        val file = notebook.fileForPage(pageId) ?: return null
+        val file = notebook.fileForPage(pageId, logger) ?: return null
         return evalPage(file, pageId)
     }
 
@@ -56,11 +59,12 @@ internal class PageRegistryImpl(
         val (page , reports) = host.evalScript<PageScript>(
             file,
             id,
+            logger = logger,
             libs = File("libs")
         )
         reportMap[id] = reports
         if(page == null) {
-            println("evaluation failed")
+            logger.error("evaluation failed")
             return null
         }
         compiledPages[id] = page
@@ -70,13 +74,27 @@ internal class PageRegistryImpl(
         return page to execPage(id)
     }
 
-    private fun invalidatePage(id: String) {
+    private fun invalidatePage(id: String): ObservableSet<String>? {
         compiledPages.remove(id)
-        results.remove(id)
-        dependencies.remove(id)
+
+        invalidateResult(id)
+        return dependencies[id]
 //        dependencies.forEach { dependency, dependents ->
 //            dependents -= id
 //        }
+    }
+
+    private fun invalidateResult(id: String) {
+        logger.debug("invalidating result for '$id'")
+        logger.debug("dependencies: $dependencies")
+        results.remove(id)
+
+        dependencies.forEach { depId, dependents ->
+            if(dependents.contains(id))
+                invalidateResult(depId)
+        }
+
+//        dependencies.remove(id)
     }
 
     override val allResults: Map<String, Any>
@@ -101,19 +119,19 @@ internal class PageRegistryImpl(
 
     override fun execPage(pageId: String): Any? {
         val page = compiledPages[pageId] ?: run {
-            println("page $pageId not evaluated yet")
+            logger.debug("page $pageId not evaluated yet")
             return null
         }
         val processFunction = page::class.declaredFunctions.find {
             it.name == "process"
         } ?: run {
-            println("no function `process` found")
+            logger.debug("no function `process` found")
             return null
         }
         val parameters = processFunction.valueParameters.map { parameter ->
-            println("parameter: $parameter")
-            println("parameter.name: ${parameter.name}")
-            println("parameter.annotations: ${parameter.annotations}")
+            logger.debug("parameter: $parameter")
+            logger.debug("parameter.name: ${parameter.name}")
+            logger.debug("parameter.annotations: ${parameter.annotations}")
             val pageResult = parameter.findAnnotation<FromPage>()
             require(pageResult != null) { "parameter: ${parameter.name} is not annotated with PageResult" }
             val sourceId = pageResult.source.takeIf { it.isNotBlank() } ?: parameter.name!!
@@ -121,12 +139,12 @@ internal class PageRegistryImpl(
             dependencies.getOrPut(pageId) { FXCollections.observableSet() } += sourceId
             getResultOrExec(sourceId) ?: return null
         }
-        println("arguments: $parameters")
+        logger.debug("arguments: $parameters")
         val result = processFunction.call(page, *parameters.toTypedArray())
 //        val result = page.process()
-        println("result of '$pageId': '$result'")
+        logger.debug("result of '$pageId': '$result'")
         if (result == null) {
-            println("process function returned null")
+            logger.error("process function returned null")
             return null
         }
         updateResult(pageId, result)
@@ -146,19 +164,25 @@ internal class PageRegistryImpl(
                     val id = file.name.substringBeforeLast(".page.kts")
                     when (watchEvent.kind().name()) {
                         "ENTRY_CREATE" -> {
-                            println("${watchEvent.context()} was created")
+                            logger.debug("${watchEvent.context()} was created")
                             evalPage(file)
                         }
                         "ENTRY_MODIFY" -> {
-                            println("${watchEvent.context()} was modified")
+                            logger.debug("${watchEvent.context()} was modified")
                             invalidatePage(id)
+                            logger.debug("results: $results")
                             evalPage(file)
+                            notebook.pageFiles.forEach {
+                                val id = it.name.substringBeforeLast(".page.kts")
+                                val result = getResultOrExec(id)
+                                logger.info("[$id] => $result")
+                            }
                         }
                         "ENTRY_DELETE" -> {
-                            println("${watchEvent.context()} was deleted")
+                            logger.debug("${watchEvent.context()} was deleted")
                             invalidatePage(id)
                         }
-                        "OVERFLOW" -> println("${watchEvent.context()} overflow")
+                        "OVERFLOW" -> logger.debug("${watchEvent.context()} overflow")
                     }
                 }
             }

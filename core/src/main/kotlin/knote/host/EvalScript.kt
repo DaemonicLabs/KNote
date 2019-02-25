@@ -1,5 +1,6 @@
 package knote.host
 
+import mu.KLogger
 import java.io.File
 import kotlin.script.experimental.api.EvaluationResult
 import kotlin.script.experimental.api.ResultValue
@@ -33,6 +34,7 @@ fun createJvmScriptingHost(cacheDir: File): BasicJvmScriptingHost {
 inline fun <reified T: Any> BasicJvmScriptingHost.evalScript(
     scriptFile: File,
     vararg args: Any?,
+    logger: KLogger,
     libs: File? = null,
     importScripts: List<SourceCode> = listOf(),
     compilationConfig: ScriptCompilationConfiguration = createJvmCompilationConfigurationFromTemplate<T> {
@@ -46,7 +48,7 @@ inline fun <reified T: Any> BasicJvmScriptingHost.evalScript(
             libs?.absoluteFile?.takeIf { it.exists() }?.apply {
                 listFiles { file -> file.name.endsWith(".jar")}
                     .forEach {
-                        println("adding dependency: $it")
+                        logger.debug("adding dependency: $it")
                         dependencies.append(JvmDependency(it))
                     }
             }
@@ -56,32 +58,32 @@ inline fun <reified T: Any> BasicJvmScriptingHost.evalScript(
         }
     }
 ): Pair<T?, List<ScriptDiagnostic>> {
-    println("compilationConfig entries")
+    logger.debug("compilationConfig entries")
     compilationConfig.entries().forEach {
-        println("    $it")
+        logger.debug("    $it")
     }
 
     val evaluationConfig = ScriptEvaluationConfiguration {
-        args.forEach { println("constructorArg: $it  ${it!!::class}") }
+        args.forEach { logger.debug("constructorArg: $it  ${it!!::class}") }
         constructorArgs.append(*args)
     }
 
-    println("evaluationConfig entries")
+    logger.debug("evaluationConfig entries")
     evaluationConfig.entries().forEach {
-        println("    $it")
+        logger.debug("    $it")
     }
 
     val scriptSource = scriptFile.toScriptSource()
 
-    println("compiling script, please be patient")
+    logger.debug("compiling script, please be patient")
     val result = eval(scriptSource, compilationConfig, evaluationConfig)
 
-    return result.get<T?>()
+    return result.get<T?>(scriptFile, logger)
 }
 
 fun SourceCode.Location.posToString() = "(${start.line}, ${start.col})"
 
-inline fun <reified T> ResultWithDiagnostics<EvaluationResult>.get(): Pair<T?, List<ScriptDiagnostic>> {
+inline fun <reified T> ResultWithDiagnostics<EvaluationResult>.get(scriptFile: File, logger: KLogger): Pair<T?, List<ScriptDiagnostic>> {
 
 //    for (report in reports) {
 //        val severityIndicator = when (report.severity) {
@@ -107,29 +109,30 @@ inline fun <reified T> ResultWithDiagnostics<EvaluationResult>.get(): Pair<T?, L
 //    }
 //    println(this)
     val evalResult = resultOrNull() ?: run {
-        System.err.println("evaluation result failed for notebook")
+        logger.error("evaluation result failed for notebook $scriptFile")
         return null to reports
     }
 
     val resultValue = evalResult.returnValue
-    println("resultValue = '$resultValue'")
-    println("resultValue::class = '${resultValue::class}'")
+    logger.trace("resultValue = '$resultValue'")
+    logger.trace("resultValue::class = '${resultValue::class}'")
 
     return when (resultValue) {
         is ResultValue.Value -> {
-            println("resultValue.name = '${resultValue.name}'")
-            println("resultValue.value = '${resultValue.value}'")
-            println("resultValue.type = '${resultValue.type}'")
+            logger.trace("resultValue.name = '${resultValue.name}'")
+            logger.trace("resultValue.value = '${resultValue.value}'")
+            logger.trace("resultValue.type = '${resultValue.type}'")
 
-            println("resultValue.value::class = '${resultValue.value!!::class}'")
-            println("resultValue.value::class.supertypes = '${resultValue.value!!::class.supertypes}'")
+            logger.trace("resultValue.value::class = '${resultValue.value!!::class}'")
+            logger.trace("resultValue.value::class.supertypes = '${resultValue.value!!::class.supertypes}'")
 
             val env = resultValue.value as T
-            println(env)
+            logger.debug { env }
             env to reports
         }
         is ResultValue.Unit -> {
             System.err.println("evaluation failed")
+            logger.error("evaluation failed")
             null to reports
         }
     }

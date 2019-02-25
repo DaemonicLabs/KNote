@@ -9,16 +9,17 @@ import knote.script.NotebookScript
 import knote.util.watchActor
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
+import mu.KLogging
 import java.io.File
 import kotlin.script.experimental.api.ScriptDiagnostic
 
-object NotebookRegistryImpl : NotebookRegisty {
+object NotebookRegistryImpl : NotebookRegisty, KLogging() {
     private val host = createJvmScriptingHost(KNote.cacheDir)
     private val workingDir = File(System.getProperty("user.dir")).absoluteFile!!
 
     private val notebooksDir = File(System.getProperty("user.dir")).absoluteFile.resolve("notebooks").apply {
         mkdirs()
-        println("notebooksDir: $this")
+        logger.info("notebooksDir: $this")
     }
 
 
@@ -33,7 +34,7 @@ object NotebookRegistryImpl : NotebookRegisty {
         }
 
     override fun evalNotebooks() {
-        println("listNotebookFiles: $listNotebookFiles")
+        logger.info("listNotebookFiles: $listNotebookFiles")
 
         listNotebookFiles
             .map { it.name.substringBeforeLast(".notebook.kts") }
@@ -52,7 +53,7 @@ object NotebookRegistryImpl : NotebookRegisty {
      */
     override fun evalNotebook(notebookId: String): NotebookScript? {
         if(notebookFilter?.let { notebookId !in it } == true) {
-            println("$notebookId rejected by notebookFilter: $notebookFilter")
+            logger.error("$notebookId rejected by notebookFilter: $notebookFilter")
             return null
         }
         val file = notebooksDir.resolve("$notebookId.notebook.kts")
@@ -60,6 +61,7 @@ object NotebookRegistryImpl : NotebookRegisty {
         val (notebook, reports) = host.evalScript<NotebookScript>(
             file,
             args = *arrayOf(id, workingDir),
+            logger = logger,
             libs = workingDir.resolve("libs")
         )
         reportMap[id] = reports
@@ -85,7 +87,7 @@ object NotebookRegistryImpl : NotebookRegisty {
 
     private var watchJob: Job? = null
     private fun startWatcher() {
-        println("starting notebook watcher")
+        logger.debug("starting notebook watcher")
         runBlocking {
             watchJob?.cancel()
             watchJob = watchActor(notebooksDir.toPath()) {
@@ -102,25 +104,23 @@ object NotebookRegistryImpl : NotebookRegisty {
                     }
                     when (watchEvent.kind().name()) {
                         "ENTRY_CREATE" -> {
-                            println("$path was created")
+                            logger.debug("$path was created")
                             evalNotebook(id)
                         }
                         "ENTRY_MODIFY" -> {
-                            println("$path was modified")
+                            logger.debug("$path was modified")
                             // TODO: delete all pages and readd
                             invalidateNotebook(id)
                             evalNotebook(id)
                         }
                         "ENTRY_DELETE" -> {
-                            println("$path was deleted")
+                            logger.debug("$path was deleted")
                             invalidateNotebook(id)
                         }
-                        "OVERFLOW" -> println("${watchEvent.context()} overflow")
+                        "OVERFLOW" -> logger.debug("${watchEvent.context()} overflow")
                     }
                 }
             }
-
         }
-        println("started watcher")
     }
 }

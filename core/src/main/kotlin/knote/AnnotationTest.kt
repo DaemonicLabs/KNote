@@ -1,5 +1,6 @@
 package knote
 
+import mu.KLogging
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.functions
 
@@ -12,18 +13,18 @@ class AnnotationTest() {
 
     }
 
-    companion object {
+    companion object: KLogging() {
         @JvmStatic
         fun main(args: Array<String>) {
             val processFun = AnnotationTest::class.functions.find { it.name == "process" }!!
-            println("process: $processFun")
-            println("process.parameters: ${processFun.parameters}")
+            logger.info("process: $processFun")
+            logger.info("process.parameters: ${processFun.parameters}")
             processFun.parameters.forEach { parameter ->
-                println("parameter: $parameter")
-                println("parameter.index: ${parameter.index}")
-                println("parameter.name: ${parameter.name}")
-                println("parameter.type: ${parameter.type}")
-                println("parameter.annotations: ${parameter.annotations}")
+                logger.info("parameter: $parameter")
+                logger.info("parameter.index: ${parameter.index}")
+                logger.info("parameter.name: ${parameter.name}")
+                logger.info("parameter.type: ${parameter.type}")
+                logger.info("parameter.annotations: ${parameter.annotations}")
                 val annotation = parameter.findAnnotation<TestAnnotation>()
             }
         }

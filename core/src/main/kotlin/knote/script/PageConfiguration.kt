@@ -2,6 +2,7 @@ package knote.script
 
 import knote.annotations.FromPage
 import knote.annotations.Import
+import mu.KLogging
 import org.jetbrains.kotlin.script.InvalidScriptResolverAnnotation
 import kotlin.script.experimental.api.ResultWithDiagnostics
 import kotlin.script.experimental.api.ScriptCollectedData
@@ -43,7 +44,7 @@ class PageConfiguration : ScriptCompilationConfiguration({
         }
 
         onAnnotations(Import::class) { context ->
-            println("on annotations")
+            logger.debug("on annotations")
             val scriptFile = (context.script as FileScriptSource).file
             val rootDir = scriptFile.parentFile.parentFile
 
@@ -78,6 +79,8 @@ class PageConfiguration : ScriptCompilationConfiguration({
             }.asSuccess(reports)
         }
     }
-})
+}) {
+    companion object: KLogging()
+}
 
 

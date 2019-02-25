@@ -2,6 +2,7 @@ package knote.script
 
 import knote.poet.NotePage
 import knote.poet.PageMarker
+import mu.KLogger
 import java.io.File
 import kotlin.script.experimental.annotations.KotlinScript
 
@@ -20,11 +21,13 @@ open class NotebookScript(val id: String, val rootDir: File) {
     val pageFiles: Array<out File>
         get() = pageRoot.listFiles { file -> file.isFile && file.name.endsWith(".page.kts")}
 
-    fun fileForPage(pageId: String): File? {
+    fun fileForPage(pageId: String, logger: KLogger): File? {
         val file = pageRoot.resolve("$pageId.page.kts")
-        if(file in pageFiles) return file
-        println("file $file does not belong to notebook $id")
-        return null
+        if(file !in pageFiles) {
+            logger.error("file $file does not belong to notebook $id")
+            return null
+        }
+        return file
     }
 
     @Deprecated("use includedPageFiles")

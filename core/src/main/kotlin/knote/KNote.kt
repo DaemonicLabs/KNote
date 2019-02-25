@@ -5,16 +5,17 @@ import javafx.collections.ObservableMap
 import knote.api.NotebookRegisty
 import knote.api.PageRegistry
 import kotlinx.coroutines.Job
+import mu.KLogging
 import java.io.File
 
-object KNote {
+object KNote: KLogging() {
     private val workingDir = File(System.getProperty("user.dir")).absoluteFile!!
 
     val cacheDir = File(System.getProperty("user.dir")).resolve("build").resolve(".knote-cache").apply { mkdirs() }
 
 
     init {
-        println("workingDir: $workingDir")
+        logger.info("workingDir: $workingDir")
     }
 
     val pageRegistries: ObservableMap<String, PageRegistry> = FXCollections.observableHashMap()
@@ -26,7 +27,7 @@ object KNote {
     }
 
     fun shutdown() {
-        println("doing shutdown")
+        logger.info("doing shutdown")
         jobs.forEach { it.cancel() }
     }
 }

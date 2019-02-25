@@ -9,6 +9,16 @@ object Constants {
         const val version = "1.3.21"
     }
 
+    object KotlinLogging {
+        const val version = "1.6.24"
+        const val dependency = "io.github.microutils:kotlin-logging:$version"
+    }
+
+    object LogbackClassic {
+        const val version = "1.3.0-alpha4"
+        const val dependency = "ch.qos.logback:logback-classic:$version"
+    }
+
     object KotlinPoet {
         const val version = "1.0.1"
         const val dependency = "com.squareup:kotlinpoet:$version"

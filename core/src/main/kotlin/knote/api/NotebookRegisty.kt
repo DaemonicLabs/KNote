@@ -2,6 +2,7 @@ package knote.api
 
 import javafx.collections.ObservableMap
 import knote.script.NotebookScript
+import mu.KLogging
 import java.io.File
 import kotlin.script.experimental.api.ScriptDiagnostic
 

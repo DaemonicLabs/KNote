@@ -7,10 +7,12 @@ import knote.poet.NotePage
 import knote.tornadofx.model.Page
 import knote.tornadofx.model.PageRegistryScope
 import knote.tornadofx.view.Workbench
+import mu.KLogging
 import tornadofx.*
 import java.io.BufferedReader
 
 class ViewerApp : App(Workspace:: class) {
+    val logger = KLogging().logger
 
     lateinit var pageRegistry: PageRegistry
     private val pages: ArrayList<Page> = arrayListOf()
@@ -23,7 +25,7 @@ class ViewerApp : App(Workspace:: class) {
         notebooks.forEach { notebook ->
             pageRegistry = KNote.pageRegistries.getValue(notebook.id)
             pageRegistry.allResults.forEach { pageId, result ->
-                println("[$pageId]: KClass: ${result::class} value: '$result'")
+                logger.info("[$pageId]: KClass: ${result::class} value: '$result'")
             }
             notebook.includes.forEach{ notePage ->
                 val result = pageRegistry.getResultOrExec(notePage.id)
@@ -45,7 +47,7 @@ class ViewerApp : App(Workspace:: class) {
     companion object {
         @JvmStatic
         fun main(vararg args: String) {
-//            KNote.notebookRegistry.notebookFilter = args.toList()
+            KNote.notebookRegistry.notebookFilter = args.toList()
             Application.launch(ViewerApp::class.java, *args)
         }
     }

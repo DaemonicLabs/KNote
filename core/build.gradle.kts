@@ -17,4 +17,8 @@ dependencies {
     implementation(kotlin("reflect", Constants.Kotlin.version))
 
     implementation(Constants.KotlinPoet.dependency)
+    api(Constants.KotlinLogging.dependency)
+    implementation(Constants.LogbackClassic.dependency) {
+        exclude(group = "com.com.mail", module = "javax.mail")
+    }
 }

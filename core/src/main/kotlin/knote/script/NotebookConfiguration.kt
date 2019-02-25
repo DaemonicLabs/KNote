@@ -2,6 +2,7 @@ package knote.script
 
 import knote.annotations.Import
 import knote.poet.PageMarker
+import mu.KLogging
 import org.jetbrains.kotlin.script.InvalidScriptResolverAnnotation
 import java.io.File
 import kotlin.script.experimental.api.ResultWithDiagnostics
@@ -47,7 +48,7 @@ class NotebookConfiguration : ScriptCompilationConfiguration({
         }
 
         onAnnotations(Import::class) { context ->
-            println("on annotations")
+            logger.debug("on annotations")
             val scriptFile = (context.script as FileScriptSource).file
             val rootDir = scriptFile.parentFile.parentFile
             val id = scriptFile.name.substringBeforeLast(".notebook.kts")
@@ -102,6 +103,8 @@ class NotebookConfiguration : ScriptCompilationConfiguration({
             }.asSuccess(reports)
         }
     }
-})
+}){
+    companion object: KLogging()
+}
 
 
