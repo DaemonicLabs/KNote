@@ -2,25 +2,28 @@
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>
-                %-40(%d{HH:mm:ss.SSS} [%thread]) %-30(.\(%F:%L\))  %-5level - %msg%n
+                %-40(%d{HH:mm:ss.SSS} [%thread]) %-30(.\(%F:%L\)) %-5level - %msg%n
             </pattern>
         </encoder>
     </appender>
+    <timestamp key="date" datePattern="yyyy-MM-dd"/>
     <!-- Daily rollover appender that also appends timestamp and rolls over on startup -->
     <appender name="FILE_APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/latest.log</file>
         <encoder>
             <pattern>
-                %-40(%d{HH:mm:ss.SSS} [%thread]) %-30(.\(%F:%L\)) %-5level - %msg %n
+                %-40(%d{HH:mm:ss.SSS} [%thread]) %n%-40(%logger{36}:%L) %-5level - %msg %n%n
             </pattern>
         </encoder>
-        <file>logs/latest.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-            <fileNamePattern>logs/%d{yyyy-MM-dd}-%i.log</fileNamePattern>
+            <fileNamePattern>logs/${date}-%i.log</fileNamePattern>
             <minIndex>1</minIndex>
-            <maxIndex>4</maxIndex>
+            <maxIndex>5</maxIndex>
             <!--<cleanHistoryOnStart>true</cleanHistoryOnStart>-->
         </rollingPolicy>
-        <triggeringPolicy class="knote.logging.RollOncePerSessionTriggeringPolicy"/>
+        <triggeringPolicy class="knote.logging.RollOncePerSessionTriggeringPolicy">
+            <maxFileSize>5MB</maxFileSize>
+        </triggeringPolicy>
     </appender>
     <!--<appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>logs/knote.log</file>

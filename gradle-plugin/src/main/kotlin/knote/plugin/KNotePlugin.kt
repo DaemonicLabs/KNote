@@ -9,6 +9,7 @@ import org.gradle.api.Project
 import org.gradle.api.internal.AbstractTask
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.tasks.JavaExec
+import org.gradle.internal.impldep.aQute.lib.env.Env
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.dependencies
@@ -70,6 +71,17 @@ open class KNotePlugin : Plugin<Project> {
 //                    version = GradlePluginConstants.FULL_VERSION
 //                )
 //            )
+            if(knote.util.Platform.isWindows) {
+                // Windows required jansi for logging
+                add(
+                    configurationName = shadowCoreConfiguration.name,
+                    dependencyNotation = create(
+                        group = "org.fusesource.jansi",
+                        name = "jansi",
+                        version = "1.9"
+                    )
+                )
+            }
         }
 
         val shadowCore = project.tasks.create<ShadowJar>("shadowCore") {
