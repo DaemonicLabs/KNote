@@ -1,9 +1,9 @@
 package knote
 
-import javafx.collections.FXCollections
-import javafx.collections.ObservableMap
 import knote.api.NotebookRegisty
 import knote.api.PageRegistry
+import knote.util.KObservableMap
+import knote.util.MutableKObservableMap
 import kotlinx.coroutines.Job
 import mu.KLogging
 import java.io.File
@@ -18,7 +18,7 @@ object KNote: KLogging() {
         logger.info("workingDir: $workingDir")
     }
 
-    val pageRegistries: ObservableMap<String, PageRegistry> = FXCollections.observableHashMap()
+    val pageRegistries: KObservableMap<String, PageRegistry> = MutableKObservableMap()
     val notebookRegistry: NotebookRegisty = NotebookRegistryImpl
 
     private val jobs: MutableList<Job> = mutableListOf()

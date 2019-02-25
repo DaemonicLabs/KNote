@@ -67,7 +67,7 @@ object NotebookRegistryImpl : NotebookRegisty, KLogging() {
         }
 
         compiledNotebooks[id] = notebook
-        KNote.pageRegistries[id] = PageRegistryImpl(notebook, host)
+        (KNote.pageRegistries as MutableKObservableMap)[id]= PageRegistryImpl(notebook, host)
         return notebook
     }
 
@@ -76,7 +76,7 @@ object NotebookRegistryImpl : NotebookRegisty, KLogging() {
         reportMap -= id
         val oldRegistry = KNote.pageRegistries[id]!! as PageRegistryImpl
         oldRegistry.stopWatcher()
-        KNote.pageRegistries.remove(id)
+        (KNote.pageRegistries as MutableKObservableMap).remove(id)
     }
 
     override fun findNotebook(notebookId: String) = notebooks.find { it.id == notebookId }

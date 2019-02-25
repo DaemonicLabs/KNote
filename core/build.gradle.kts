@@ -21,4 +21,6 @@ dependencies {
     implementation(Constants.LogbackClassic.dependency) {
         exclude(group = "com.com.mail", module = "javax.mail")
     }
+    
+    api(Constants.Coroutines.dependency)
 }

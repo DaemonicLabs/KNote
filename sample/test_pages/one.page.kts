@@ -1,6 +1,8 @@
+//@file:Import("IncludeText.kt")
 import knote.annotations.FromPage
 
-println("constructing one.page.kts")
-fun process(@FromPage two: String): String {
-    return "one + $two"
+logger.info("evaluating $id")
+fun process(@FromPage two: String,@FromPage three: String): String {
+    logger.info("executing $id")
+    return "one + $two + $three"
 }

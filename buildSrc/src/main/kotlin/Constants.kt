@@ -9,6 +9,11 @@ object Constants {
         const val version = "1.3.21"
     }
 
+    object Coroutines {
+        const val version = "1.1.1"
+        const val dependency = "org.jetbrains.kotlinx:kotlinx-coroutines-core:$version"
+    }
+
     object KotlinLogging {
         const val version = "1.6.24"
         const val dependency = "io.github.microutils:kotlin-logging:$version"

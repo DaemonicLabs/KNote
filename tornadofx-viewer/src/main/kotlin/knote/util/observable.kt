@@ -1,11 +1,13 @@
 package knote.util
 
+import javafx.beans.property.ReadOnlyListProperty
 import javafx.beans.property.ReadOnlyListWrapper
+import javafx.beans.property.ReadOnlyMapProperty
 import javafx.beans.property.ReadOnlyMapWrapper
 import javafx.collections.FXCollections
 import tornadofx.*
 
-inline val <reified E> KObservableList<E>.asObservable: ReadOnlyListWrapper<E>
+inline val <reified E> KObservableList<E>.asObservable: ReadOnlyListProperty<E>
     get() {
         val mutableList = FXCollections.observableArrayList<E>()
         val observableList = ReadOnlyListWrapper<E>(mutableList)
@@ -14,17 +16,20 @@ inline val <reified E> KObservableList<E>.asObservable: ReadOnlyListWrapper<E>
                 observableList.setAll(new)
             }
         }
-        return observableList
+        return observableList.readOnlyProperty
     }
-inline val <reified K, reified V> KObservableMap<K, V>.asObservable: ReadOnlyMapWrapper<K, V>
+inline val <reified K, reified V> KObservableMap<K, V>.asObservable: ReadOnlyMapProperty<K, V>
     get() {
         val mutableMap = FXCollections.observableHashMap<K, V>()
         val observableMap =  ReadOnlyMapWrapper<K, V>(mutableMap)
         callbacks += { new ->
             runLater {
-                mutableMap.clear()
-                mutableMap.putAll(new)
+                val removed = mutableMap.entries - new.entries
+                val added: Map<K, V> = (new.toMutableMap() - mutableMap) as Map<K, V>
+
+                mutableMap.entries.removeAll(removed)
+                mutableMap.putAll(added)
             }
         }
-        return observableMap
+        return observableMap.readOnlyProperty
     }

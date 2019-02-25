@@ -161,9 +161,6 @@ open class KNotePlugin : Plugin<Project> {
                         workingDir = rootDir
                         main = "knote.Main"
                         classpath(shadowCore.archiveFile)
-                        environment("LOG_FOLDER", "logs")
-                        environment("LOG_FILENAME", "knote")
-                        environment("ROOT_FOLDER", rootDir.absoluteFile.parentFile.absolutePath)
                         doFirst {
                             logger.lifecycle("executing")
                             logger.lifecycle("java -jar ${jarFile} ${(args as List<String>).joinToString(" ")}")
@@ -179,8 +176,7 @@ open class KNotePlugin : Plugin<Project> {
                         main = "knote.tornadofx.ViewerApp"
                         workingDir = rootDir
                         classpath(shadowViewer.archiveFile)
-                        environment("LOG_FOLDER", "logs")
-                        environment("LOG_FILENAME", "knote")
+                        systemProperty("notebook", id)
                         doFirst {
                             logger.lifecycle("executing")
                             logger.lifecycle("java -jar ${jarFile} ${(args as List<String>).joinToString(" ")}")
