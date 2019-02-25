@@ -2,17 +2,17 @@ package knote.plugin
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import knote.gradle.plugin.GradlePluginConstants
-import knote.poet.PageMarker
 import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.internal.AbstractTask
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.tasks.JavaExec
-import org.gradle.internal.impldep.aQute.lib.env.Env
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.dependencies
+import org.gradle.kotlin.dsl.maven
+import org.gradle.kotlin.dsl.repositories
 import org.gradle.kotlin.dsl.task
 import org.gradle.plugins.ide.idea.model.IdeaModel
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
@@ -38,6 +38,11 @@ open class KNotePlugin : Plugin<Project> {
         }
         implementation.extendsFrom(shadowCoreConfiguration)
 
+        project.repositories {
+            maven(url = "http://maven.modmuss50.me") {
+                name = "modmuss50"
+            }
+        }
         project.dependencies {
             add(
                 configurationName = shadowCoreConfiguration.name,
@@ -136,7 +141,7 @@ open class KNotePlugin : Plugin<Project> {
                         logger.error("no files found in $pagesSrc")
                         arrayOf<File>()
                     }
-                    PageMarker.generate(generatedSrc, pages, fileName = id.capitalize())
+//                    PageMarker.generate(generatedSrc, pages, fileName = id.capitalize())
 
                     extensions.configure<KotlinJvmProjectExtension> {
                         sourceSets.maybeCreate("main").apply {

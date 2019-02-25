@@ -9,7 +9,6 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":core"))
     implementation(kotlin("stdlib", Constants.Kotlin.version))
     implementation(kotlin("gradle-plugin", Constants.Kotlin.version))
     api(Constants.ShadowJar.dependency)
@@ -53,9 +52,9 @@ pluginBundle {
         // first plugin
         "knotePlugin" {
             // id is captured from java-gradle-plugin configuration
-            displayName = "Kotlin Notebook"
-            description = "USe Kotlin Scripting and TornadoFX to process and visualize data"
-            tags = listOf("datascience", "notebook", "visualization")
+            displayName = "KNote"
+            description = "Use Kotlin Scripting and TornadoFX to process and visualize data"
+            tags = listOf("datascience", "notebook", "visualization", "kotlin")
         }
 
 //        // another plugin

@@ -1,5 +1,5 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import moe.nikky.counter.CounterExtension
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import plugin.ConstantsExtension
 import plugin.GenerateConstantsTask
 
@@ -132,7 +132,7 @@ subprojects {
                     it.capitalize()
                 } + "Constants"
         ) {
-//            field("JENKINS_URL") value Jenkins.url
+            //            field("JENKINS_URL") value Jenkins.url
 //            field("JENKINS_JOB") value Jenkins.job
 //            field("JENKINS_BUILD_NUMBER") value (System.getenv("BUILD_NUMBER")?.toIntOrNull() ?: -1)
             field("GRADLE_VERSION") value Constants.Gradle.version
@@ -153,8 +153,8 @@ subprojects {
     }
 
     runnableProjects[project]?.let { mainClass ->
-//        apply<ApplicationPlugin>()
-        apply{
+        //        apply<ApplicationPlugin>()
+        apply {
             plugin("application")
 //            plugin("com.github.johnrengelman.shadow")
         }
@@ -162,7 +162,6 @@ subprojects {
         configure<JavaApplication> {
             mainClassName = mainClass
         }
-
 
 //        val runDir = rootProject.file("run")
 //
