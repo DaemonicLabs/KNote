@@ -59,7 +59,6 @@ internal class PageRegistryImpl(
         val (page , reports) = host.evalScript<PageScript>(
             file,
             id,
-            logger = logger,
             libs = File("libs")
         )
         reportMap[id] = reports

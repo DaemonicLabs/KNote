@@ -5,9 +5,6 @@ import mu.KLogging
 object Main : KLogging() {
     @JvmStatic
     fun main(vararg args: String) {
-        // TODO: start tornadofx application
-        // TODO: file change listener
-
         KNote.notebookRegistry.notebookFilter = args.toList()
         KNote.notebookRegistry.evalNotebooks()
 

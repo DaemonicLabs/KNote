@@ -20,7 +20,7 @@ val wrapper = tasks.getByName<Wrapper>("wrapper") {
 }
 
 val runnableProjects = mapOf(
-    project("core") to "knote.MainKt",
+    project("core") to "knote.Main",
     project("tornadofx-viewer") to "knote.tornadofx.ViewApp"
 )
 allprojects {

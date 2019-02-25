@@ -1,6 +1,6 @@
 package knote.host
 
-import mu.KLogger
+import mu.KLogging
 import java.io.File
 import kotlin.script.experimental.api.EvaluationResult
 import kotlin.script.experimental.api.ResultValue
@@ -23,6 +23,8 @@ import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
 import kotlin.script.experimental.jvmhost.JvmScriptCompiler
 import kotlin.script.experimental.jvmhost.createJvmCompilationConfigurationFromTemplate
 
+object EvalScript : KLogging()
+
 fun createJvmScriptingHost(cacheDir: File): BasicJvmScriptingHost {
     val cache = FileBasedScriptCache(cacheDir)
     val compiler = JvmScriptCompiler(defaultJvmScriptingHostConfiguration, cache = cache)
@@ -34,7 +36,6 @@ fun createJvmScriptingHost(cacheDir: File): BasicJvmScriptingHost {
 inline fun <reified T: Any> BasicJvmScriptingHost.evalScript(
     scriptFile: File,
     vararg args: Any?,
-    logger: KLogger,
     libs: File? = null,
     importScripts: List<SourceCode> = listOf(),
     compilationConfig: ScriptCompilationConfiguration = createJvmCompilationConfigurationFromTemplate<T> {
@@ -48,7 +49,7 @@ inline fun <reified T: Any> BasicJvmScriptingHost.evalScript(
             libs?.absoluteFile?.takeIf { it.exists() }?.apply {
                 listFiles { file -> file.name.endsWith(".jar")}
                     .forEach {
-                        logger.debug("adding dependency: $it")
+                        EvalScript.logger.debug("adding dependency: $it")
                         dependencies.append(JvmDependency(it))
                     }
             }
@@ -58,81 +59,55 @@ inline fun <reified T: Any> BasicJvmScriptingHost.evalScript(
         }
     }
 ): Pair<T?, List<ScriptDiagnostic>> {
-    logger.debug("compilationConfig entries")
+    EvalScript.logger.debug("compilationConfig entries")
     compilationConfig.entries().forEach {
-        logger.debug("    $it")
+        EvalScript.logger.debug("    $it")
     }
 
     val evaluationConfig = ScriptEvaluationConfiguration {
-        args.forEach { logger.debug("constructorArg: $it  ${it!!::class}") }
+        args.forEach { EvalScript.logger.debug("constructorArg: $it  ${it!!::class}") }
         constructorArgs.append(*args)
     }
 
-    logger.debug("evaluationConfig entries")
+    EvalScript.logger.debug("evaluationConfig entries")
     evaluationConfig.entries().forEach {
-        logger.debug("    $it")
+        EvalScript.logger.debug("    $it")
     }
 
     val scriptSource = scriptFile.toScriptSource()
 
-    logger.debug("compiling script, please be patient")
+    EvalScript.logger.debug("compiling script, please be patient")
     val result = eval(scriptSource, compilationConfig, evaluationConfig)
 
-    return result.get<T?>(scriptFile, logger)
+    return result.get<T?>(scriptFile)
 }
 
-fun SourceCode.Location.posToString() = "(${start.line}, ${start.col})"
-
-inline fun <reified T> ResultWithDiagnostics<EvaluationResult>.get(scriptFile: File, logger: KLogger): Pair<T?, List<ScriptDiagnostic>> {
-
-//    for (report in reports) {
-//        val severityIndicator = when (report.severity) {
-//            ScriptDiagnostic.Severity.FATAL -> "fatal"
-//            ScriptDiagnostic.Severity.ERROR -> "e"
-//            ScriptDiagnostic.Severity.WARNING -> "w"
-//            ScriptDiagnostic.Severity.INFO -> "i"
-//            ScriptDiagnostic.Severity.DEBUG -> "d"
-//        }
-//        println("$severityIndicator: ${report.sourcePath}: ${report.location?.posToString()}: ${report.message}")
-//        report.exception?.apply {
-//            println("exception: $message")
-//            printStackTrace()
-//            this.cause?.apply {
-//                println("cause: $message")
-//                printStackTrace()
-//            }
-//            this.suppressed.forEach {
-//                println("suppressed exception: ${it.message}")
-//                it.printStackTrace()
-//            }
-//        }
-//    }
-//    println(this)
+inline fun <reified T> ResultWithDiagnostics<EvaluationResult>.get(scriptFile: File): Pair<T?, List<ScriptDiagnostic>> {
     val evalResult = resultOrNull() ?: run {
-        logger.error("evaluation result failed for notebook $scriptFile")
+        EvalScript.logger.error("evaluation result failed for notebook $scriptFile")
         return null to reports
     }
 
     val resultValue = evalResult.returnValue
-    logger.trace("resultValue = '$resultValue'")
-    logger.trace("resultValue::class = '${resultValue::class}'")
+    EvalScript.logger.trace("resultValue = '$resultValue'")
+    EvalScript.logger.trace("resultValue::class = '${resultValue::class}'")
 
     return when (resultValue) {
         is ResultValue.Value -> {
-            logger.trace("resultValue.name = '${resultValue.name}'")
-            logger.trace("resultValue.value = '${resultValue.value}'")
-            logger.trace("resultValue.type = '${resultValue.type}'")
+            EvalScript.logger.trace("resultValue.name = '${resultValue.name}'")
+            EvalScript.logger.trace("resultValue.value = '${resultValue.value}'")
+            EvalScript.logger.trace("resultValue.type = '${resultValue.type}'")
 
-            logger.trace("resultValue.value::class = '${resultValue.value!!::class}'")
-            logger.trace("resultValue.value::class.supertypes = '${resultValue.value!!::class.supertypes}'")
+            EvalScript.logger.trace("resultValue.value::class = '${resultValue.value!!::class}'")
+            EvalScript.logger.trace("resultValue.value::class.supertypes = '${resultValue.value!!::class.supertypes}'")
 
             val env = resultValue.value as T
-            logger.debug { env }
+            EvalScript.logger.debug { env }
             env to reports
         }
         is ResultValue.Unit -> {
             System.err.println("evaluation failed")
-            logger.error("evaluation failed")
+            EvalScript.logger.error("evaluation failed")
             null to reports
         }
     }

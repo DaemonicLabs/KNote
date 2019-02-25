@@ -94,7 +94,6 @@ val shadowViewer = tasks.getByName<ShadowJar>("shadowViewer") {
     dependsOn += publishHost
 }
 
-val pagesDir = rootDir.resolve("pages").apply { mkdirs() }
 val notebookDir = rootDir.resolve("notebooks").apply { mkdirs() }
 
 task<DefaultTask>("depsize") {

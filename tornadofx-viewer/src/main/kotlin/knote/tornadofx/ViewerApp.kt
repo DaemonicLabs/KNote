@@ -12,8 +12,6 @@ import tornadofx.*
 import java.io.BufferedReader
 
 class ViewerApp : App(Workspace:: class) {
-    val logger = KLogging().logger
-
     lateinit var pageRegistry: PageRegistry
     private val pages: ArrayList<Page> = arrayListOf()
 
@@ -44,7 +42,7 @@ class ViewerApp : App(Workspace:: class) {
         pages.add(page)
     }
 
-    companion object {
+    companion object: KLogging() {
         @JvmStatic
         fun main(vararg args: String) {
             KNote.notebookRegistry.notebookFilter = args.toList()
