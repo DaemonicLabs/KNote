@@ -5,7 +5,7 @@ import javafx.collections.ObservableMap
 import javafx.collections.ObservableSet
 import knote.annotations.FromPage
 import knote.api.PageRegistry
-import knote.host.evalScript
+import knote.host.EvalScript
 import knote.script.NotebookScript
 import knote.script.PageScript
 import knote.util.watchActor
@@ -56,14 +56,18 @@ internal class PageRegistryImpl(
         require(file.exists()) {
             "page: $id does not exist ($file)"
         }
-        val (page , reports) = host.evalScript<PageScript>(
+        val (page , reports) = EvalScript.evalScript<PageScript>(
+            host,
             file,
             id,
             libs = File("libs")
         )
         reportMap[id] = reports
         if(page == null) {
-            logger.error("evaluation failed")
+            logger.error("evaluation failed for file $file")
+            reports.forEach {
+                logger.error { it }
+            }
             return null
         }
         compiledPages[id] = page

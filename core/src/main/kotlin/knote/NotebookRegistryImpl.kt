@@ -3,8 +3,7 @@ package knote
 import javafx.collections.FXCollections
 import javafx.collections.ObservableMap
 import knote.api.NotebookRegisty
-import knote.host.createJvmScriptingHost
-import knote.host.evalScript
+import knote.host.EvalScript
 import knote.script.NotebookScript
 import knote.util.watchActor
 import kotlinx.coroutines.Job
@@ -13,7 +12,7 @@ import java.io.File
 import kotlin.script.experimental.api.ScriptDiagnostic
 
 object NotebookRegistryImpl : NotebookRegisty, KLogging() {
-    private val host = createJvmScriptingHost(KNote.cacheDir)
+    private val host = EvalScript.createJvmScriptingHost(KNote.cacheDir)
     private val workingDir = File(System.getProperty("user.dir")).absoluteFile!!
 
     private val notebooksDir = File(System.getProperty("user.dir")).absoluteFile.resolve("notebooks").apply {
@@ -56,7 +55,8 @@ object NotebookRegistryImpl : NotebookRegisty, KLogging() {
         }
         val file = notebooksDir.resolve("$notebookId.notebook.kts")
         val id = file.name.substringBeforeLast(".notebook.kts")
-        val (notebook, reports) = host.evalScript<NotebookScript>(
+        val (notebook, reports) = EvalScript.evalScript<NotebookScript>(
+            host,
             file,
             args = *arrayOf(id, workingDir),
             libs = workingDir.resolve("libs")

@@ -5,12 +5,15 @@ import knote.annotations.Import
 import mu.KLogging
 import org.jetbrains.kotlin.script.InvalidScriptResolverAnnotation
 import kotlin.script.experimental.api.ResultWithDiagnostics
+import kotlin.script.experimental.api.ScriptAcceptedLocation
 import kotlin.script.experimental.api.ScriptCollectedData
 import kotlin.script.experimental.api.ScriptCompilationConfiguration
 import kotlin.script.experimental.api.ScriptDiagnostic
+import kotlin.script.experimental.api.acceptedLocations
 import kotlin.script.experimental.api.asSuccess
 import kotlin.script.experimental.api.defaultImports
 import kotlin.script.experimental.api.foundAnnotations
+import kotlin.script.experimental.api.ide
 import kotlin.script.experimental.api.importScripts
 import kotlin.script.experimental.api.refineConfiguration
 import kotlin.script.experimental.host.FileScriptSource
@@ -49,6 +52,10 @@ class PageConfiguration : ScriptCompilationConfiguration({
             val rootDir = scriptFile.parentFile.parentFile
 
             val reports = mutableListOf<ScriptDiagnostic>()
+            reports += ScriptDiagnostic(
+                "rootDir: $rootDir",
+                ScriptDiagnostic.Severity.INFO
+            )
             val annotations = context.collectedData?.get(ScriptCollectedData.foundAnnotations)?.also { annotations ->
                 reports += ScriptDiagnostic("file_annotations: $annotations", ScriptDiagnostic.Severity.INFO)
 
@@ -69,6 +76,10 @@ class PageConfiguration : ScriptCompilationConfiguration({
             }.distinct()
 
             return@onAnnotations ScriptCompilationConfiguration(context.compilationConfiguration) {
+                val acceptedLocationsDefault = ide.acceptedLocations.defaultValue
+                reports += ScriptDiagnostic("acceptedLocationsDefault: $acceptedLocationsDefault", ScriptDiagnostic.Severity.INFO)
+                ide.acceptedLocations.append(ScriptAcceptedLocation.Project)
+
                 if (sources.isNotEmpty()) {
                     importScripts.append(sources.map { it.toScriptSource() })
                     reports += ScriptDiagnostic(
