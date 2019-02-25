@@ -2,9 +2,9 @@ import kotlinx.html.stream.createHTML
 import kotlinx.html.html
 
 logger.info("evaluating $id")
-fun process(): Any? {
+fun process(): List<String> {
     logger.info("executing $id")
-    return createHTML().html {
-        +"two 2"
-    }.replace("\n", "\\n")
+    return listOf(createHTML().html {
+        +"two 2 222"
+    }.replace("\n", "\\n"))
 }

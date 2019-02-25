@@ -15,9 +15,11 @@ import java.io.File
 import java.nio.file.Path
 import java.nio.file.WatchEvent
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.reflect.KParameter
 import kotlin.reflect.full.declaredFunctions
+import kotlin.reflect.full.declaredMemberFunctions
 import kotlin.reflect.full.findAnnotation
-import kotlin.reflect.full.valueParameters
+import kotlin.reflect.full.isSubtypeOf
 import kotlin.script.experimental.api.ScriptDiagnostic
 import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
 
@@ -32,6 +34,8 @@ internal class PageRegistryImpl(
 
     override val dependencies: MutableKObservableMap<String, Set<String>> = MutableKObservableMap()
     override val reportMap: MutableKObservableMap<String, List<ScriptDiagnostic>> = MutableKObservableMap()
+    override val fileContentMap: MutableKObservableMap<String, String> = MutableKObservableMap()
+
 
     init {
         notebook.pageFiles.forEach {
@@ -63,6 +67,7 @@ internal class PageRegistryImpl(
             id,
             libs = File("libs")
         )
+        fileContentMap[id] = file.readText()
         reportMap[id] = reports
         if (page == null) {
             logger.error("evaluation failed for file $file")
@@ -132,19 +137,42 @@ internal class PageRegistryImpl(
             logger.debug("no function `process` found")
             return null
         }
-        val parameters = processFunction.valueParameters.map { parameter ->
+        val parameters = processFunction.parameters.associate { parameter ->
             logger.debug("parameter: $parameter")
             logger.debug("parameter.name: ${parameter.name}")
             logger.debug("parameter.annotations: ${parameter.annotations}")
+            when(parameter.kind) {
+                KParameter.Kind.INSTANCE -> {
+                    return@associate parameter to page
+                }
+                else -> {}
+            }
             val pageResult = parameter.findAnnotation<FromPage>()
             require(pageResult != null) { "parameter: ${parameter.name} is not annotated with PageResult" }
-            val sourceId = pageResult.source.takeIf { it.isNotBlank() } ?: parameter.name!!
-            // TODO: register page as dependent on sourceId
-            dependencies.getOrPut(pageId) { mutableSetOf() } as MutableSet += sourceId
-            getResultOrExec(sourceId) ?: return null
+            val paramId = pageResult.source.takeIf { it.isNotBlank() } ?: parameter.name!!
+            dependencies.getOrPut(pageId) { mutableSetOf() } as MutableSet += paramId
+            val paramResult = getResultOrExec(paramId) ?: return null
+            // TODO: require result to be assignable to the parameter
+            val parameterScript = compiledPages[paramId] ?: return null
+            val parameterProcessFunc = parameterScript::class.declaredMemberFunctions.find { it.name == "process" }?: run {
+                logger.error("no function `process` found in $paramId")
+                return null
+            }
+            require(parameterProcessFunc.returnType.isSubtypeOf(parameter.type)) {
+                logger.error("${parameterProcessFunc.returnType} is not a subtype of requested ${parameter.type}")
+                logger.error("on page: $pageId")
+                logger.info("parameter script: ${parameterScript.id}")
+                logger.info("expected type: ${parameter.type}")
+                logger.info("return type: ${parameterProcessFunc.returnType}")
+                logger.info("parameter process function: $parameterProcessFunc")
+                println()
+                "${parameterProcessFunc.returnType} is not a subtype of requested ${parameter.type}"
+            }
+
+            parameter to paramResult
         }
         logger.debug("executing '$pageId' arguments: $parameters")
-        val result = processFunction.call(page, *parameters.toTypedArray())
+        val result = processFunction.callBy(parameters)
 //        val result = page.process()
         logger.debug("result of '$pageId': '$result'")
         if (result == null) {

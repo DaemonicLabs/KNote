@@ -4,6 +4,7 @@ import javafx.collections.ObservableMap
 import javafx.collections.ObservableSet
 import knote.script.PageScript
 import knote.util.KObservableMap
+import knote.util.MutableKObservableMap
 import kotlin.script.experimental.api.ScriptDiagnostic
 
 interface PageRegistry {
@@ -15,6 +16,7 @@ interface PageRegistry {
 
     val reportMap: KObservableMap<String, List<ScriptDiagnostic>>
     val dependencies: KObservableMap<String, Set<String>>
+    val fileContentMap: KObservableMap<String, String>
 
     /**
      * Evaluate and Execute a page
