@@ -94,7 +94,9 @@ object EvalScript : KLogging() {
         }
 
         for (report in resultWithDiagnostics.reports) {
-            val messageString = "${report.sourcePath}: ${report.location?.posToString()}: ${report.message}"
+            val path = report.sourcePath?.let {"$it: "} ?: ""
+            val location = report.location?.posToString()?.let { "$it: "} ?: ""
+            val messageString = "$path$location${report.message}"
             when (report.severity) {
                 ScriptDiagnostic.Severity.FATAL -> EvalScript.logger.error { "FATAL: $messageString" }
                 ScriptDiagnostic.Severity.ERROR -> EvalScript.logger.error { messageString }

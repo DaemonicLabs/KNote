@@ -56,6 +56,7 @@ class PageConfiguration : ScriptCompilationConfiguration({
                 "rootDir: $rootDir",
                 ScriptDiagnostic.Severity.INFO
             )
+
             val annotations = context.collectedData?.get(ScriptCollectedData.foundAnnotations)?.also { annotations ->
                 reports += ScriptDiagnostic("file_annotations: $annotations", ScriptDiagnostic.Severity.INFO)
 
@@ -66,26 +67,27 @@ class PageConfiguration : ScriptCompilationConfiguration({
                     )
                     return@onAnnotations ResultWithDiagnostics.Failure(reports)
                 }
-            } ?: return@onAnnotations context.compilationConfiguration.asSuccess(reports)
-
-            val importAnnotations = annotations.filterIsInstance(Import::class.java)
-            reports += ScriptDiagnostic("importAnnotations: $importAnnotations", ScriptDiagnostic.Severity.DEBUG)
-
-            val sources = importAnnotations.map {
-                rootDir.resolve("include").resolve(it.source)
-            }.distinct()
+            }
 
             return@onAnnotations ScriptCompilationConfiguration(context.compilationConfiguration) {
                 val acceptedLocationsDefault = ide.acceptedLocations.defaultValue
                 reports += ScriptDiagnostic("acceptedLocationsDefault: $acceptedLocationsDefault", ScriptDiagnostic.Severity.INFO)
-                ide.acceptedLocations.append(ScriptAcceptedLocation.Project)
+//                ide.acceptedLocations.append(ScriptAcceptedLocation.Project)
 
-                if (sources.isNotEmpty()) {
-                    importScripts.append(sources.map { it.toScriptSource() })
-                    reports += ScriptDiagnostic(
-                        "importScripts += ${sources.map { it.relativeTo(rootDir) }}",
-                        ScriptDiagnostic.Severity.INFO
-                    )
+                if(annotations != null) {
+                    val importAnnotations = annotations.filterIsInstance(Import::class.java)
+                    reports += ScriptDiagnostic("importAnnotations: $importAnnotations", ScriptDiagnostic.Severity.DEBUG)
+
+                    val sources = importAnnotations.map {
+                        rootDir.resolve("include").resolve(it.source)
+                    }.distinct()
+                    if (sources.isNotEmpty()) {
+                        importScripts.append(sources.map { it.toScriptSource() })
+                        reports += ScriptDiagnostic(
+                            "importScripts += ${sources.map { it.relativeTo(rootDir) }}",
+                            ScriptDiagnostic.Severity.INFO
+                        )
+                    }
                 }
             }.asSuccess(reports)
         }

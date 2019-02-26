@@ -44,6 +44,7 @@ internal class PageRegistryImpl(
 
         startWatcher()
 
+        // loop over all pages that are evaluated but have no result yet
         while ((compiledPages.keys - results.keys).isNotEmpty()) {
             val pageIds = compiledPages.keys - results.keys
             pageIds.forEach { id ->
@@ -166,6 +167,7 @@ internal class PageRegistryImpl(
                 logger.info("return type: ${parameterProcessFunc.returnType}")
                 logger.info("parameter process function: $parameterProcessFunc")
                 println()
+                compiledPages.remove(pageId)
                 "${parameterProcessFunc.returnType} is not a subtype of requested ${parameter.type}"
             }
 

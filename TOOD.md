@@ -9,6 +9,7 @@
 - [ ] use withObject on scripts to pass previous compiled scripts ?  
   NOTE: would not allow access to functions defined in other scripts.. (i think)  
   NOTE: `@Import`/`@Include` seems like a cleaner solution
+- [ ] Handle Compilation Fail different than waiting on results to be available
 
 ## PathWatcher
 
