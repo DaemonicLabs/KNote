@@ -12,9 +12,6 @@ object KNote: KLogging() {
     private val workingDir = File(System.getProperty("user.dir")).absoluteFile!!
     private val jobs: MutableList<Job> = mutableListOf()
 
-    val PAGE_REGISTRIES: KObservableMap<String, PageManager> = MutableKObservableMap()
-    val NOTEBOOK_REGISTRY: NotebookManager = NotebookManagerImpl
-
     val cacheDir = File(System.getProperty("user.dir"))
             .resolve("build")
             .resolve(".knote-cache")
@@ -23,6 +20,9 @@ object KNote: KLogging() {
     init {
         logger.info("workingDir: $workingDir")
     }
+
+    val PAGE_REGISTRIES: KObservableMap<String, PageManager> = MutableKObservableMap()
+    val NOTEBOOK_REGISTRY: NotebookManager = NotebookManagerImpl
 
     fun cancelOnShutDown(job: Job) {
         jobs += job
