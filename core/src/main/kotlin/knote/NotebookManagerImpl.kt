@@ -1,6 +1,6 @@
 package knote
 
-import knote.api.NotebookRegisty
+import knote.api.NotebookManager
 import knote.host.EvalScript
 import knote.script.NotebookScript
 import knote.util.MutableKObservableMap
@@ -10,17 +10,20 @@ import mu.KLogging
 import java.io.File
 import kotlin.script.experimental.api.ScriptDiagnostic
 
-object NotebookRegistryImpl : NotebookRegisty, KLogging() {
+object NotebookManagerImpl : NotebookManager, KLogging() {
     private val host = EvalScript.createJvmScriptingHost(KNote.cacheDir)
     private val workingDir = File(System.getProperty("user.dir")).absoluteFile!!
-
-    private val notebooksDir = File(System.getProperty("user.dir")).absoluteFile.resolve("notebooks").apply {
-        mkdirs()
-        logger.info("notebooksDir: $this")
-    }
+    private val notebooksDir = File(System.getProperty("user.dir")).absoluteFile
+            .resolve("notebooks")
+            .apply {
+                mkdirs()
+                logger.info("notebooksDir: $this")
+            }
 
     override val reportMap: MutableKObservableMap<String, List<ScriptDiagnostic>> = MutableKObservableMap()
     override val compiledNotebooks: MutableKObservableMap<String, NotebookScript> = MutableKObservableMap()
+
+    private var watchJob: Job? = null
 
     override var notebookFilter: List<String>? = null
 
@@ -33,13 +36,16 @@ object NotebookRegistryImpl : NotebookRegisty, KLogging() {
         logger.info("listNotebookFiles: $listNotebookFiles")
 
         listNotebookFiles
-            .map { it.name.substringBeforeLast(".notebook.kts") }
+            .map {
+                it.name.substringBeforeLast(".notebook.kts")
+            }
             .filter { id ->
                 notebookFilter?.let { filter -> id in filter } ?: true
             }
             .forEach {
-                NotebookRegistryImpl.evalNotebook(it)
+                NotebookManagerImpl.evalNotebook(it)
             }
+
         startWatcher()
     }
 
@@ -60,43 +66,49 @@ object NotebookRegistryImpl : NotebookRegisty, KLogging() {
             args = *arrayOf(id, workingDir),
             libs = workingDir.resolve("libs")
         )
+
         reportMap[id] = reports
+
         if (notebook == null) {
-            println("evaluation failed for notebook $id")
+            println("Evaluation failed for notebook $id")
             return null
         }
 
         compiledNotebooks[id] = notebook
-        (KNote.pageRegistries as MutableKObservableMap)[id]= PageRegistryImpl(notebook, host)
+
+        (KNote.PAGE_REGISTRIES as MutableKObservableMap)[id]= PageManagerImpl(notebook, host)
+
         return notebook
     }
 
     private fun invalidateNotebook(id: String) {
         compiledNotebooks -= id
         reportMap -= id
-        val oldRegistry = KNote.pageRegistries[id]!! as PageRegistryImpl
+
+        val oldRegistry = KNote.PAGE_REGISTRIES[id] as PageManagerImpl
         oldRegistry.stopWatcher()
-        (KNote.pageRegistries as MutableKObservableMap).remove(id)
+        (KNote.PAGE_REGISTRIES as MutableKObservableMap).remove(id)
     }
 
     override fun findNotebook(notebookId: String) = notebooks.find { it.id == notebookId }
 
-    private var watchJob: Job? = null
     private fun startWatcher() {
-        logger.debug("starting notebook watcher")
+        logger.debug("Starting notebook watcher")
+
         watchJob?.cancel()
+
         watchJob = watchActor(notebooksDir.toPath()) {
             for (watchEvent in channel) {
                 val path = watchEvent.context()
                 val file = path.toFile()
                 val id = file.name.substringBeforeLast(".notebook.kts")
+
                 if (!file.name.endsWith(".notebook.kts")) continue
-                val matches = notebookFilter?.let { filter ->
-                    id in filter
-                } ?: true
-                if (!matches) {
-                    continue
-                }
+
+                val matches = notebookFilter?.let { filter -> id in filter } ?: true
+
+                if (!matches) continue
+
                 when (watchEvent.kind().name()) {
                     "ENTRY_CREATE" -> {
                         logger.debug("$path was created")

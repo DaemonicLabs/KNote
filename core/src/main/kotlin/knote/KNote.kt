@@ -1,7 +1,7 @@
 package knote
 
-import knote.api.NotebookRegisty
-import knote.api.PageRegistry
+import knote.api.NotebookManager
+import knote.api.PageManager
 import knote.util.KObservableMap
 import knote.util.MutableKObservableMap
 import kotlinx.coroutines.Job
@@ -10,18 +10,20 @@ import java.io.File
 
 object KNote: KLogging() {
     private val workingDir = File(System.getProperty("user.dir")).absoluteFile!!
+    private val jobs: MutableList<Job> = mutableListOf()
 
-    val cacheDir = File(System.getProperty("user.dir")).resolve("build").resolve(".knote-cache").apply { mkdirs() }
+    val PAGE_REGISTRIES: KObservableMap<String, PageManager> = MutableKObservableMap()
+    val NOTEBOOK_REGISTRY: NotebookManager = NotebookManagerImpl
 
+    val cacheDir = File(System.getProperty("user.dir"))
+            .resolve("build")
+            .resolve(".knote-cache")
+            .apply { mkdirs() }
 
     init {
         logger.info("workingDir: $workingDir")
     }
 
-    val pageRegistries: KObservableMap<String, PageRegistry> = MutableKObservableMap()
-    val notebookRegistry: NotebookRegisty = NotebookRegistryImpl
-
-    private val jobs: MutableList<Job> = mutableListOf()
     fun cancelOnShutDown(job: Job) {
         jobs += job
     }
@@ -30,4 +32,5 @@ object KNote: KLogging() {
         logger.info("doing shutdown")
         jobs.forEach { it.cancel() }
     }
+
 }

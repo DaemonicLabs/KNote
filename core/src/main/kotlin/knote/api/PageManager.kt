@@ -1,13 +1,10 @@
 package knote.api
 
-import javafx.collections.ObservableMap
-import javafx.collections.ObservableSet
 import knote.script.PageScript
 import knote.util.KObservableMap
-import knote.util.MutableKObservableMap
 import kotlin.script.experimental.api.ScriptDiagnostic
 
-interface PageRegistry {
+interface PageManager {
 
     val compiledPages: KObservableMap<String, PageScript>
     val results: KObservableMap<String, Any>

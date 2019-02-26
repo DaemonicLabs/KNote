@@ -1,7 +1,7 @@
 package knote
 
 import knote.annotations.FromPage
-import knote.api.PageRegistry
+import knote.api.PageManager
 import knote.host.EvalScript
 import knote.script.NotebookScript
 import knote.script.PageScript
@@ -23,10 +23,10 @@ import kotlin.reflect.full.isSubtypeOf
 import kotlin.script.experimental.api.ScriptDiagnostic
 import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
 
-internal class PageRegistryImpl(
+internal class PageManagerImpl(
     val notebook: NotebookScript,
     val host: BasicJvmScriptingHost
-) : PageRegistry {
+) : PageManager {
     companion object : KLogging()
 
     override val compiledPages: MutableKObservableMap<String, PageScript> = MutableKObservableMap()
@@ -194,7 +194,7 @@ internal class PageRegistryImpl(
 
     private var watchJob: Job? = null
     private fun startWatcher() {
-        NotebookRegistryImpl.logger.debug("starting page watcher")
+        NotebookManagerImpl.logger.debug("starting page watcher")
         watchJob = watchActor(notebook.pageRoot.absoluteFile.toPath()) {
             val fileRef: AtomicReference<File> = AtomicReference()
             val eventKind: AtomicReference<WatchEvent.Kind<Path>> = AtomicReference()
@@ -242,7 +242,7 @@ internal class PageRegistryImpl(
             }
         }
 
-        NotebookRegistryImpl.logger.debug("started page watcher")
+        NotebookManagerImpl.logger.debug("started page watcher")
     }
 
     internal fun stopWatcher() {
