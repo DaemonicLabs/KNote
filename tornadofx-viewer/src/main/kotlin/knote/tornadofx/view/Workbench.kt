@@ -5,13 +5,13 @@ import javafx.scene.layout.Priority
 import javafx.scene.paint.Color
 import javafx.scene.text.Text
 
-import knote.tornadofx.model.Page
+import knote.tornadofx.model.PageModel
 import knote.tornadofx.model.PageRegistryScope
 import tornadofx.*
 
 class Workbench : View() {
 
-    var pages = arrayListOf<Page>().observable()
+    var pages = arrayListOf<PageModel>().observable()
     val tools = (1..10).toList()
     var evaluationText = Text()
     override val scope = super.scope as PageRegistryScope
@@ -59,14 +59,14 @@ class Workbench : View() {
                                 pane { hboxConstraints { hGrow = Priority.ALWAYS } }
                                 button("Rerun") {
                                     setOnAction {
-                                        pages.forEach {page ->
+                                        pages.forEach { page ->
                                             if (page.dirtyState) {
-                                                page.file.printWriter().use {
-                                                    out -> out.println(page.script)
+                                                page.file.printWriter().use { out ->
+                                                    out.println(page.script)
                                                 }
                                             }
                                         }
-                                        page.results = scope.registry.execPage(page.pageName).toString()
+                                        page.results = scope.manager.execPage(page.pageName).toString()
                                         evaluationText = text(page.results)
                                     }
                                 }

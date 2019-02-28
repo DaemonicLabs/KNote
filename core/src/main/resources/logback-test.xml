@@ -1,0 +1,32 @@
+<configuration packagingData="true">
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>
+                %-75(%d{HH:mm:ss.SSS} [%thread] %-30(.\(%F:%L\))) %-5level - %msg%n
+            </pattern>
+        </encoder>
+    </appender>
+    <timestamp key="date" datePattern="yyyy-MM-dd"/>
+    <!-- Daily rollover appender that also appends timestamp and rolls over on startup -->
+    <appender name="FILE_APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/latest.log</file>
+        <encoder>
+            <pattern>
+                %-40(%d{HH:mm:ss.SSS} [%thread]) %n%-40(%logger{36}:%L) %-5level - %msg %n%n
+            </pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <fileNamePattern>logs/${date}-%i.log</fileNamePattern>
+            <minIndex>1</minIndex>
+            <maxIndex>5</maxIndex>
+            <!--<cleanHistoryOnStart>true</cleanHistoryOnStart>-->
+        </rollingPolicy>
+        <triggeringPolicy class="knote.logging.RollOncePerSessionTriggeringPolicy">
+            <maxFileSize>5MB</maxFileSize>
+        </triggeringPolicy>
+    </appender>
+    <root level="DEBUG">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FILE_APPENDER"/>
+    </root>
+</configuration>

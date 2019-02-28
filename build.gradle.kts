@@ -198,7 +198,7 @@ subprojects {
         publications {
 
             create("default", MavenPublication::class.java) {
-//                groupId = project.group
+                //                groupId = project.group
 //                artifactId = project.name
 //                version = "1.0-SNAPSHOT"
 

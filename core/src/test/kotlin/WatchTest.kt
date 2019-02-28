@@ -1,12 +1,10 @@
-package knote
-
 import knote.util.watch
 import mu.KLogging
 import java.io.File
 
 object WatchTest : KLogging() {
     @JvmStatic
-    fun main(args : Array<String>) {
+    fun main(args: Array<String>) {
         val path = File("pages").toPath()
 
         val watcher = path.watch()

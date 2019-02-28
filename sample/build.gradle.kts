@@ -2,7 +2,6 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-//    HostUtil.publishToMavenLocal(File(System.getProperty("user.dir")).absoluteFile)
     id("daemoniclabs.knote") version "1.0.0-dev"
 }
 
@@ -32,18 +31,12 @@ repositories {
     }
     mavenCentral()
     jcenter()
+    maven(url = "https://jitpack.io" )
 }
 
 dependencies {
-    fun add(
-        configuration: Configuration,
-        group: String,
-        name: String, version: String
-    ) = add(
-        configurationName = configuration.name,
-        dependencyNotation = "$group:$name:$version"
-    )
-
+    knote(group = "org.nield", name = "kotlin-statistics", version = "1.2.1")
+    knote(group = "com.github.holgerbrandl", name = "krangl", version = "-SNAPSHOT")
     knote(group = "org.jetbrains.kotlinx", name = "kotlinx-html-jvm", version = "0.6.12")
 }
 
@@ -79,7 +72,6 @@ val hostRoot = rootDir.absoluteFile.parentFile
 //    val result = process.waitFor()
 //    logger.lifecycle("command finished with code: $result")
 //}
-
 
 val publishHost = task<GradleBuild>("publishHost") {
     tasks = listOf("publishToMavenLocal")

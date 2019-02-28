@@ -17,7 +17,10 @@ class FileBasedScriptCache(private val baseDir: File) : CompiledJvmScriptsCache 
         baseDir.mkdirs()
     }
 
-    internal fun uniqueHash(script: SourceCode, scriptCompilationConfiguration: ScriptCompilationConfiguration): String {
+    internal fun uniqueHash(
+        script: SourceCode,
+        scriptCompilationConfiguration: ScriptCompilationConfiguration
+    ): String {
         val digestWrapper = MessageDigest.getInstance("MD5")
         digestWrapper.update(script.text.toByteArray())
         scriptCompilationConfiguration.entries().sortedBy { it.key.name }.forEach {
@@ -27,8 +30,11 @@ class FileBasedScriptCache(private val baseDir: File) : CompiledJvmScriptsCache 
         return digestWrapper.digest().toHexString()
     }
 
-    override fun get(script: SourceCode, scriptCompilationConfiguration: ScriptCompilationConfiguration): CompiledScript<*>? {
-        val prefix = if(script is FileScriptSource) {
+    override fun get(
+        script: SourceCode,
+        scriptCompilationConfiguration: ScriptCompilationConfiguration
+    ): CompiledScript<*>? {
+        val prefix = if (script is FileScriptSource) {
             "${script.file.name}-"
         } else ""
         val file = File(baseDir, prefix + uniqueHash(script, scriptCompilationConfiguration))
@@ -41,7 +47,7 @@ class FileBasedScriptCache(private val baseDir: File) : CompiledJvmScriptsCache 
         script: SourceCode,
         scriptCompilationConfiguration: ScriptCompilationConfiguration
     ) {
-        val prefix = if(script is FileScriptSource) {
+        val prefix = if (script is FileScriptSource) {
             "${script.file.name}-"
         } else ""
         val file = File(baseDir, prefix + uniqueHash(script, scriptCompilationConfiguration))
@@ -63,6 +69,5 @@ class FileBasedScriptCache(private val baseDir: File) : CompiledJvmScriptsCache 
                 }
             }
         }
-
     }
 }

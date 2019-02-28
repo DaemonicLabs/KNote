@@ -36,7 +36,6 @@ object EvalScript : KLogging() {
         host: BasicJvmScriptingHost,
         scriptFile: File,
         vararg args: Any?,
-        libs: File? = null,
         importScripts: List<SourceCode> = listOf(),
         compilationConfig: ScriptCompilationConfiguration = createJvmCompilationConfigurationFromTemplate<T> {
             jvm {
@@ -45,14 +44,6 @@ object EvalScript : KLogging() {
                 dependenciesFromCurrentContext(wholeClasspath = false)
 
                 importScripts(importScripts)
-
-                libs?.absoluteFile?.takeIf { it.exists() }?.apply {
-                    listFiles { file -> file.name.endsWith(".jar") }
-                        .forEach {
-                            EvalScript.logger.debug("adding dependency: $it")
-                            dependencies.append(JvmDependency(it))
-                        }
-                }
 //            val JDK_HOME = System.getProperty("jdkHome") ?: System.getenv("JAVA_HOME")
 //                ?: throw IllegalStateException("please pass -DjdkHome=path/to/jdk or please set JAVA_HOME to the installed jdk")
 //            jdkHome(File(JDK_HOME))
@@ -88,14 +79,9 @@ object EvalScript : KLogging() {
         resultWithDiagnostics: ResultWithDiagnostics<EvaluationResult>,
         scriptFile: File
     ): Pair<T?, List<ScriptDiagnostic>> {
-        val evalResult = resultWithDiagnostics.resultOrNull() ?: resultWithDiagnostics.run {
-            EvalScript.logger.error("evaluation result failed for notebook $scriptFile")
-            return null to this.reports
-        }
-
         for (report in resultWithDiagnostics.reports) {
-            val path = report.sourcePath?.let {"$it: "} ?: ""
-            val location = report.location?.posToString()?.let { "$it: "} ?: ""
+            val path = report.sourcePath?.let { "$it: " } ?: ""
+            val location = report.location?.posToString()?.let { "$it: " } ?: ""
             val messageString = "$path$location${report.message}"
             when (report.severity) {
                 ScriptDiagnostic.Severity.FATAL -> EvalScript.logger.error { "FATAL: $messageString" }
@@ -104,12 +90,11 @@ object EvalScript : KLogging() {
                 ScriptDiagnostic.Severity.INFO -> EvalScript.logger.info { messageString }
                 ScriptDiagnostic.Severity.DEBUG -> EvalScript.logger.debug { messageString }
             }
-//            EvalScript.logger.trace("$severityIndicator: ${report.sourcePath}: ${report.location?.posToString()}: ${report.message}")
             report.exception?.apply {
-                EvalScript.logger.error("exception: $message", this)
+                EvalScript.logger.error(message, this)
 //            printStackTrace()
                 this.cause?.apply {
-                    EvalScript.logger.error("cause: $message", this)
+                    EvalScript.logger.error(message, this)
 //                printStackTrace()
                 }
                 this.suppressed.forEach {
@@ -117,6 +102,11 @@ object EvalScript : KLogging() {
 //                it.printStackTrace()
                 }
             }
+        }
+
+        val evalResult = resultWithDiagnostics.resultOrNull() ?: resultWithDiagnostics.run {
+            EvalScript.logger.error("evaluation result failed for notebook $scriptFile")
+            return null to this.reports
         }
 
         val resultValue = evalResult.returnValue

@@ -3,11 +3,11 @@ package knote.tornadofx.model
 import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
-import knote.api.PageRegistry
+import knote.api.PageManager
 import tornadofx.*
 import java.io.File
 
-class Page(file: File, pageName: String, script: String, results: String? = null, dirtyState: Boolean = false) {
+class PageModel(file: File, pageName: String, script: String, results: String? = null, dirtyState: Boolean = false) {
     val fileProperty = SimpleObjectProperty(this, "", file)
     var file by fileProperty
 
@@ -24,5 +24,5 @@ class Page(file: File, pageName: String, script: String, results: String? = null
     var dirtyState by dirtyStateProperty
 }
 
-class PageRegistryScope(val registry: PageRegistry, val pages: List<Page>): Scope()
+class PageRegistryScope(val manager: PageManager, val pages: List<PageModel>) : Scope()
 

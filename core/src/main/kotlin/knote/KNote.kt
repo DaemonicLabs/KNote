@@ -1,27 +1,25 @@
 package knote
 
-import knote.api.NotebookRegisty
-import knote.api.PageRegistry
+import knote.api.NotebookManager
+import knote.api.PageManager
 import knote.util.KObservableMap
 import knote.util.MutableKObservableMap
 import kotlinx.coroutines.Job
 import mu.KLogging
 import java.io.File
 
-object KNote: KLogging() {
+object KNote : KLogging() {
     private val workingDir = File(System.getProperty("user.dir")).absoluteFile!!
-
-    val cacheDir = File(System.getProperty("user.dir")).resolve("build").resolve(".knote-cache").apply { mkdirs() }
-
+    private val jobs: MutableList<Job> = mutableListOf()
 
     init {
         logger.info("workingDir: $workingDir")
     }
 
-    val pageRegistries: KObservableMap<String, PageRegistry> = MutableKObservableMap()
-    val notebookRegistry: NotebookRegisty = NotebookRegistryImpl
+    @Deprecated("use knote.api.Notebook::pageManager")
+    val PAGE_REGISTRIES: KObservableMap<String, PageManager> = MutableKObservableMap()
+    val NOTEBOOK_MANAGER: NotebookManager = NotebookManagerImpl
 
-    private val jobs: MutableList<Job> = mutableListOf()
     fun cancelOnShutDown(job: Job) {
         jobs += job
     }

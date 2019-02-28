@@ -17,7 +17,7 @@ class ConstantsBuilder(val pkg: String, val className: String) : Serializable {
     }
 }
 
-data class ConstantField (
+data class ConstantField(
     val name: String
 )
 

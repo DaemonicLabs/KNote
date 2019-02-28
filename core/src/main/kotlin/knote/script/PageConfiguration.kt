@@ -1,29 +1,20 @@
 package knote.script
 
 import knote.annotations.FromPage
-import knote.annotations.Import
 import mu.KLogging
-import org.jetbrains.kotlin.script.InvalidScriptResolverAnnotation
-import kotlin.script.experimental.api.ResultWithDiagnostics
 import kotlin.script.experimental.api.ScriptAcceptedLocation
-import kotlin.script.experimental.api.ScriptCollectedData
 import kotlin.script.experimental.api.ScriptCompilationConfiguration
 import kotlin.script.experimental.api.ScriptDiagnostic
 import kotlin.script.experimental.api.acceptedLocations
 import kotlin.script.experimental.api.asSuccess
 import kotlin.script.experimental.api.defaultImports
-import kotlin.script.experimental.api.foundAnnotations
 import kotlin.script.experimental.api.ide
-import kotlin.script.experimental.api.importScripts
 import kotlin.script.experimental.api.refineConfiguration
-import kotlin.script.experimental.host.FileScriptSource
-import kotlin.script.experimental.host.toScriptSource
 import kotlin.script.experimental.jvm.dependenciesFromCurrentContext
 import kotlin.script.experimental.jvm.jvm
 
 class PageConfiguration : ScriptCompilationConfiguration({
     defaultImports(
-        Import::class,
         FromPage::class
     )
     jvm {
@@ -34,66 +25,75 @@ class PageConfiguration : ScriptCompilationConfiguration({
     refineConfiguration {
         beforeParsing { context ->
             val reports = mutableListOf<ScriptDiagnostic>()
-            reports += ScriptDiagnostic("beforeParsing time: ${System.currentTimeMillis()}", ScriptDiagnostic.Severity.DEBUG)
+            reports += ScriptDiagnostic(
+                "beforeParsing time: ${System.currentTimeMillis()}",
+                ScriptDiagnostic.Severity.DEBUG
+            )
 
             context.compilationConfiguration.asSuccess(reports)
         }
 
         beforeCompiling { context ->
             val reports = mutableListOf<ScriptDiagnostic>()
-            reports += ScriptDiagnostic("beforeCompiling time: ${System.currentTimeMillis()}", ScriptDiagnostic.Severity.DEBUG)
-
-            context.compilationConfiguration.asSuccess(reports)
-        }
-
-        onAnnotations(Import::class) { context ->
-            logger.debug("on annotations")
-            val scriptFile = (context.script as FileScriptSource).file
-            val rootDir = scriptFile.parentFile.parentFile
-
-            val reports = mutableListOf<ScriptDiagnostic>()
             reports += ScriptDiagnostic(
-                "rootDir: $rootDir",
-                ScriptDiagnostic.Severity.INFO
+                "beforeCompiling time: ${System.currentTimeMillis()}",
+                ScriptDiagnostic.Severity.DEBUG
             )
 
-            val annotations = context.collectedData?.get(ScriptCollectedData.foundAnnotations)?.also { annotations ->
-                reports += ScriptDiagnostic("file_annotations: $annotations", ScriptDiagnostic.Severity.INFO)
-
-                if (annotations.any { it is InvalidScriptResolverAnnotation }) {
-                    reports += ScriptDiagnostic(
-                        "InvalidScriptResolverAnnotation found",
-                        ScriptDiagnostic.Severity.ERROR
-                    )
-                    return@onAnnotations ResultWithDiagnostics.Failure(reports)
-                }
-            }
-
-            return@onAnnotations ScriptCompilationConfiguration(context.compilationConfiguration) {
-                val acceptedLocationsDefault = ide.acceptedLocations.defaultValue
-                reports += ScriptDiagnostic("acceptedLocationsDefault: $acceptedLocationsDefault", ScriptDiagnostic.Severity.INFO)
-//                ide.acceptedLocations.append(ScriptAcceptedLocation.Project)
-
-                if(annotations != null) {
-                    val importAnnotations = annotations.filterIsInstance(Import::class.java)
-                    reports += ScriptDiagnostic("importAnnotations: $importAnnotations", ScriptDiagnostic.Severity.DEBUG)
-
-                    val sources = importAnnotations.map {
-                        rootDir.resolve("include").resolve(it.source)
-                    }.distinct()
-                    if (sources.isNotEmpty()) {
-                        importScripts.append(sources.map { it.toScriptSource() })
-                        reports += ScriptDiagnostic(
-                            "importScripts += ${sources.map { it.relativeTo(rootDir) }}",
-                            ScriptDiagnostic.Severity.INFO
-                        )
-                    }
-                }
+            ScriptCompilationConfiguration(context.compilationConfiguration) {
+                ide.acceptedLocations.append(ScriptAcceptedLocation.Project)
             }.asSuccess(reports)
         }
+
+//        onAnnotations(Import::class) { context ->
+//            logger.debug("on annotations")
+//            val scriptFile = (context.script as FileScriptSource).file
+//            val rootDir = scriptFile.parentFile.parentFile
+//
+//            val reports = mutableListOf<ScriptDiagnostic>()
+//            reports += ScriptDiagnostic(
+//                "rootDir: $rootDir",
+//                ScriptDiagnostic.Severity.INFO
+//            )
+//
+//            val annotations = context.collectedData?.get(ScriptCollectedData.foundAnnotations)?.also { annotations ->
+//                reports += ScriptDiagnostic("file_annotations: $annotations", ScriptDiagnostic.Severity.INFO)
+//
+//                if (annotations.any { it is InvalidScriptResolverAnnotation }) {
+//                    reports += ScriptDiagnostic(
+//                        "InvalidScriptResolverAnnotation found",
+//                        ScriptDiagnostic.Severity.ERROR
+//                    )
+//                    return@onAnnotations ResultWithDiagnostics.Failure(reports)
+//                }
+//            }
+//
+//            return@onAnnotations ScriptCompilationConfiguration(context.compilationConfiguration) {
+//                ide.acceptedLocations.append(ScriptAcceptedLocation.Project)
+//
+//                if (annotations != null) {
+//                    val importAnnotations = annotations.filterIsInstance(Import::class.java)
+//                    reports += ScriptDiagnostic(
+//                        "importAnnotations: $importAnnotations",
+//                        ScriptDiagnostic.Severity.DEBUG
+//                    )
+//
+//                    val sources = importAnnotations.map {
+//                        rootDir.resolve("include").resolve(it.source)
+//                    }.distinct()
+//                    if (sources.isNotEmpty()) {
+//                        importScripts.append(sources.map { it.toScriptSource() })
+//                        reports += ScriptDiagnostic(
+//                            "importScripts += ${sources.map { it.relativeTo(rootDir) }}",
+//                            ScriptDiagnostic.Severity.INFO
+//                        )
+//                    }
+//                }
+//            }.asSuccess(reports)
+//        }
     }
 }) {
-    companion object: KLogging()
+    companion object : KLogging()
 }
 
 
