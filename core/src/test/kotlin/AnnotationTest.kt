@@ -1,5 +1,3 @@
-package knote
-
 import mu.KLogging
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.functions
@@ -9,11 +7,10 @@ import kotlin.reflect.full.functions
 annotation class TestAnnotation(val source: String = "")
 
 class AnnotationTest() {
-    fun process(@TestAnnotation data: String){
-
+    fun process(@TestAnnotation data: String) {
     }
 
-    companion object: KLogging() {
+    companion object : KLogging() {
         @JvmStatic
         fun main(args: Array<String>) {
             val processFun = AnnotationTest::class.functions.find { it.name == "process" }!!

@@ -1,7 +1,8 @@
 package knote.util
+
 import java.util.LinkedHashMap
 
-class MutableKObservableMap<K, V>: KObservableMap<K, V>, LinkedHashMap<K, V>() {
+class MutableKObservableMap<K, V> : KObservableMap<K, V>, LinkedHashMap<K, V>() {
     override val callbacks: MutableList<(newValue: Map<K, V>) -> Unit> = mutableListOf()
 
     private fun execCallback(newValue: Map<K, V>) {
@@ -14,7 +15,6 @@ class MutableKObservableMap<K, V>: KObservableMap<K, V>, LinkedHashMap<K, V>() {
         super.clear().also {
             execCallback(this)
         }
-
     }
 
     override fun put(key: K, value: V): V? {

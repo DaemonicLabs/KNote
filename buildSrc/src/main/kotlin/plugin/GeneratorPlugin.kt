@@ -9,7 +9,6 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.kotlin.dsl.configure
-import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.task
 import org.gradle.plugins.ide.idea.IdeaPlugin
 
@@ -35,7 +34,7 @@ open class GeneratorPlugin : Plugin<Project> {
             constExtension
         }
         project.afterEvaluate {
-//            val constExtension = extensions.getByType<ConstantsExtension>()
+            //            val constExtension = extensions.getByType<ConstantsExtension>()
             createConstants(constExtension)
         }
     }

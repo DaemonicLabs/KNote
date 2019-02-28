@@ -5,7 +5,6 @@ import knote.gradle.plugin.GradlePluginConstants
 import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.internal.AbstractTask
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.tasks.JavaExec
 import org.gradle.kotlin.dsl.configure
@@ -29,14 +28,12 @@ open class KNotePlugin : Plugin<Project> {
         }
 
         val implementation = project.configurations.getByName("implementation")
-        val knoteConfiguration = project.configurations.create("knote")
-        implementation.extendsFrom(knoteConfiguration)
 
-        val shadowViewerConfiguration = project.configurations.create("knote-shadow-viewer")
-        val shadowCoreConfiguration = project.configurations.create("knote-shadow-core") {
-            extendsFrom(shadowViewerConfiguration)
+        val knoteConfiguration = project.configurations.create("knote")
+        val knoteFXConfiguration = project.configurations.create("knoteFx"){
+            extendsFrom(knoteConfiguration)
         }
-        implementation.extendsFrom(shadowCoreConfiguration)
+        implementation.extendsFrom(knoteConfiguration)
 
         project.repositories {
             maven(url = "http://maven.modmuss50.me") {
@@ -45,41 +42,25 @@ open class KNotePlugin : Plugin<Project> {
         }
         project.dependencies {
             add(
-                configurationName = shadowCoreConfiguration.name,
+                configurationName = knoteConfiguration.name,
                 dependencyNotation = create(
                     group = "daemoniclabs.knote",
                     name = "core",
                     version = GradlePluginConstants.FULL_VERSION
                 )
             )
-//            add(
-//                configurationName = implementation.name,
-//                dependencyNotation = create(
-//                    group = "daemoniclabs.knote",
-//                    name = "core",
-//                    version = GradlePluginConstants.FULL_VERSION
-//                )
-//            )
             add(
-                configurationName = shadowViewerConfiguration.name,
+                configurationName = knoteFXConfiguration.name,
                 dependencyNotation = create(
                     group = "daemoniclabs.knote",
                     name = "tornadofx-viewer",
                     version = GradlePluginConstants.FULL_VERSION
                 )
             )
-//            add(
-//                configurationName = implementation.name,
-//                dependencyNotation = create(
-//                    group = "daemoniclabs.knote",
-//                    name = "tornadofx-viewer",
-//                    version = GradlePluginConstants.FULL_VERSION
-//                )
-//            )
-            if(knote.util.Platform.isWindows) {
+            if (knote.util.Platform.isWindows) {
                 // Windows required jansi for logging
                 add(
-                    configurationName = shadowCoreConfiguration.name,
+                    configurationName = knoteConfiguration.name,
                     dependencyNotation = create(
                         group = "org.fusesource.jansi",
                         name = "jansi",
@@ -92,26 +73,12 @@ open class KNotePlugin : Plugin<Project> {
         val shadowCore = project.tasks.create<ShadowJar>("shadowCore") {
             group = "shadow"
             archiveBaseName.set("core")
-            configurations = listOf(shadowCoreConfiguration)
+            configurations = listOf(knoteConfiguration)
         }
-        val shadowViewer =  project.tasks.create<ShadowJar>("shadowViewer") {
+        val shadowViewer = project.tasks.create<ShadowJar>("shadowViewer") {
             group = "shadow"
             archiveBaseName.set("tornadofx-viewer")
-            configurations = listOf(shadowViewerConfiguration)
-        }
-
-        val libs = project.rootDir.resolve("libs")
-
-
-        val copyLibs = project.task<AbstractTask>("copyLibs") {
-            group = "build"
-            doFirst {
-                libs.deleteRecursively()
-                libs.mkdirs()
-                for (file in knoteConfiguration.resolve()) {
-                    file.copyTo(libs.resolve(file.name), overwrite = true)
-                }
-            }
+            configurations = listOf(knoteFXConfiguration)
         }
 
         val notebookDir = project.rootDir.resolve("notebooks").apply { mkdirs() }
@@ -122,11 +89,11 @@ open class KNotePlugin : Plugin<Project> {
                 targetCompatibility = JavaVersion.VERSION_1_8
             }
 
-            extensions.configure<KotlinJvmProjectExtension> {
-                sourceSets.maybeCreate("main").apply {
-                    kotlin.srcDir(notebookDir)
-                }
-            }
+//            extensions.configure<KotlinJvmProjectExtension> {
+//                sourceSets.maybeCreate("main").apply {
+//                    kotlin.srcDir(notebookDir)
+//                }
+//            }
 
             // TODO: loop through registered notebooks (in extension)
 
@@ -145,7 +112,7 @@ open class KNotePlugin : Plugin<Project> {
 
                     extensions.configure<KotlinJvmProjectExtension> {
                         sourceSets.maybeCreate("main").apply {
-                            kotlin.srcDir(pagesSrc)
+//                            kotlin.srcDir(pagesSrc)
                             kotlin.srcDir(generatedSrc)
 //                            dependsOn(sourceSets.getByName("main"))
                         }
@@ -159,7 +126,7 @@ open class KNotePlugin : Plugin<Project> {
 
                     task<JavaExec>("run_$id") {
                         dependsOn(shadowCore)
-                        dependsOn(copyLibs)
+//                        dependsOn(copyLibs)
                         val jarFile = shadowCore.archiveFile.get()
                         group = "application"
                         args = listOf(id)
@@ -174,7 +141,7 @@ open class KNotePlugin : Plugin<Project> {
                     }
                     task<JavaExec>("runViewer_$id") {
                         dependsOn(shadowViewer)
-                        dependsOn(copyLibs)
+//                        dependsOn(copyLibs)
                         val jarFile = shadowCore.archiveFile.get()
                         group = "application"
                         args = listOf(id)
@@ -191,5 +158,4 @@ open class KNotePlugin : Plugin<Project> {
                 }
         }
     }
-
 }

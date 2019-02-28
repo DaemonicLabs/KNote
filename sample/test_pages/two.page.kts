@@ -1,10 +1,10 @@
-import kotlinx.html.stream.createHTML
 import kotlinx.html.html
+import kotlinx.html.stream.createHTML
 
-logger.info("evaluating $id")
-fun process(): List<String> {
-    logger.info("executing $id")
-    return listOf(createHTML().html {
-        +"two 2 222"
-    }.replace("\n", "\\n"))
+logger.info(">>>> evaluating step $id")
+fun process(): String {
+    logger.info(">>>> executing step $id")
+    return createHTML().html {
+        +"two 2"
+    }.replace("\n", "\\n")
 }

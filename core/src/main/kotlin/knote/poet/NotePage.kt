@@ -1,6 +1,5 @@
 package knote.poet
 
-import knote.script.NotebookScript
 import java.io.File
 
 /**

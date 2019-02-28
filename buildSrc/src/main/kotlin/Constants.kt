@@ -1,4 +1,5 @@
 import org.gradle.api.tasks.wrapper.Wrapper
+
 object Constants {
     object Gradle {
         const val version = "5.2.1"

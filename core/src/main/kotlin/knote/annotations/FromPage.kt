@@ -1,5 +1,6 @@
 package knote.annotations
 
 @Target(AnnotationTarget.VALUE_PARAMETER)
-@Retention(AnnotationRetention.RUNTIME)
-annotation class FromPage(val source: String = "")
+@Repeatable
+@Retention(AnnotationRetention.SOURCE)
+annotation class FromPage(val source: String)
