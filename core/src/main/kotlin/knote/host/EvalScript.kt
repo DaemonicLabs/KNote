@@ -10,11 +10,10 @@ import kotlin.script.experimental.api.ScriptDiagnostic
 import kotlin.script.experimental.api.ScriptEvaluationConfiguration
 import kotlin.script.experimental.api.SourceCode
 import kotlin.script.experimental.api.constructorArgs
-import kotlin.script.experimental.api.dependencies
+import kotlin.script.experimental.api.implicitReceivers
 import kotlin.script.experimental.api.importScripts
 import kotlin.script.experimental.api.resultOrNull
 import kotlin.script.experimental.host.toScriptSource
-import kotlin.script.experimental.jvm.JvmDependency
 import kotlin.script.experimental.jvm.defaultJvmScriptingHostConfiguration
 import kotlin.script.experimental.jvm.dependenciesFromCurrentContext
 import kotlin.script.experimental.jvm.jvm
@@ -36,6 +35,7 @@ object EvalScript : KLogging() {
         host: BasicJvmScriptingHost,
         scriptFile: File,
         vararg args: Any?,
+        receivers: List<Any> = listOf(),
         importScripts: List<SourceCode> = listOf(),
         compilationConfig: ScriptCompilationConfiguration = createJvmCompilationConfigurationFromTemplate<T> {
             jvm {
@@ -57,6 +57,7 @@ object EvalScript : KLogging() {
 
         val evaluationConfig = ScriptEvaluationConfiguration {
             args.forEach { EvalScript.logger.debug("constructorArg: $it  ${it!!::class}") }
+            implicitReceivers(*receivers.toTypedArray())
             constructorArgs.append(*args)
         }
 

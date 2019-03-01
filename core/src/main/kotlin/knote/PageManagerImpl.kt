@@ -14,7 +14,8 @@ import kotlinx.coroutines.launch
 import mu.KLogging
 import java.io.File
 import java.lang.Exception
-import kotlin.script.experimental.api.ScriptDiagnostic
+import kotlin.reflect.KType
+import kotlin.reflect.full.declaredMemberFunctions
 import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
 
 internal class PageManagerImpl(
@@ -59,12 +60,23 @@ internal class PageManagerImpl(
         }
     }
 
-    override fun evalPage(pageId: String): Pair<PageScript, Any?>? {
+    override fun resultType(pageId: String): KType? {
+        val page = pages[pageId] ?: return null
+        val pageScript = page.compiledScript ?: return null
+        val processFunction =
+            pageScript::class.declaredMemberFunctions.find { it.name == "process" } ?: run {
+                logger.error("no function `process` found in $pageId")
+                return null
+            }
+        return processFunction.returnType
+    }
+
+    override fun evalPage(pageId: String): Page? {
         val file = notebookScript.fileForPage(pageId, logger) ?: return null
         return evalPage(file, pageId)
     }
 
-    fun evalPage(file: File, id: String = file.name.substringBeforeLast(".page.kts")): Pair<PageScript, Any?>? {
+    fun evalPage(file: File, id: String = file.name.substringBeforeLast(".page.kts")): Page? {
         require(file.exists()) {
             "page: $id does not exist ($file)"
         }
@@ -90,7 +102,7 @@ internal class PageManagerImpl(
 
         page.errored = false
         page.result = null
-        return pageScript to execPage(id)
+        return page
     }
 
     private fun invalidatePage(id: String): Set<String>? {
@@ -140,8 +152,7 @@ internal class PageManagerImpl(
         val page = pages[pageId] as PageImpl
         val pageScript = page.compiledScript ?: run {
             logger.debug("page $pageId not evaluated yet")
-            val (page, result) = evalPage(pageId) ?: return null
-            page
+            evalPage(pageId)?.compiledScript ?: return null
         }
 //        val processFunction = pageScript::class.declaredFunctions.find {
 //            it.name == "process"
@@ -223,8 +234,7 @@ internal class PageManagerImpl(
 
     override fun getResultOrExec(pageId: String): Any? {
         val page = pages[pageId] as? PageImpl ?: run {
-            val (page, result) = evalPage(pageId) ?: return null
-            return result
+            evalPage(pageId) ?: return null
         }
         return page.result ?: execPage(pageId)
     }

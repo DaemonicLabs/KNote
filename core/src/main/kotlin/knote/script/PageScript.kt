@@ -29,24 +29,6 @@ open class PageScript(
         return null
     }
 
-//    fun <T> fromPage(pageId: String): T {
-//        logger.debug("notebook: $notebook")
-//        val pageManager = KNote.NOTEBOOK_MANAGER.getPageManager(notebookId = notebook.id)!!
-//        //TODO: add typecheck
-//        logger.debug("getting result for $pageId")
-//        val result = pageManager.getResultOrExec(pageId)!!
-//        val page = pageManager.pages[pageId]!!
-//        logger.debug("result: $pageId = $result")
-//        logger.debug("result::class: ${result::class}")
-//        page.dependencies as MutableSet += pageId
-//        return result as T
-////        if(result is T)
-////            return result
-////        else {
-////            throw IllegalStateException("result: ${result::class} is not ${T::class}")
-////        }
-//    }
-
     fun <This, T> This.inject(pageId: String? = null): PageResult<This, T> {
         val delegate = object : PageResult<This, T> {
             override fun getValue(self: This, property: KProperty<*>): T {
@@ -64,13 +46,9 @@ open class PageScript(
                 logger.debug("result: $result")
                 logger.debug("result::class: ${result::class}")
                 // find and match result type
-                val dependencyProcessFunction = depPage.compiledScript!!::class.declaredFunctions
-                    .find { it.name == "process" }
-                require (dependencyProcessFunction != null) {
-                    "cannot find  ::process in page '$dependencyId'"
-                }
-                require(dependencyProcessFunction.returnType.isSubtypeOf(property.returnType)) {
-                    "${dependencyProcessFunction.returnType} is not assignable to ${property.returnType}"
+                val depReturnType = pageManager.resultType(dependencyId)!!
+                require(depReturnType.isSubtypeOf(property.returnType)) {
+                    "$depReturnType} is not assignable to ${property.returnType}"
                 }
                 logger.debug("adding dependency $dependencyId to ${page.id}")
                 (page as PageImpl).dependencies += dependencyId

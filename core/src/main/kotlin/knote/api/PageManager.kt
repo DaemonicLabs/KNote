@@ -2,6 +2,7 @@ package knote.api
 
 import knote.script.PageScript
 import knote.util.KObservableMap
+import kotlin.reflect.KType
 import kotlin.script.experimental.api.ScriptDiagnostic
 
 interface PageManager {
@@ -10,7 +11,7 @@ interface PageManager {
     /**
      * Evaluate and Execute a page
      */
-    fun evalPage(pageId: String): Pair<PageScript, Any?>?
+    fun evalPage(pageId: String): Page?
 
     fun getResultOrExec(pageId: String): Any?
 
@@ -21,4 +22,5 @@ interface PageManager {
 
     fun updateSourceCode(pageId: String, content: String)
     fun executeAll(): Map<String, Any>
+    fun resultType(pageId: String): KType?
 }
