@@ -14,7 +14,6 @@ import kotlinx.coroutines.launch
 import mu.KLogging
 import java.io.File
 import java.lang.Exception
-import kotlin.reflect.full.declaredFunctions
 import kotlin.script.experimental.api.ScriptDiagnostic
 import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
 
@@ -28,12 +27,6 @@ internal class PageManagerImpl(
     val notebookScript get() = notebook.compiledScript!!
 
     override val pages: MutableKObservableMap<String, Page> = MutableKObservableMap()
-    override val compiledPages: MutableKObservableMap<String, PageScript> = MutableKObservableMap()
-    override val results: MutableKObservableMap<String, Any> = MutableKObservableMap()
-
-    override val dependencies: MutableKObservableMap<String, Set<String>> = MutableKObservableMap()
-    override val reportMap: MutableKObservableMap<String, List<ScriptDiagnostic>> = MutableKObservableMap()
-    override val fileContentMap: MutableKObservableMap<String, String> = MutableKObservableMap()
 
     init {
         // init all pages (without compilation)
@@ -111,28 +104,24 @@ internal class PageManagerImpl(
 //        }
     }
 
-    private fun invalidateResult(id: String) {
-        val page = pages[id] as PageImpl
-        logger.debug("invalidating result for '$id'")
-        logger.debug("dependencies: ${page.dependencies}")
+    private fun invalidateResult(pageId: String) {
+        val page = pages[pageId] as PageImpl
+        logger.debug("invalidating result for '$pageId'")
+//        logger.debug("dependencies of $pageId: ${page.dependencies}")
         page.result = null
 
-        page.dependencies.filter { dependents ->
-            dependents.contains(id)
-        }.forEach {
-            invalidateResult(it)
-        }
 
-//        dependencies.remove(id)
-    }
-
-    override val allResults: Map<String, Any>
-        get() {
-            return compiledPages.keys.associate { id ->
-                val result = getResultOrExec(id) ?: throw IllegalStateException("could not evaluate result for '${id}'")
-                id to result
+        // find all pages depending on this page and invalidate them too
+        pages.forEach { depId, depPage ->
+//            logger.debug("dependencies of $depId: ${depPage.dependencies}")
+//            if(depId == pageId) return@forEach
+            if(pageId in depPage.dependencies) {
+                invalidateResult(depId)
             }
         }
+        // remove all old dependencies this page had
+        page.dependencies = setOf()
+    }
 
     private fun updateResult(pageId: String, result: Any) {
         val page = pages[pageId] as PageImpl
@@ -140,7 +129,7 @@ internal class PageManagerImpl(
         if (oldResult == null || oldResult != result)
             page.result = result
 
-        val continuations = dependencies[pageId]
+        val continuations = page.dependencies
 
         continuations?.forEach {
             getResultOrExec(it)
@@ -270,7 +259,7 @@ internal class PageManagerImpl(
                         "ENTRY_MODIFY" -> {
                             logger.debug("${watchEvent.context()} was modified")
                             invalidatePage(id)
-                            logger.debug("results: ${pages.mapValues { "${it.value.result}\n\n" }}}")
+                            logger.debug("invalidated pages: ${pages.filterValues { it.result == null }.keys}}")
                             evalPage(file)
                             // ensure all pages have their results cached again
                             notebookScript.pageFiles.forEach {
@@ -286,8 +275,6 @@ internal class PageManagerImpl(
                         "OVERFLOW" -> logger.debug("${watchEvent.context()} overflow")
                     }
                 }
-
-                logger.info("set fileObject and even refs")
             }
         }
 
