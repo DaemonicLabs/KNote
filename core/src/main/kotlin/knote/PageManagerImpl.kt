@@ -173,7 +173,7 @@ internal class PageManagerImpl(
 
         val continuations = page.dependencies
 
-        continuations?.forEach {
+        continuations.forEach {
             getResultOrExec(it)
         }
     }

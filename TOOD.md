@@ -1,14 +1,16 @@
 # Buildscripts
 
-- [ ] add constants generator
+- [x] add constants generator
 
 # Core
 
-## Script COmpiler
+## Notebook
 
-- [ ] use withObject on scripts to pass previous compiled scripts ?  
-  NOTE: would not allow access to functions defined in other scripts.. (i think)  
-  NOTE: `@Import`/`@Include` seems like a cleaner solution
+- [ ] register Result Adapter
+- [ ] get closest matching Result Adapter for given KType
+
+## Script Compiler
+
 - [ ] Handle Compilation Fail different than waiting on results to be available
 
 ## PathWatcher
@@ -23,13 +25,12 @@ possibly annotations on method arguments
 
 ## Gradle Plugin
 
-- [ ] Extension
-- [ ] ShadowJar tasks
+- [x] Extension
+- [x] ShadowJar tasks
 
 
 # GUI TornadoFx
 
-- [ ] Finish conversion layer to send data back to KNote module to compile and send results
 - [ ] Page dependency digraph drawer with clickable features
 - [ ] JVM dependency manager
 

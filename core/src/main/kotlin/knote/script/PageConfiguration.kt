@@ -140,9 +140,6 @@ class PageConfiguration : ScriptCompilationConfiguration({
                 ide.acceptedLocations.append(ScriptAcceptedLocation.Project)
 
                 if (dependencyScripts.isNotEmpty()) {
-                    defaultImports(
-                        FromPage::class
-                    )
                     reports += ScriptDiagnostic(
                         "importScripts += ${dependencyScripts.map { it.locationId }}",
                         ScriptDiagnostic.Severity.INFO
