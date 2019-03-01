@@ -1,14 +1,14 @@
-@file:Import("Item.kt")
+import Item
 
 fun process(): Sequence<Item> {
     val sequence = sequenceOf(
-        Pair("Alpha", 4.0),
-        Pair("Beta", 6.0),
-        Pair("Gamma", 7.2),
-        Pair("Delta", 9.2),
-        Pair("Epsilon", 6.8),
-        Pair("Zeta", 2.4),
-        Pair("Iota", 8.8)
+        Item("Alpha", 4.0),
+        Item("Beta", 6.0),
+        Item("Gamma", 7.2),
+        Item("Delta", 9.2),
+        Item("Epsilon", 6.8),
+        Item("Zeta", 2.4),
+        Item("Iota", 8.8)
     )
     println(sequence.toList())
     return sequence

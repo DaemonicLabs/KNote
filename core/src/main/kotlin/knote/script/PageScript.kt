@@ -5,6 +5,7 @@ import knote.api.Notebook
 import knote.api.PageResult
 import knote.data.PageImpl
 import mu.KLogging
+import mu.KotlinLogging
 import java.io.File
 import kotlin.reflect.KProperty
 import kotlin.reflect.full.declaredFunctions
@@ -21,6 +22,8 @@ open class PageScript(
     val id: String,
     val rootDir: File
 ) {
+    val logger = KotlinLogging.logger(id)
+
     companion object : KLogging()
 
     override fun toString() = "PageScript(id=$id)"

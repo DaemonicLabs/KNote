@@ -88,13 +88,13 @@ internal object NotebookManagerImpl : NotebookManager, KLogging() {
         return notebook
     }
 
-    override fun getPageManager(notebookId: String): PageManager? {
+    override fun getPageManager(notebookId: String): PageManager {
         val notebook = notebooks[notebookId] as NotebookImpl
-        val oldManager = notebook.pageManager
-        if(oldManager == null) {
-            notebook.pageManager = PageManagerImpl(notebook, host, workingDir)
-        }
         return notebook.pageManager
+            ?: return PageManagerImpl(notebook, host, workingDir).also {
+                notebook.pageManager = it
+            }
+//            notebook.pageManager = PageManagerImpl(notebook, host, workingDir)
     }
 
     private fun invalidateNotebook(id: String) {

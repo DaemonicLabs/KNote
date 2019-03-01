@@ -44,6 +44,8 @@ val ideaActive = System.getProperty("idea.active") == "true"
 
 val hostRoot = rootDir.absoluteFile.parentFile
 
+sourceSets.main
+
 //if (ideaActive) {
 //    val gradleWrapper = when {
 //        Platform.isWindows -> "gradlew.bat"

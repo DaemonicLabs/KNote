@@ -7,9 +7,11 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.tasks.JavaExec
+import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.dependencies
+import org.gradle.kotlin.dsl.getByName
 import org.gradle.kotlin.dsl.maven
 import org.gradle.kotlin.dsl.repositories
 import org.gradle.kotlin.dsl.task
@@ -30,10 +32,10 @@ open class KNotePlugin : Plugin<Project> {
         val implementation = project.configurations.getByName("implementation")
 
         val knoteConfiguration = project.configurations.create("knote")
-        val knoteFXConfiguration = project.configurations.create("knoteFx"){
+        val knoteFXConfiguration = project.configurations.create("knoteFx") {
             extendsFrom(knoteConfiguration)
         }
-        implementation.extendsFrom(knoteConfiguration)
+//        implementation.extendsFrom(knoteConfiguration)
 
         project.repositories {
             maven(url = "http://maven.modmuss50.me") {
@@ -70,15 +72,36 @@ open class KNotePlugin : Plugin<Project> {
             }
         }
 
+        val sourceSets = project.extensions.getByName<SourceSetContainer>("sourceSets")
+        val main = sourceSets.getByName("main")
+
         val shadowCore = project.tasks.create<ShadowJar>("shadowCore") {
             group = "shadow"
+            from(main.output)
             archiveBaseName.set("core")
             configurations = listOf(knoteConfiguration)
+            manifest {
+                attributes(
+                    mapOf(
+                        "Main-Class" to "knote.Main",
+                        "version" to project.version
+                    )
+                )
+            }
         }
         val shadowViewer = project.tasks.create<ShadowJar>("shadowViewer") {
             group = "shadow"
+            from(main.output)
             archiveBaseName.set("tornadofx-viewer")
             configurations = listOf(knoteFXConfiguration)
+            manifest {
+                attributes(
+                    mapOf(
+                        "Main-Class" to "knote.tornadofx.ViewerApp",
+                        "version" to project.version
+                    )
+                )
+            }
         }
 
         val notebookDir = project.rootDir.resolve("notebooks").apply { mkdirs() }
@@ -110,13 +133,13 @@ open class KNotePlugin : Plugin<Project> {
                     }
 //                    PageMarker.generate(generatedSrc, pages, fileName = id.capitalize())
 
-                    extensions.configure<KotlinJvmProjectExtension> {
-                        sourceSets.maybeCreate("main").apply {
-//                            kotlin.srcDir(pagesSrc)
-                            kotlin.srcDir(generatedSrc)
-//                            dependsOn(sourceSets.getByName("main"))
-                        }
-                    }
+//                    extensions.configure<KotlinJvmProjectExtension> {
+//                        this.sourceSets.maybeCreate("main").apply {
+                            // kotlin.srcDir(pagesSrc)
+                            // kotlin.srcDir(generatedSrc)
+                            // dependsOn(sourceSets.getByName("main"))
+//                        }
+//                    }
 
                     extensions.configure<IdeaModel> {
                         module {
@@ -131,7 +154,7 @@ open class KNotePlugin : Plugin<Project> {
                         group = "application"
                         args = listOf(id)
                         workingDir = rootDir
-                        main = "knote.Main"
+                        this.main = "knote.Main"
                         classpath(shadowCore.archiveFile)
                         doFirst {
                             logger.lifecycle("executing")
@@ -145,7 +168,7 @@ open class KNotePlugin : Plugin<Project> {
                         val jarFile = shadowCore.archiveFile.get()
                         group = "application"
                         args = listOf(id)
-                        main = "knote.tornadofx.ViewerApp"
+                        this.main = "knote.tornadofx.ViewerApp"
                         workingDir = rootDir
                         classpath(shadowViewer.archiveFile)
                         systemProperty("notebook", id)

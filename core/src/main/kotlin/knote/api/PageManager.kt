@@ -23,4 +23,5 @@ interface PageManager {
     fun updateSourceCode(pageId: String, content: String)
     fun executeAll(): Map<String, Any>
     fun resultType(pageId: String): KType?
+    fun findPage(pageId: String): Page?
 }

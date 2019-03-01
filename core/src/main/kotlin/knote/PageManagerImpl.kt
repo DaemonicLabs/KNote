@@ -5,6 +5,7 @@ import knote.api.PageManager
 import knote.data.NotebookImpl
 import knote.data.PageImpl
 import knote.host.EvalScript
+import knote.host.EvalScript.posToString
 import knote.script.PageScript
 import knote.util.MutableKObservableMap
 import knote.util.watchActor
@@ -13,9 +14,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mu.KLogging
 import java.io.File
-import java.lang.Exception
 import kotlin.reflect.KType
 import kotlin.reflect.full.declaredMemberFunctions
+import kotlin.script.experimental.api.ScriptDiagnostic
 import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
 
 internal class PageManagerImpl(
@@ -41,15 +42,14 @@ internal class PageManagerImpl(
         startWatcher()
 
         // loop over all pages that are evaluated but have no result yet
-
     }
 
-    override fun executeAll() : Map<String, Any>{
+    override fun executeAll(): Map<String, Any> {
         notebookScript.pageFiles.forEach {
             val id = it.name.substringBeforeLast(".page.kts")
             pages[id]?.compiledScript ?: evalPage(it)
         }
-        while (pages.any { (id, page) -> page.result == null && !(page as PageImpl).errored}) {
+        while (pages.any { (id, page) -> page.result == null && !(page as PageImpl).errored }) {
             pages.filterValues { it.result == null }
                 .forEach { id, page ->
                     id to getResultOrExec(id)
@@ -61,14 +61,27 @@ internal class PageManagerImpl(
     }
 
     override fun resultType(pageId: String): KType? {
-        val page = pages[pageId] ?: return null
-        val pageScript = page.compiledScript ?: return null
+        val page = findPage(pageId) ?: run {
+            logger.warn("could not find page $pageId")
+            return null
+        }
+        val pageScript = page.compiledScript ?: run {
+            logger.warn("script for page $pageId is not compiled")
+            evalPage(pageId)?.compiledScript ?: return null
+        }
         val processFunction =
             pageScript::class.declaredMemberFunctions.find { it.name == "process" } ?: run {
                 logger.error("no function `process` found in $pageId")
                 return null
             }
         return processFunction.returnType
+    }
+
+    override fun findPage(pageId: String): Page? = pages[pageId] ?: run {
+        evalPage(pageId) ?: run {
+            logger.warn("evalPage($pageId) returned null")
+            null
+        }
     }
 
     override fun evalPage(pageId: String): Page? {
@@ -93,8 +106,26 @@ internal class PageManagerImpl(
         page.compiledScript = pageScript
         if (pageScript == null) {
             logger.error("evaluation failed for file $file")
-            reports.forEach {
-                logger.error { it }
+            reports.forEach { report ->
+                val path = report.sourcePath?.let { "$it: " } ?: ""
+                val location = report.location?.posToString()?.let { "$it: " } ?: ""
+                val messageString = "$path$location${report.message}"
+                when (report.severity) {
+                    ScriptDiagnostic.Severity.FATAL -> logger.error { "FATAL: $messageString" }
+                    ScriptDiagnostic.Severity.ERROR -> logger.error { messageString }
+                    ScriptDiagnostic.Severity.WARNING -> logger.warn { messageString }
+                    ScriptDiagnostic.Severity.INFO -> logger.info { messageString }
+                    ScriptDiagnostic.Severity.DEBUG -> logger.debug { messageString }
+                }
+                report.exception?.apply {
+                    logger.error(message, this)
+                    this.cause?.apply {
+                        logger.error(message, this)
+                    }
+                    this.suppressed.forEach {
+                        logger.error("suppressed exception: ${it.message}", this)
+                    }
+                }
             }
             page.errored = true
             return null
@@ -122,12 +153,11 @@ internal class PageManagerImpl(
 //        logger.debug("dependencies of $pageId: ${page.dependencies}")
         page.result = null
 
-
         // find all pages depending on this page and invalidate them too
         pages.forEach { depId, depPage ->
-//            logger.debug("dependencies of $depId: ${depPage.dependencies}")
+            //            logger.debug("dependencies of $depId: ${depPage.dependencies}")
 //            if(depId == pageId) return@forEach
-            if(pageId in depPage.dependencies) {
+            if (pageId in depPage.dependencies) {
                 invalidateResult(depId)
             }
         }
@@ -197,7 +227,7 @@ internal class PageManagerImpl(
 //                page.compiledScript = null
 //                "${parameterProcessFunc.returnType} is not a subtype of requested ${parameter.type}"
 //            }
-            // TODO: ensure actual type of paramResult is accessible
+        // TODO: ensure actual type of paramResult is accessible
 //            val paramClass = paramResult::class
 //            logger.debug("paramResult::class: $paramClass")
 //            logger.debug("paramResult::class.visibility : ${paramClass.visibility}")
