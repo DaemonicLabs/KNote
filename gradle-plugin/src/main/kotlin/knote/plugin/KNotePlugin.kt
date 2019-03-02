@@ -16,11 +16,11 @@ import org.gradle.kotlin.dsl.maven
 import org.gradle.kotlin.dsl.repositories
 import org.gradle.kotlin.dsl.task
 import org.gradle.plugins.ide.idea.model.IdeaModel
-import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import java.io.File
 
 open class KNotePlugin : Plugin<Project> {
     override fun apply(project: Project) {
+        project.logger.lifecycle("KNote version ${GradlePluginConstants.FULL_VERSION}")
         val knoteExtension = project.run {
             pluginManager.apply("org.gradle.idea")
             pluginManager.apply("org.jetbrains.kotlin.jvm")
@@ -33,7 +33,7 @@ open class KNotePlugin : Plugin<Project> {
 
         val knoteConfiguration = project.configurations.create("knote")
         val knoteFXConfiguration = project.configurations.create("knoteFx") {
-            extendsFrom(knoteConfiguration)
+            //            extendsFrom(knoteConfiguration)
         }
 //        implementation.extendsFrom(knoteConfiguration)
 
@@ -72,6 +72,30 @@ open class KNotePlugin : Plugin<Project> {
             }
         }
 
+        val notebookDir = project.rootDir.resolve("notebooks").apply { mkdirs() }
+
+        project.extensions.configure<IdeaModel> {
+            module {
+//                val debugLog = project.rootDir.resolve("debug.log")
+//                debugLog.writeText("adding '$notebookDir' to sourceDirs")
+
+                project.logger.lifecycle("adding '$notebookDir' to sourceDirs")
+                sourceDirs.add(notebookDir)
+                notebookDir
+                    .listFiles { _, name -> name.endsWith(".notebook.kts") }
+                    .forEach { scriptFile ->
+                        val id = scriptFile.name.substringBeforeLast(".notebook.kts")
+
+                        val generatedSrc = project.rootDir.resolve("build").resolve(".knote").resolve(id)
+                        val pagesSrc = project.rootDir.resolve("${id}_pages")
+
+                        sourceDirs.add(pagesSrc)
+                        sourceDirs.add(generatedSrc)
+                        generatedSourceDirs.add(generatedSrc)
+                    }
+            }
+        }
+
         val sourceSets = project.extensions.getByName<SourceSetContainer>("sourceSets")
         val main = sourceSets.getByName("main")
 
@@ -104,7 +128,6 @@ open class KNotePlugin : Plugin<Project> {
             }
         }
 
-        val notebookDir = project.rootDir.resolve("notebooks").apply { mkdirs() }
 
         project.afterEvaluate {
             extensions.configure<JavaPluginExtension> {
@@ -112,8 +135,32 @@ open class KNotePlugin : Plugin<Project> {
                 targetCompatibility = JavaVersion.VERSION_1_8
             }
 
+
+            dependencies {
+                knoteConfiguration.resolvedConfiguration.firstLevelModuleDependencies.forEach {
+                    logger.lifecycle("adding to implementation: $it")
+                    add(
+                        implementation.name, create(
+                            it.moduleGroup,
+                            it.moduleName,
+                            it.moduleVersion
+                        )
+                    )
+                }
+                knoteFXConfiguration.resolvedConfiguration.firstLevelModuleDependencies.forEach {
+                    logger.lifecycle("adding to implementation: $it")
+                    add(
+                        implementation.name, create(
+                            it.moduleGroup,
+                            it.moduleName,
+                            it.moduleVersion
+                        )
+                    )
+                }
+            }
+
 //            extensions.configure<KotlinJvmProjectExtension> {
-//                sourceSets.maybeCreate("main").apply {
+//                this.sourceSets.maybeCreate("main_script").apply {
 //                    kotlin.srcDir(notebookDir)
 //                }
 //            }
@@ -133,19 +180,20 @@ open class KNotePlugin : Plugin<Project> {
                     }
 //                    PageMarker.generate(generatedSrc, pages, fileName = id.capitalize())
 
-//                    extensions.configure<KotlinJvmProjectExtension> {
-//                        this.sourceSets.maybeCreate("main").apply {
-                            // kotlin.srcDir(pagesSrc)
-                            // kotlin.srcDir(generatedSrc)
-                            // dependsOn(sourceSets.getByName("main"))
+//                    extensions.configure<IdeaModel> {
+//                        module {
+//                            sourceDirs.add(pagesSrc)
+//                            sourceDirs.add(generatedSrc)
+//                            generatedSourceDirs.add(generatedSrc)
 //                        }
 //                    }
-
-                    extensions.configure<IdeaModel> {
-                        module {
-                            generatedSourceDirs.add(generatedSrc)
-                        }
-                    }
+//                    extensions.configure<KotlinJvmProjectExtension> {
+//                        this.sourceSets.maybeCreate("main_script").apply {
+//                            kotlin.srcDir(pagesSrc)
+//                            kotlin.srcDir(generatedSrc)
+//                             dependsOn(sourceSets.getByName("main"))
+//                        }
+//                    }
 
                     task<JavaExec>("run_$id") {
                         dependsOn(shadowCore)

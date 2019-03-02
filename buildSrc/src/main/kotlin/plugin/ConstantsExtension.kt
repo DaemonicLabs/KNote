@@ -15,6 +15,10 @@ class ConstantsBuilder(val pkg: String, val className: String) : Serializable {
     infix fun ConstantField.value(value: Int) {
         fields += this.name to value
     }
+
+    infix fun ConstantField.value(value: Long) {
+        fields += this.name to value
+    }
 }
 
 data class ConstantField(

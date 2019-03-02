@@ -141,6 +141,7 @@ subprojects {
             field("VERSION") value Constants.KNote.version
             field("FULL_VERSION") value fullVersion
             field("BUILD_NUMBER") value buildnumber
+            field("COMPILE_TIMESTAMP") value System.currentTimeMillis()
         }
     }
 

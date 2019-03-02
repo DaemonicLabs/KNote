@@ -66,7 +66,7 @@ object PageDependency : KLogging() {
                 }
                 PageScript.logger.debug("adding dependency $dependencyId to ${page.id}")
                 (page as PageImpl).dependencies += dependencyId
-                PageScript.logger.debug("dependencies of $pageId: ${depPage.dependencies}")
+                PageScript.logger.debug("dependencies of ${page.id}: ${page.dependencies}")
                 return result as? T ?: run {
                     throw IllegalStateException("result: ${result::class} is not ${property.returnType}")
                 }

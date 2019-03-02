@@ -3,6 +3,7 @@ package knote.script
 import knote.KNote
 import knote.annotations.FromPage
 import knote.api.PageManager
+import knote.core.CoreConstants
 import knote.poet.PageDependency
 import mu.KLogging
 import org.jetbrains.kotlin.script.InvalidScriptResolverAnnotation
@@ -52,6 +53,10 @@ class PageConfiguration : ScriptCompilationConfiguration({
                 "beforeCompiling time: ${System.currentTimeMillis()}",
                 ScriptDiagnostic.Severity.DEBUG
             )
+            reports += ScriptDiagnostic(
+                "COMPILE_TIMESTAMP: ${CoreConstants.COMPILE_TIMESTAMP}",
+                ScriptDiagnostic.Severity.INFO
+            )
 
             ScriptCompilationConfiguration(context.compilationConfiguration) {
                 ide.acceptedLocations.append(ScriptAcceptedLocation.Project)
@@ -73,8 +78,9 @@ class PageConfiguration : ScriptCompilationConfiguration({
             )
 
             val annotations = context.collectedData?.get(ScriptCollectedData.foundAnnotations)?.also { annotations ->
-                reports += ScriptDiagnostic("file_annotations: $annotations", ScriptDiagnostic.Severity.DEBUG)
-
+                if(annotations.isNotEmpty()) {
+                    reports += ScriptDiagnostic("file_annotations: $annotations", ScriptDiagnostic.Severity.DEBUG)
+                }
                 if (annotations.any { it is InvalidScriptResolverAnnotation }) {
                     reports += ScriptDiagnostic(
                         "InvalidScriptResolverAnnotation found",
@@ -88,8 +94,8 @@ class PageConfiguration : ScriptCompilationConfiguration({
                 ?.takeIf { it.isNotEmpty() }
             val dependencyScripts: List<SourceCode> = if (fromPageAnnotations != null) {
                 reports += ScriptDiagnostic(
-                    "fromPageAnnotations: $fromPageAnnotations",
-                    ScriptDiagnostic.Severity.DEBUG
+                    "fromPage: $fromPageAnnotations",
+                    ScriptDiagnostic.Severity.INFO
                 )
                 val startedPages = loopDetector.getOrPut(notebookId) { mutableListOf() }
                 if(pageId in startedPages) {
@@ -102,8 +108,7 @@ class PageConfiguration : ScriptCompilationConfiguration({
                 startedPages += pageId
                 val pageManager: PageManager = KNote.NOTEBOOK_MANAGER.getPageManager(notebookId)
 //                val page = pageManager.findPage(pageId)!! as PageImpl
-                val generatedSrc = rootDir.resolve("build").resolve(".dependencies").resolve(notebookId).absoluteFile
-                generatedSrc.deleteRecursively()
+                val generatedSrc = rootDir.resolve("build").resolve(".knote").resolve(notebookId).absoluteFile
                 generatedSrc.mkdirs()
                 val pageDependencies = fromPageAnnotations
                     .map { it.source }
@@ -127,24 +132,25 @@ class PageConfiguration : ScriptCompilationConfiguration({
                         depId to resultType
                     }
 
+                logger.debug("generating dependencies for $notebookId:$pageId")
                 val file = PageDependency.generate(
                     output = generatedSrc,
                     notebookId = notebookId,
                     pageId = pageId,
                     pageDependencies = pageDependencies
                 )
+                logger.debug("generated $file, ${file.exists()}")
                 listOf(file.toScriptSource())
             } else listOf()
 
             val compilationConfiguration = ScriptCompilationConfiguration(context.compilationConfiguration) {
-                ide.acceptedLocations.append(ScriptAcceptedLocation.Project)
-
                 if (dependencyScripts.isNotEmpty()) {
                     reports += ScriptDiagnostic(
                         "importScripts += ${dependencyScripts.map { it.locationId }}",
                         ScriptDiagnostic.Severity.INFO
                     )
                     importScripts.append(dependencyScripts)
+//                    ide.dependenciesSources.append(dependencyScripts)
                 }
             }
             loopDetector.remove(pageId)

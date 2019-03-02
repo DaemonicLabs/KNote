@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     id("daemoniclabs.knote") version "1.0.0-dev"
+    idea
 }
 
 knote {
@@ -44,8 +45,6 @@ val ideaActive = System.getProperty("idea.active") == "true"
 
 val hostRoot = rootDir.absoluteFile.parentFile
 
-sourceSets.main
-
 //if (ideaActive) {
 //    val gradleWrapper = when {
 //        Platform.isWindows -> "gradlew.bat"
@@ -75,18 +74,18 @@ sourceSets.main
 //    logger.lifecycle("command finished with code: $result")
 //}
 
-val publishHost = task<GradleBuild>("publishHost") {
-    tasks = listOf("publishToMavenLocal")
-    dir = hostRoot
-    buildFile = hostRoot.resolve("build.gradle.kts")
-}
-
-val shadowCore = tasks.getByName<ShadowJar>("shadowCore") {
-    dependsOn += publishHost
-}
-val shadowViewer = tasks.getByName<ShadowJar>("shadowViewer") {
-    dependsOn += publishHost
-}
+//val publishHost = task<GradleBuild>("publishHost") {
+//    tasks = listOf("publishToMavenLocal")
+//    dir = hostRoot
+//    buildFile = hostRoot.resolve("build.gradle.kts")
+//}
+//
+//val shadowCore = tasks.getByName<ShadowJar>("shadowCore") {
+//    dependsOn += publishHost
+//}
+//val shadowViewer = tasks.getByName<ShadowJar>("shadowViewer") {
+//    dependsOn += publishHost
+//}
 
 val notebookDir = rootDir.resolve("notebooks").apply { mkdirs() }
 
