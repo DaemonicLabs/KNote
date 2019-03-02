@@ -3,21 +3,26 @@ package knote.tornadofx.view
 import javafx.geometry.Side
 import javafx.scene.layout.Priority
 import javafx.scene.paint.Color
-import javafx.scene.text.Text
 
-import knote.tornadofx.model.PageModel
 import knote.tornadofx.model.PageRegistryScope
+import knote.tornadofx.model.PageViewModel
 import tornadofx.*
+
+import javafx.scene.layout.VBox
+import knote.tornadofx.Styles
+import knote.tornadofx.controller.WorkbenchController
 
 class Workbench : View() {
 
-    var pages = arrayListOf<PageModel>().observable()
+    var pages = arrayListOf<PageViewModel>().observable()
     val tools = (1..10).toList()
-    var evaluationText = Text()
+    var evaluationConsole = VBox()
+
     override val scope = super.scope as PageRegistryScope
+    private val controller: WorkbenchController by inject()
 
     init {
-        scope.pages.forEach {
+        scope.pageViewModels.forEach {
             pages.add(it)
         }
     }
@@ -37,21 +42,13 @@ class Workbench : View() {
                                                 it.script = new
                                             }
                                         }
-                                        vbox {
+                                        evaluationConsole = vbox {
                                             when (it.results) {
-                                                is String -> {
-                                                    evaluationText = text(it.results)
-                                                    add(evaluationText)
-                                                }
+                                                is String -> { add(text(it.results)) }
                                                 else -> TODO()
                                             }
                                             minHeight = 280.0
-                                            style {
-                                                backgroundColor += Color.WHITE
-                                                backgroundColor += Color.WHITE
-                                                padding = box(10.px)
-                                            }
-                                        }
+                                        }.addClass(Styles.evaluationConsole)
                                     }
                                 }
                             }
@@ -59,15 +56,19 @@ class Workbench : View() {
                                 pane { hboxConstraints { hGrow = Priority.ALWAYS } }
                                 button("Rerun") {
                                     setOnAction {
-                                        pages.forEach { page ->
+                                        pages.forEach {page ->
                                             if (page.dirtyState) {
-                                                page.file.printWriter().use { out ->
-                                                    out.println(page.script)
+                                                page.file.printWriter().use {
+                                                    out -> out.println(page.script)
                                                 }
                                             }
                                         }
-                                        page.results = scope.manager.execPage(page.pageName).toString()
-                                        evaluationText = text(page.results)
+                                        runAsync {
+                                            scope.manager.getResultOrExec(page.pageName).toString()
+                                        } ui {
+                                            controller.updateEvaluationConsole(it)
+                                            page.results = it
+                                        }
                                     }
                                 }
                             }
@@ -98,8 +99,8 @@ class Workbench : View() {
                                         }
                                     }
                                 }
-                                item("Page Dependencies") {
-                                    text("List of dependencies here")
+                                item("Notebooks") {
+                                    text("notebooks")
                                 }
                                 item("JVM Dependencies") {
                                     text("List of JVM dependencies here")
