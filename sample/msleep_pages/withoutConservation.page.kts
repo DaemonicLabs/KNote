@@ -1,6 +1,6 @@
 //@file:FromPage("sleepData")
 import krangl.DataFrame
 
-val sleepData: DataFrmae by inject()
+val sleepData: DataFrame by inject()
 
 fun process() = sleepData.remove("conservation")

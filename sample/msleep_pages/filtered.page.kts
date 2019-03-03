@@ -2,8 +2,8 @@
 //@file:FromPage("longSleepers")
 import krangl.*
 
-val sleepData: DataFrmae by inject()
-val longSleepers: DataFrmae by inject()
+val sleepData: DataFrame by inject()
+val longSleepers: DataFrame by inject()
 
 fun process(): DataFrame {
     return longSleepers.select({listOf("name")}, { startsWith("sl")})
