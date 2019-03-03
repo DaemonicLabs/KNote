@@ -74,28 +74,6 @@ open class KNotePlugin : Plugin<Project> {
 
         val notebookDir = project.rootDir.resolve("notebooks").apply { mkdirs() }
 
-        project.extensions.configure<IdeaModel> {
-            module {
-//                val debugLog = project.rootDir.resolve("debug.log")
-//                debugLog.writeText("adding '$notebookDir' to sourceDirs")
-
-                project.logger.lifecycle("adding '$notebookDir' to sourceDirs")
-                sourceDirs.add(notebookDir)
-                notebookDir
-                    .listFiles { _, name -> name.endsWith(".notebook.kts") }
-                    .forEach { scriptFile ->
-                        val id = scriptFile.name.substringBeforeLast(".notebook.kts")
-
-                        val generatedSrc = project.rootDir.resolve("build").resolve(".knote").resolve(id)
-                        val pagesSrc = project.rootDir.resolve("${id}_pages")
-
-                        sourceDirs.add(pagesSrc)
-                        sourceDirs.add(generatedSrc)
-                        generatedSourceDirs.add(generatedSrc)
-                    }
-            }
-        }
-
         val sourceSets = project.extensions.getByName<SourceSetContainer>("sourceSets")
         val main = sourceSets.getByName("main")
 
@@ -159,13 +137,7 @@ open class KNotePlugin : Plugin<Project> {
                 }
             }
 
-//            extensions.configure<KotlinJvmProjectExtension> {
-//                this.sourceSets.maybeCreate("main_script").apply {
-//                    kotlin.srcDir(notebookDir)
-//                }
-//            }
-
-            // TODO: loop through registered notebooks (in extension)
+            // TODO: loop through registered notebooks (in extension ?)
 
             notebookDir
                 .listFiles { _, name -> name.endsWith(".notebook.kts") }
