@@ -1,10 +1,14 @@
 package knote.tornadofx.model
 
+import javafx.beans.property.ReadOnlyObjectWrapper
 import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
 import knote.api.Notebook
+import knote.api.Page
 import knote.api.PageManager
+import knote.script.PageScript
+import knote.util.KObservableMap
 import knote.util.KObservableObject
 import tornadofx.*
 import java.io.File
@@ -26,8 +30,12 @@ class PageViewModel(file: File, pageName: String, script: String, results: Strin
     var dirtyState by dirtyStateProperty
 }
 
-class PageRegistryScope(val pageManagerObject: KObservableObject<Notebook, PageManager?>,
-                        val pageViewModels: List<PageViewModel>): Scope()
+class PageManagerScope(val pageManager: PageManager,
+                       val pageViewModels: List<PageViewModel>): Scope()
+
+class PageManagerChangeListener(val pageName: String, scope: PageManagerScope): FXEvent(EventBus.RunOn.BackgroundThread, scope)
+
+class PageManagerEvent(val eval: Pair<PageScript, Any?>?) : FXEvent(EventBus.RunOn.BackgroundThread)
 
 
 

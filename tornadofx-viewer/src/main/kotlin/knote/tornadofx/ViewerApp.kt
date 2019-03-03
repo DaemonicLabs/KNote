@@ -1,12 +1,16 @@
 package knote.tornadofx
 
 import javafx.application.Application
+import javafx.beans.property.ReadOnlyMapProperty
+import javafx.beans.property.ReadOnlyObjectWrapper
 import knote.KNote
+import knote.api.Notebook
 import knote.api.PageManager
 import knote.tornadofx.model.PageViewModel
-import knote.tornadofx.model.PageRegistryScope
+import knote.tornadofx.model.PageManagerScope
 import knote.tornadofx.view.Workbench
-import knote.util.asObservable
+import knote.util.KObservableObject
+import knote.util.asProperty
 import mu.KLogging
 import tornadofx.*
 
@@ -18,8 +22,9 @@ class ViewerApp : App(Workspace::class) {
         KNote.NOTEBOOK_MANAGER.evalNotebooks()
         val notebooks = KNote.NOTEBOOK_MANAGER.notebooks
 
+        // TODO include a mechanism to choose a notebook, but we'll make the first notebook default for now
         notebooks.forEach { (id, notebook) ->
-            logger.info("id: $id")
+            logger.info("id: $notebook.id")
             pageManager = notebook.pageManager!!
 
             val pages = pageManager.pages
@@ -38,7 +43,7 @@ class ViewerApp : App(Workspace::class) {
     }
 
     override fun onBeforeShow(view: UIComponent) {
-        workspace.dock<Workbench>(PageRegistryScope(pageManagerObject, pageViewModels))
+        workspace.dock<Workbench>(PageManagerScope(pageManager, pageViewModels))
     }
 
     companion object : KLogging() {

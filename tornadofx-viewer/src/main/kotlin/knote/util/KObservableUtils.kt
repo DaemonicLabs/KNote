@@ -6,6 +6,7 @@ import javafx.beans.property.ReadOnlyMapProperty
 import javafx.beans.property.ReadOnlyMapWrapper
 import javafx.beans.property.ReadOnlyObjectWrapper
 import javafx.collections.FXCollections
+import knote.tornadofx.model.PageManagerChangeListener
 import tornadofx.*
 
 inline val <reified E> KObservableList<E>.asObservable: ReadOnlyListProperty<E>
@@ -19,6 +20,7 @@ inline val <reified E> KObservableList<E>.asObservable: ReadOnlyListProperty<E>
         }
         return observableList.readOnlyProperty
     }
+
 inline val <reified K, reified V> KObservableMap<K, V>.asObservable: ReadOnlyMapProperty<K, V>
     get() {
         val mutableMap = FXCollections.observableHashMap<K, V>()
