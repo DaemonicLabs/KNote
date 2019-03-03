@@ -1,6 +1,6 @@
-import krangl.DataFrame
+//@file:FromPage("sleepData")
 import krangl.*
 
-val sleepData: DataFrame = fromPage("sleepData")
+val sleepData: DataFrame by inject()
 
 fun process() = sleepData.select { range("name", "order") }

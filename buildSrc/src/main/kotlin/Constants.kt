@@ -26,7 +26,7 @@ object Constants {
     }
 
     object KotlinPoet {
-        const val version = "1.0.1"
+        const val version = "1.1.0"
         const val dependency = "com.squareup:kotlinpoet:$version"
     }
 

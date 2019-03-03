@@ -1,6 +1,6 @@
 package knote.annotations
 
-@Target(AnnotationTarget.VALUE_PARAMETER)
+@Target(AnnotationTarget.FILE)
 @Repeatable
 @Retention(AnnotationRetention.SOURCE)
 annotation class FromPage(val source: String)

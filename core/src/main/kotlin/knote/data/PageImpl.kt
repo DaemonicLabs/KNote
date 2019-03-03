@@ -21,7 +21,7 @@ class PageImpl(
         MutableKObservableObject(reports)
     override val resultObject: MutableKObservableObject<Page, Any?> = MutableKObservableObject(null)
     override val dependenciesObject: MutableKObservableObject<Page, Set<String>> =
-        MutableKObservableObject(mutableSetOf())
+        MutableKObservableObject(setOf())
 
     override var file by fileObject
     override var fileContent by fileContentObject

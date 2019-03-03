@@ -56,6 +56,17 @@ open class GenerateConstantsTask : DefaultTask() {
                                 .build()
                         )
                     }
+                    is Long -> {
+                        constantBuilder.addProperty(
+                            PropertySpec.builder(
+                                key,
+                                Long::class,
+                                KModifier.CONST
+                            )
+                                .initializer("%L", value)
+                                .build()
+                        )
+                    }
                 }
             }
 

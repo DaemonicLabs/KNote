@@ -1,15 +1,29 @@
 package knote.script
 
+import knote.KNote
 import knote.annotations.FromPage
+import knote.api.PageManager
+import knote.core.CoreConstants
+import knote.poet.PageDependency
 import mu.KLogging
+import org.jetbrains.kotlin.script.InvalidScriptResolverAnnotation
+import java.time.Instant
+import java.util.Date
+import kotlin.script.experimental.api.ResultWithDiagnostics
 import kotlin.script.experimental.api.ScriptAcceptedLocation
+import kotlin.script.experimental.api.ScriptCollectedData
 import kotlin.script.experimental.api.ScriptCompilationConfiguration
 import kotlin.script.experimental.api.ScriptDiagnostic
+import kotlin.script.experimental.api.SourceCode
 import kotlin.script.experimental.api.acceptedLocations
 import kotlin.script.experimental.api.asSuccess
 import kotlin.script.experimental.api.defaultImports
+import kotlin.script.experimental.api.foundAnnotations
 import kotlin.script.experimental.api.ide
+import kotlin.script.experimental.api.importScripts
 import kotlin.script.experimental.api.refineConfiguration
+import kotlin.script.experimental.host.FileScriptSource
+import kotlin.script.experimental.host.toScriptSource
 import kotlin.script.experimental.jvm.dependenciesFromCurrentContext
 import kotlin.script.experimental.jvm.jvm
 
@@ -21,6 +35,8 @@ class PageConfiguration : ScriptCompilationConfiguration({
         // ensures that all dependencies are available to the script
         dependenciesFromCurrentContext(wholeClasspath = false)
     }
+
+    // TODO: generate `Page.id`
 
     refineConfiguration {
         beforeParsing { context ->
@@ -39,61 +55,136 @@ class PageConfiguration : ScriptCompilationConfiguration({
                 "beforeCompiling time: ${System.currentTimeMillis()}",
                 ScriptDiagnostic.Severity.DEBUG
             )
+            val compileTime = Date.from(Instant.ofEpochSecond( CoreConstants.COMPILE_TIMESTAMP ))
+            reports += ScriptDiagnostic(
+                "COMPILE_TIMESTAMP: ${compileTime}",
+                ScriptDiagnostic.Severity.INFO
+            )
 
             ScriptCompilationConfiguration(context.compilationConfiguration) {
                 ide.acceptedLocations.append(ScriptAcceptedLocation.Project)
             }.asSuccess(reports)
         }
 
-//        onAnnotations(Import::class) { context ->
-//            logger.debug("on annotations")
-//            val scriptFile = (context.script as FileScriptSource).file
-//            val rootDir = scriptFile.parentFile.parentFile
-//
-//            val reports = mutableListOf<ScriptDiagnostic>()
-//            reports += ScriptDiagnostic(
-//                "rootDir: $rootDir",
-//                ScriptDiagnostic.Severity.INFO
-//            )
-//
-//            val annotations = context.collectedData?.get(ScriptCollectedData.foundAnnotations)?.also { annotations ->
-//                reports += ScriptDiagnostic("file_annotations: $annotations", ScriptDiagnostic.Severity.INFO)
-//
-//                if (annotations.any { it is InvalidScriptResolverAnnotation }) {
+        onAnnotations(FromPage::class) { context ->
+            logger.debug("on annotations")
+            val scriptFile = (context.script as FileScriptSource).file
+            val rootDir = scriptFile.parentFile.parentFile
+
+            val notebookId = scriptFile.parentFile.name.substringBeforeLast("_pages")
+            val pageId = scriptFile.name.substringBeforeLast(".page.kts")
+
+            val reports = mutableListOf<ScriptDiagnostic>()
+            reports += ScriptDiagnostic(
+                "rootDir: $rootDir",
+                ScriptDiagnostic.Severity.INFO
+            )
+
+            System.setProperty("user.dir", rootDir.absolutePath)
+
+            val annotations = context.collectedData?.get(ScriptCollectedData.foundAnnotations)?.also { annotations ->
+                if(annotations.isNotEmpty()) {
+                    reports += ScriptDiagnostic("file_annotations: $annotations", ScriptDiagnostic.Severity.DEBUG)
+                }
+                if (annotations.any { it is InvalidScriptResolverAnnotation }) {
+                    reports += ScriptDiagnostic(
+                        "InvalidScriptResolverAnnotation found",
+                        ScriptDiagnostic.Severity.ERROR
+                    )
+                    return@onAnnotations ResultWithDiagnostics.Failure(reports)
+                }
+            }
+
+            val fromPageAnnotations = annotations?.filterIsInstance(FromPage::class.java)
+                ?.takeIf { it.isNotEmpty() }
+            val dependencyScripts: List<SourceCode> = if (fromPageAnnotations != null) {
+                reports += ScriptDiagnostic(
+                    "fromPage: $fromPageAnnotations",
+                    ScriptDiagnostic.Severity.INFO
+                )
+                // TODO: DETECT CIRCULAR DEPENDENCIES
+//                val startedPages = loopDetector.getOrPut(notebookId) { mutableListOf() }
+//                if(pageId in startedPages) {
 //                    reports += ScriptDiagnostic(
-//                        "InvalidScriptResolverAnnotation found",
+//                        "page $pageId depends on itself",
 //                        ScriptDiagnostic.Severity.ERROR
 //                    )
 //                    return@onAnnotations ResultWithDiagnostics.Failure(reports)
 //                }
-//            }
-//
-//            return@onAnnotations ScriptCompilationConfiguration(context.compilationConfiguration) {
-//                ide.acceptedLocations.append(ScriptAcceptedLocation.Project)
-//
-//                if (annotations != null) {
-//                    val importAnnotations = annotations.filterIsInstance(Import::class.java)
+//                startedPages += pageId
+
+//                val notebook = KNote.NOTEBOOK_MANAGER.findNotebook(notebookId)
+//                if(notebook != null) {
+//                    logger.error("notebook $notebookId could not be loaded")
 //                    reports += ScriptDiagnostic(
-//                        "importAnnotations: $importAnnotations",
-//                        ScriptDiagnostic.Severity.DEBUG
+//                        "notebook $notebookId could not be loaded",
+//                        ScriptDiagnostic.Severity.ERROR
 //                    )
-//
-//                    val sources = importAnnotations.map {
-//                        rootDir.resolve("include").resolve(it.source)
-//                    }.distinct()
-//                    if (sources.isNotEmpty()) {
-//                        importScripts.append(sources.map { it.toScriptSource() })
-//                        reports += ScriptDiagnostic(
-//                            "importScripts += ${sources.map { it.relativeTo(rootDir) }}",
-//                            ScriptDiagnostic.Severity.INFO
-//                        )
-//                    }
+//                    return@onAnnotations ResultWithDiagnostics.Failure(reports)
 //                }
-//            }.asSuccess(reports)
-//        }
+                val pageManager: PageManager = KNote.NOTEBOOK_MANAGER.getPageManager(notebookId) ?: run {
+                    logger.error("pageManager for $notebookId could not be loaded")
+                    reports += ScriptDiagnostic(
+                        "pageManager for $notebookId could not be loaded",
+                        ScriptDiagnostic.Severity.ERROR
+                    )
+                    return@onAnnotations ResultWithDiagnostics.Failure(reports)
+                }
+//                val page = pageManager.findPage(pageId)!! as PageImpl
+                val generatedSrc = rootDir.resolve("build").resolve(".knote").resolve(notebookId).absoluteFile
+                generatedSrc.mkdirs()
+                val pageDependencies = fromPageAnnotations
+                    .map { it.source }
+                    .distinct()
+                    .associate { depId ->
+                        // TODO: DETECT CIRCULAR DEPENDENCIES
+                        if(depId == pageId) {
+                            reports += ScriptDiagnostic(
+                                "page $pageId depends on itself",
+                                ScriptDiagnostic.Severity.FATAL
+                            )
+                            return@onAnnotations ResultWithDiagnostics.Failure(reports)
+                        }
+                        val resultType = pageManager.resultType(depId)
+                        if (resultType == null) {
+                            reports += ScriptDiagnostic(
+                                "resultType of page $depId is unknown",
+                                ScriptDiagnostic.Severity.ERROR
+                            )
+                            return@onAnnotations ResultWithDiagnostics.Failure(reports)
+                        }
+                        depId to resultType
+                    }
+
+                logger.debug("generating dependencies for $notebookId:$pageId")
+                val file = PageDependency.generate(
+                    output = generatedSrc,
+                    notebookId = notebookId,
+                    pageId = pageId,
+                    pageDependencies = pageDependencies
+                )
+                logger.debug("generated $file, ${file.exists()}")
+                listOf(file.toScriptSource())
+            } else listOf()
+
+            val compilationConfiguration = ScriptCompilationConfiguration(context.compilationConfiguration) {
+                if (dependencyScripts.isNotEmpty()) {
+                    reports += ScriptDiagnostic(
+                        "importScripts += ${dependencyScripts.map { it.locationId }}",
+                        ScriptDiagnostic.Severity.INFO
+                    )
+                    importScripts.append(dependencyScripts)
+//                    ide.dependenciesSources.append(dependencyScripts)
+                }
+            }
+            loopDetector.remove(pageId)
+            compilationConfiguration.asSuccess(reports)
+        }
     }
 }) {
-    companion object : KLogging()
+    companion object : KLogging() {
+        val loopDetector: MutableMap<String, MutableList<String>> = mutableMapOf()
+    }
 }
 
 

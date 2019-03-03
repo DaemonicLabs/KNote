@@ -1,7 +1,7 @@
-import krangl.DataFrame
+//@file:FromPage("sleepData")
+//@file:FromPage("longSleepers")
 import krangl.*
 
-//val longSleepers: DataFrame = fromPage("longSleepers")
 val sleepData: DataFrame by inject()
 val longSleepers: DataFrame by inject()
 

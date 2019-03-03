@@ -24,9 +24,9 @@ internal object NotebookManagerImpl : NotebookManager, KLogging() {
         .apply { mkdirs() }
 
     private val host = EvalScript.createJvmScriptingHost(cacheDir)
-    private val workingDir = File(System.getProperty("user.dir")).absoluteFile!!
+    private val workingDir get() = File(System.getProperty("user.dir")).absoluteFile!!
 
-    private val notebooksDir = File(System.getProperty("user.dir")).absoluteFile.resolve("notebooks").apply {
+    private val notebooksDir get() = File(System.getProperty("user.dir")).absoluteFile.resolve("notebooks").apply {
         mkdirs()
         logger.info("notebooksDir: $this")
     }
@@ -64,23 +64,27 @@ internal object NotebookManagerImpl : NotebookManager, KLogging() {
             logger.error("$notebookId rejected by notebookFilter: $notebookFilter")
             return null
         }
+        logger.debug("attempting to construct notebook '$notebookId'")
         val file = notebooksDir.resolve("$notebookId.notebook.kts")
-        val id = file.name.substringBeforeLast(".notebook.kts")
+        require(file.exists()) {
+            "notebook: $notebookId does not exist ($file)"
+        }
+//        val id = file.name.substringBeforeLast(".notebook.kts")
         val (notebookScript, reports) = EvalScript.evalScript<NotebookScript>(
             host,
             file,
-            args = *arrayOf(id, workingDir)
+            args = *arrayOf(notebookId, workingDir)
         )
-        val notebook = notebooks.getOrPut(id) {
+        val notebook = notebooks.getOrPut(notebookId) {
             NotebookImpl(
-                id = id,
+                id = notebookId,
                 file = file
             )
         } as NotebookImpl
         notebook.reports = reports
         notebook.compiledScript = notebookScript
         if (notebookScript == null) {
-            println("evaluation failed for notebook $id")
+            logger.error("evaluation failed for notebook $notebookId")
             return notebook
         }
 
@@ -89,12 +93,15 @@ internal object NotebookManagerImpl : NotebookManager, KLogging() {
     }
 
     override fun getPageManager(notebookId: String): PageManager? {
-        val notebook = notebooks[notebookId] as NotebookImpl
-        val oldManager = notebook.pageManager
-        if(oldManager == null) {
-            notebook.pageManager = PageManagerImpl(notebook, host, workingDir)
+        val notebook = findNotebook(notebookId) as? NotebookImpl ?: run {
+            logger.error("cannot load notebook $notebookId")
+            return null
         }
         return notebook.pageManager
+            ?: return PageManagerImpl(notebook, host, workingDir).also {
+                notebook.pageManager = it
+            }
+//            notebook.pageManager = PageManagerImpl(notebook, host, workingDir)
     }
 
     private fun invalidateNotebook(id: String) {
@@ -153,6 +160,6 @@ internal object NotebookManagerImpl : NotebookManager, KLogging() {
                 }
             }
         }
-        logger.debug("started notebook watcher")
+        logger.trace("started notebook watcher")
     }
 }

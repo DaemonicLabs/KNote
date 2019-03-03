@@ -7,18 +7,20 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.tasks.JavaExec
+import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.dependencies
+import org.gradle.kotlin.dsl.getByName
 import org.gradle.kotlin.dsl.maven
 import org.gradle.kotlin.dsl.repositories
 import org.gradle.kotlin.dsl.task
 import org.gradle.plugins.ide.idea.model.IdeaModel
-import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import java.io.File
 
 open class KNotePlugin : Plugin<Project> {
     override fun apply(project: Project) {
+        project.logger.lifecycle("KNote version ${GradlePluginConstants.FULL_VERSION}")
         val knoteExtension = project.run {
             pluginManager.apply("org.gradle.idea")
             pluginManager.apply("org.jetbrains.kotlin.jvm")
@@ -30,10 +32,10 @@ open class KNotePlugin : Plugin<Project> {
         val implementation = project.configurations.getByName("implementation")
 
         val knoteConfiguration = project.configurations.create("knote")
-        val knoteFXConfiguration = project.configurations.create("knoteFx"){
-            extendsFrom(knoteConfiguration)
+        val knoteFXConfiguration = project.configurations.create("knoteFx") {
+            //            extendsFrom(knoteConfiguration)
         }
-        implementation.extendsFrom(knoteConfiguration)
+//        implementation.extendsFrom(knoteConfiguration)
 
         project.repositories {
             maven(url = "http://maven.modmuss50.me") {
@@ -70,18 +72,40 @@ open class KNotePlugin : Plugin<Project> {
             }
         }
 
+        val notebookDir = project.rootDir.resolve("notebooks").apply { mkdirs() }
+
+        val sourceSets = project.extensions.getByName<SourceSetContainer>("sourceSets")
+        val main = sourceSets.getByName("main")
+
         val shadowCore = project.tasks.create<ShadowJar>("shadowCore") {
             group = "shadow"
+            from(main.output)
             archiveBaseName.set("core")
             configurations = listOf(knoteConfiguration)
+            manifest {
+                attributes(
+                    mapOf(
+                        "Main-Class" to "knote.Main",
+                        "version" to project.version
+                    )
+                )
+            }
         }
         val shadowViewer = project.tasks.create<ShadowJar>("shadowViewer") {
             group = "shadow"
+            from(main.output)
             archiveBaseName.set("tornadofx-viewer")
             configurations = listOf(knoteFXConfiguration)
+            manifest {
+                attributes(
+                    mapOf(
+                        "Main-Class" to "knote.tornadofx.ViewerApp",
+                        "version" to project.version
+                    )
+                )
+            }
         }
 
-        val notebookDir = project.rootDir.resolve("notebooks").apply { mkdirs() }
 
         project.afterEvaluate {
             extensions.configure<JavaPluginExtension> {
@@ -89,13 +113,31 @@ open class KNotePlugin : Plugin<Project> {
                 targetCompatibility = JavaVersion.VERSION_1_8
             }
 
-//            extensions.configure<KotlinJvmProjectExtension> {
-//                sourceSets.maybeCreate("main").apply {
-//                    kotlin.srcDir(notebookDir)
-//                }
-//            }
 
-            // TODO: loop through registered notebooks (in extension)
+            dependencies {
+                knoteConfiguration.resolvedConfiguration.firstLevelModuleDependencies.forEach {
+                    logger.lifecycle("adding to implementation: $it")
+                    add(
+                        implementation.name, create(
+                            it.moduleGroup,
+                            it.moduleName,
+                            it.moduleVersion
+                        )
+                    )
+                }
+                knoteFXConfiguration.resolvedConfiguration.firstLevelModuleDependencies.forEach {
+                    logger.lifecycle("adding to implementation: $it")
+                    add(
+                        implementation.name, create(
+                            it.moduleGroup,
+                            it.moduleName,
+                            it.moduleVersion
+                        )
+                    )
+                }
+            }
+
+            // TODO: loop through registered notebooks (in extension ?)
 
             notebookDir
                 .listFiles { _, name -> name.endsWith(".notebook.kts") }
@@ -110,19 +152,20 @@ open class KNotePlugin : Plugin<Project> {
                     }
 //                    PageMarker.generate(generatedSrc, pages, fileName = id.capitalize())
 
-                    extensions.configure<KotlinJvmProjectExtension> {
-                        sourceSets.maybeCreate("main").apply {
+//                    extensions.configure<IdeaModel> {
+//                        module {
+//                            sourceDirs.add(pagesSrc)
+//                            sourceDirs.add(generatedSrc)
+//                            generatedSourceDirs.add(generatedSrc)
+//                        }
+//                    }
+//                    extensions.configure<KotlinJvmProjectExtension> {
+//                        this.sourceSets.maybeCreate("main_script").apply {
 //                            kotlin.srcDir(pagesSrc)
-                            kotlin.srcDir(generatedSrc)
-//                            dependsOn(sourceSets.getByName("main"))
-                        }
-                    }
-
-                    extensions.configure<IdeaModel> {
-                        module {
-                            generatedSourceDirs.add(generatedSrc)
-                        }
-                    }
+//                            kotlin.srcDir(generatedSrc)
+//                             dependsOn(sourceSets.getByName("main"))
+//                        }
+//                    }
 
                     task<JavaExec>("run_$id") {
                         dependsOn(shadowCore)
@@ -131,7 +174,7 @@ open class KNotePlugin : Plugin<Project> {
                         group = "application"
                         args = listOf(id)
                         workingDir = rootDir
-                        main = "knote.Main"
+                        this.main = "knote.Main"
                         classpath(shadowCore.archiveFile)
                         doFirst {
                             logger.lifecycle("executing")
@@ -145,7 +188,7 @@ open class KNotePlugin : Plugin<Project> {
                         val jarFile = shadowCore.archiveFile.get()
                         group = "application"
                         args = listOf(id)
-                        main = "knote.tornadofx.ViewerApp"
+                        this.main = "knote.tornadofx.ViewerApp"
                         workingDir = rootDir
                         classpath(shadowViewer.archiveFile)
                         systemProperty("notebook", id)

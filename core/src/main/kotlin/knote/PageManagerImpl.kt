@@ -5,6 +5,7 @@ import knote.api.PageManager
 import knote.data.NotebookImpl
 import knote.data.PageImpl
 import knote.host.EvalScript
+import knote.host.EvalScript.posToString
 import knote.script.PageScript
 import knote.util.MutableKObservableMap
 import knote.util.watchActor
@@ -13,8 +14,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mu.KLogging
 import java.io.File
-import java.lang.Exception
-import kotlin.reflect.full.declaredFunctions
+import kotlin.reflect.KType
+import kotlin.reflect.full.declaredMemberFunctions
 import kotlin.script.experimental.api.ScriptDiagnostic
 import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
 
@@ -28,12 +29,6 @@ internal class PageManagerImpl(
     val notebookScript get() = notebook.compiledScript!!
 
     override val pages: MutableKObservableMap<String, Page> = MutableKObservableMap()
-    override val compiledPages: MutableKObservableMap<String, PageScript> = MutableKObservableMap()
-    override val results: MutableKObservableMap<String, Any> = MutableKObservableMap()
-
-    override val dependencies: MutableKObservableMap<String, Set<String>> = MutableKObservableMap()
-    override val reportMap: MutableKObservableMap<String, List<ScriptDiagnostic>> = MutableKObservableMap()
-    override val fileContentMap: MutableKObservableMap<String, String> = MutableKObservableMap()
 
     init {
         // init all pages (without compilation)
@@ -47,15 +42,14 @@ internal class PageManagerImpl(
         startWatcher()
 
         // loop over all pages that are evaluated but have no result yet
-
     }
 
-    override fun executeAll() : Map<String, Any>{
+    override fun executeAll(): Map<String, Any> {
         notebookScript.pageFiles.forEach {
             val id = it.name.substringBeforeLast(".page.kts")
             pages[id]?.compiledScript ?: evalPage(it)
         }
-        while (pages.any { (id, page) -> page.result == null && !(page as PageImpl).errored}) {
+        while (pages.any { (id, page) -> page.result == null && !(page as PageImpl).errored }) {
             pages.filterValues { it.result == null }
                 .forEach { id, page ->
                     id to getResultOrExec(id)
@@ -66,12 +60,36 @@ internal class PageManagerImpl(
         }
     }
 
-    override fun evalPage(pageId: String): Pair<PageScript, Any?>? {
+    override fun resultType(pageId: String): KType? {
+        val page = findPage(pageId) ?: run {
+            logger.warn("could not find page $pageId")
+            return null
+        }
+        val pageScript = page.compiledScript ?: run {
+            logger.warn("script for page $pageId is not compiled")
+            evalPage(pageId)?.compiledScript ?: return null
+        }
+        val processFunction =
+            pageScript::class.declaredMemberFunctions.find { it.name == "process" } ?: run {
+                logger.error("no function `process` found in $pageId")
+                return null
+            }
+        return processFunction.returnType
+    }
+
+    override fun findPage(pageId: String): Page? = pages[pageId] ?: run {
+        evalPage(pageId) ?: run {
+            logger.warn("evalPage($pageId) returned null")
+            null
+        }
+    }
+
+    override fun evalPage(pageId: String): Page? {
         val file = notebookScript.fileForPage(pageId, logger) ?: return null
         return evalPage(file, pageId)
     }
 
-    fun evalPage(file: File, id: String = file.name.substringBeforeLast(".page.kts")): Pair<PageScript, Any?>? {
+    fun evalPage(file: File, id: String = file.name.substringBeforeLast(".page.kts")): Page? {
         require(file.exists()) {
             "page: $id does not exist ($file)"
         }
@@ -88,8 +106,26 @@ internal class PageManagerImpl(
         page.compiledScript = pageScript
         if (pageScript == null) {
             logger.error("evaluation failed for file $file")
-            reports.forEach {
-                logger.error { it }
+            reports.forEach { report ->
+                val path = report.sourcePath?.let { "$it: " } ?: ""
+                val location = report.location?.posToString()?.let { "$it: " } ?: ""
+                val messageString = "$path$location${report.message}"
+                when (report.severity) {
+                    ScriptDiagnostic.Severity.FATAL -> logger.error { "FATAL: $messageString" }
+                    ScriptDiagnostic.Severity.ERROR -> logger.error { messageString }
+                    ScriptDiagnostic.Severity.WARNING -> logger.warn { messageString }
+                    ScriptDiagnostic.Severity.INFO -> logger.info { messageString }
+                    ScriptDiagnostic.Severity.DEBUG -> logger.debug { messageString }
+                }
+                report.exception?.apply {
+                    logger.error(message, this)
+                    this.cause?.apply {
+                        logger.error(message, this)
+                    }
+                    this.suppressed.forEach {
+                        logger.error("suppressed exception: ${it.message}", this)
+                    }
+                }
             }
             page.errored = true
             return null
@@ -97,7 +133,7 @@ internal class PageManagerImpl(
 
         page.errored = false
         page.result = null
-        return pageScript to execPage(id)
+        return page
     }
 
     private fun invalidatePage(id: String): Set<String>? {
@@ -111,28 +147,23 @@ internal class PageManagerImpl(
 //        }
     }
 
-    private fun invalidateResult(id: String) {
-        val page = pages[id] as PageImpl
-        logger.debug("invalidating result for '$id'")
-        logger.debug("dependencies: ${page.dependencies}")
+    private fun invalidateResult(pageId: String) {
+        val page = pages[pageId] as PageImpl
+        logger.debug("invalidating result for '$pageId'")
+//        logger.debug("dependencies of $pageId: ${page.dependencies}")
         page.result = null
 
-        page.dependencies.filter { dependents ->
-            dependents.contains(id)
-        }.forEach {
-            invalidateResult(it)
-        }
-
-//        dependencies.remove(id)
-    }
-
-    override val allResults: Map<String, Any>
-        get() {
-            return compiledPages.keys.associate { id ->
-                val result = getResultOrExec(id) ?: throw IllegalStateException("could not evaluate result for '${id}'")
-                id to result
+        // find all pages depending on this page and invalidate them too
+        pages.forEach { depId, depPage ->
+            //            logger.debug("dependencies of $depId: ${depPage.dependencies}")
+//            if(depId == pageId) return@forEach
+            if (pageId in depPage.dependencies) {
+                invalidateResult(depId)
             }
         }
+        // remove all old dependencies this page had
+        page.dependencies = setOf()
+    }
 
     private fun updateResult(pageId: String, result: Any) {
         val page = pages[pageId] as PageImpl
@@ -140,9 +171,9 @@ internal class PageManagerImpl(
         if (oldResult == null || oldResult != result)
             page.result = result
 
-        val continuations = dependencies[pageId]
+        val continuations = page.dependencies
 
-        continuations?.forEach {
+        continuations.forEach {
             getResultOrExec(it)
         }
     }
@@ -151,8 +182,7 @@ internal class PageManagerImpl(
         val page = pages[pageId] as PageImpl
         val pageScript = page.compiledScript ?: run {
             logger.debug("page $pageId not evaluated yet")
-            val (page, result) = evalPage(pageId) ?: return null
-            page
+            evalPage(pageId)?.compiledScript ?: return null
         }
 //        val processFunction = pageScript::class.declaredFunctions.find {
 //            it.name == "process"
@@ -197,7 +227,7 @@ internal class PageManagerImpl(
 //                page.compiledScript = null
 //                "${parameterProcessFunc.returnType} is not a subtype of requested ${parameter.type}"
 //            }
-            // TODO: ensure actual type of paramResult is accessible
+        // TODO: ensure actual type of paramResult is accessible
 //            val paramClass = paramResult::class
 //            logger.debug("paramResult::class: $paramClass")
 //            logger.debug("paramResult::class.visibility : ${paramClass.visibility}")
@@ -234,8 +264,7 @@ internal class PageManagerImpl(
 
     override fun getResultOrExec(pageId: String): Any? {
         val page = pages[pageId] as? PageImpl ?: run {
-            val (page, result) = evalPage(pageId) ?: return null
-            return result
+            evalPage(pageId) ?: return null
         }
         return page.result ?: execPage(pageId)
     }
@@ -270,7 +299,7 @@ internal class PageManagerImpl(
                         "ENTRY_MODIFY" -> {
                             logger.debug("${watchEvent.context()} was modified")
                             invalidatePage(id)
-                            logger.debug("results: ${pages.mapValues { "${it.value.result}\n\n" }}}")
+                            logger.debug("invalidated pages: ${pages.filterValues { it.result == null }.keys}}")
                             evalPage(file)
                             // ensure all pages have their results cached again
                             notebookScript.pageFiles.forEach {
@@ -286,12 +315,10 @@ internal class PageManagerImpl(
                         "OVERFLOW" -> logger.debug("${watchEvent.context()} overflow")
                     }
                 }
-
-                logger.info("set fileObject and even refs")
             }
         }
 
-        NotebookManagerImpl.logger.debug("started page watcher")
+        NotebookManagerImpl.logger.trace("started page watcher")
     }
 
     internal fun stopWatcher() {
