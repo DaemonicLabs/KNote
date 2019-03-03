@@ -113,7 +113,7 @@ object EvalScript : KLogging() {
 //        }
 
         val evalResult = resultWithDiagnostics.resultOrNull() ?: resultWithDiagnostics.run {
-            logger.error("evaluation result failed for notebook $scriptFile")
+            logger.error("evaluation result failed for file $scriptFile")
             return null to this.reports
         }
 

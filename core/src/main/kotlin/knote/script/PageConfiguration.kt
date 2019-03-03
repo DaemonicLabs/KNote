@@ -7,6 +7,8 @@ import knote.core.CoreConstants
 import knote.poet.PageDependency
 import mu.KLogging
 import org.jetbrains.kotlin.script.InvalidScriptResolverAnnotation
+import java.time.Instant
+import java.util.Date
 import kotlin.script.experimental.api.ResultWithDiagnostics
 import kotlin.script.experimental.api.ScriptAcceptedLocation
 import kotlin.script.experimental.api.ScriptCollectedData
@@ -53,8 +55,9 @@ class PageConfiguration : ScriptCompilationConfiguration({
                 "beforeCompiling time: ${System.currentTimeMillis()}",
                 ScriptDiagnostic.Severity.DEBUG
             )
+            val compileTime = Date.from(Instant.ofEpochSecond( CoreConstants.COMPILE_TIMESTAMP ))
             reports += ScriptDiagnostic(
-                "COMPILE_TIMESTAMP: ${CoreConstants.COMPILE_TIMESTAMP}",
+                "COMPILE_TIMESTAMP: ${compileTime}",
                 ScriptDiagnostic.Severity.INFO
             )
 
@@ -77,6 +80,8 @@ class PageConfiguration : ScriptCompilationConfiguration({
                 ScriptDiagnostic.Severity.INFO
             )
 
+            System.setProperty("user.dir", rootDir.absolutePath)
+
             val annotations = context.collectedData?.get(ScriptCollectedData.foundAnnotations)?.also { annotations ->
                 if(annotations.isNotEmpty()) {
                     reports += ScriptDiagnostic("file_annotations: $annotations", ScriptDiagnostic.Severity.DEBUG)
@@ -97,16 +102,34 @@ class PageConfiguration : ScriptCompilationConfiguration({
                     "fromPage: $fromPageAnnotations",
                     ScriptDiagnostic.Severity.INFO
                 )
-                val startedPages = loopDetector.getOrPut(notebookId) { mutableListOf() }
-                if(pageId in startedPages) {
+                // TODO: DETECT CIRCULAR DEPENDENCIES
+//                val startedPages = loopDetector.getOrPut(notebookId) { mutableListOf() }
+//                if(pageId in startedPages) {
+//                    reports += ScriptDiagnostic(
+//                        "page $pageId depends on itself",
+//                        ScriptDiagnostic.Severity.ERROR
+//                    )
+//                    return@onAnnotations ResultWithDiagnostics.Failure(reports)
+//                }
+//                startedPages += pageId
+
+//                val notebook = KNote.NOTEBOOK_MANAGER.findNotebook(notebookId)
+//                if(notebook != null) {
+//                    logger.error("notebook $notebookId could not be loaded")
+//                    reports += ScriptDiagnostic(
+//                        "notebook $notebookId could not be loaded",
+//                        ScriptDiagnostic.Severity.ERROR
+//                    )
+//                    return@onAnnotations ResultWithDiagnostics.Failure(reports)
+//                }
+                val pageManager: PageManager = KNote.NOTEBOOK_MANAGER.getPageManager(notebookId) ?: run {
+                    logger.error("pageManager for $notebookId could not be loaded")
                     reports += ScriptDiagnostic(
-                        "page $pageId depends on itself",
+                        "pageManager for $notebookId could not be loaded",
                         ScriptDiagnostic.Severity.ERROR
                     )
                     return@onAnnotations ResultWithDiagnostics.Failure(reports)
                 }
-                startedPages += pageId
-                val pageManager: PageManager = KNote.NOTEBOOK_MANAGER.getPageManager(notebookId)
 //                val page = pageManager.findPage(pageId)!! as PageImpl
                 val generatedSrc = rootDir.resolve("build").resolve(".knote").resolve(notebookId).absoluteFile
                 generatedSrc.mkdirs()
@@ -114,6 +137,7 @@ class PageConfiguration : ScriptCompilationConfiguration({
                     .map { it.source }
                     .distinct()
                     .associate { depId ->
+                        // TODO: DETECT CIRCULAR DEPENDENCIES
                         if(depId == pageId) {
                             reports += ScriptDiagnostic(
                                 "page $pageId depends on itself",

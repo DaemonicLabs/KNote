@@ -2,6 +2,7 @@ import moe.nikky.counter.CounterExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import plugin.ConstantsExtension
 import plugin.GenerateConstantsTask
+import java.util.Date
 
 plugins {
     kotlin("jvm") version Constants.Kotlin.version
@@ -141,7 +142,7 @@ subprojects {
             field("VERSION") value Constants.KNote.version
             field("FULL_VERSION") value fullVersion
             field("BUILD_NUMBER") value buildnumber
-            field("COMPILE_TIMESTAMP") value System.currentTimeMillis()
+            field("COMPILE_TIMESTAMP") value (System.currentTimeMillis() / 1000)
         }
     }
 

@@ -318,7 +318,7 @@ internal class PageManagerImpl(
             }
         }
 
-        NotebookManagerImpl.logger.debug("started page watcher")
+        NotebookManagerImpl.logger.trace("started page watcher")
     }
 
     internal fun stopWatcher() {
