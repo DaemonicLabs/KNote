@@ -10,9 +10,9 @@ class WorkbenchController: Controller() {
     private val view: Workbench by inject()
 
     init {
-        subscribe<PageManagerEvent> { event ->
-            updateEvaluationConsole(event.eval.toString())
-        }
+        // subscribe<PageManagerEvent> { event ->
+        //    updateEvaluationConsole(event.eval.toString())
+        // }
     }
 
     fun updateEvaluationConsole(results: String) {

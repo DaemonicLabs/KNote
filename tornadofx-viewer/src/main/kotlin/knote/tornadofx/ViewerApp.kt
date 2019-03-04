@@ -16,6 +16,7 @@ import tornadofx.*
 
 class ViewerApp : App(Workspace::class) {
     lateinit var pageManager: PageManager
+    lateinit var pageManagerObject: KObservableObject<Notebook, PageManager?>
     private val pageViewModels: ArrayList<PageViewModel> = arrayListOf()
 
     init {
@@ -26,6 +27,7 @@ class ViewerApp : App(Workspace::class) {
         notebooks.forEach { (id, notebook) ->
             logger.info("id: $notebook.id")
             pageManager = notebook.pageManager!!
+            pageManagerObject = notebook.pageManagerObject
 
             val pages = pageManager.pages
 
@@ -43,7 +45,7 @@ class ViewerApp : App(Workspace::class) {
     }
 
     override fun onBeforeShow(view: UIComponent) {
-        workspace.dock<Workbench>(PageManagerScope(pageManager, pageViewModels))
+        workspace.dock<Workbench>(PageManagerScope(pageManager, pageManagerObject, pageViewModels))
     }
 
     companion object : KLogging() {

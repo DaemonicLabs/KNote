@@ -10,39 +10,44 @@ import knote.tornadofx.model.PageViewModel
 import tornadofx.*
 
 import javafx.scene.layout.VBox
-import knote.script.PageScript
 import knote.tornadofx.Styles
 import knote.tornadofx.controller.WorkbenchController
 import knote.tornadofx.model.PageManagerChangeListener
 import knote.tornadofx.model.PageManagerEvent
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.runBlocking
+import knote.util.asProperty
 
 class Workbench : View() {
 
     var pages = arrayListOf<PageViewModel>().observable()
+    lateinit var currentPage: PageViewModel
     val tools = (1..10).toList()
     var evaluationConsole = VBox()
     var rerunButton = Button()
 
     override val scope = super.scope as PageManagerScope
-    private val controller: WorkbenchController by inject()
+    val controller: WorkbenchController by inject()
 
     init {
         scope.pageViewModels.forEach {
             pages.add(it)
         }
 
-        subscribe<PageManagerChangeListener> { event ->
-            val eval = scope.pageManager.evalPage(event.pageName)
-            fire(PageManagerEvent(eval))
-        }
+        scope.pageManagerObject.asProperty
+                .readOnlyProperty.addListener(ChangeListener { observable,
+                                                               oldValue,
+                                                               newValue ->
+            controller.updateEvaluationConsole(newValue?.pages!![currentPage.pageId]!!.result.toString())
+        })
+
+        // subscribe<PageManagerChangeListener> { event ->
+        //    val eval = scope.pageManager.evalPage(event.pageName)
+        //    fire(PageManagerEvent(eval))
+        // }
     }
 
     override val root = tabpane {
         pages.forEach { page ->
-            tab(page.pageName) {
+            tab(page.pageId) {
                 borderpane {
                     center {
                         vbox {
@@ -72,17 +77,15 @@ class Workbench : View() {
                                         rerunButton.isDisable = true
                                         pages.forEach { page ->
                                             if (page.dirtyState) {
+                                                currentPage = page
                                                 page.file.printWriter().use {
                                                     out -> out.println(page.script)
                                                 }
-                                                fire(PageManagerChangeListener(page.pageName, scope))
-
+                                                // fire(PageManagerChangeListener(page.pageId, scope))
+                                                scope.pageManager.evalPage(page.pageId)
                                                 page.dirtyState = false
                                             }
                                         }
-
-                                        // controller.updateEvaluationConsole(it)
-                                        // page.results = it
                                     }
                                 }
                             }
