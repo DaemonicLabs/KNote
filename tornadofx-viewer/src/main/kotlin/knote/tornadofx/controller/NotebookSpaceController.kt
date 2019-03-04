@@ -1,13 +1,12 @@
 package knote.tornadofx.controller
 
 import javafx.scene.text.Text
-import knote.tornadofx.model.PageManagerEvent
-import knote.tornadofx.view.Workbench
+import knote.tornadofx.view.NotebookSpace
 import tornadofx.*
 
-class WorkbenchController: Controller() {
+class NotebookSpaceController: Controller() {
 
-    private val view: Workbench by inject()
+    private val view: NotebookSpace by inject()
 
     init {
         // subscribe<PageManagerEvent> { event ->
