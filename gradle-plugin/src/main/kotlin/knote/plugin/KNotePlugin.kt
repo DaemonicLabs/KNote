@@ -32,9 +32,7 @@ open class KNotePlugin : Plugin<Project> {
         val implementation = project.configurations.getByName("implementation")
 
         val knoteConfiguration = project.configurations.create("knote")
-        val knoteFXConfiguration = project.configurations.create("knoteFx") {
-            //            extendsFrom(knoteConfiguration)
-        }
+        val knoteFXConfiguration = project.configurations.create("knoteFx")
 //        implementation.extendsFrom(knoteConfiguration)
 
         project.repositories {
@@ -95,7 +93,7 @@ open class KNotePlugin : Plugin<Project> {
             group = "shadow"
             from(main.output)
             archiveBaseName.set("tornadofx-viewer")
-            configurations = listOf(knoteFXConfiguration)
+            configurations = listOf(knoteConfiguration, knoteFXConfiguration)
             manifest {
                 attributes(
                     mapOf(
