@@ -6,7 +6,6 @@ import javafx.beans.property.ReadOnlyMapProperty
 import javafx.beans.property.ReadOnlyMapWrapper
 import javafx.beans.property.ReadOnlyObjectWrapper
 import javafx.collections.FXCollections
-import knote.tornadofx.model.PageManagerChangeListener
 import tornadofx.*
 
 inline val <reified E> KObservableList<E>.asObservable: ReadOnlyListProperty<E>

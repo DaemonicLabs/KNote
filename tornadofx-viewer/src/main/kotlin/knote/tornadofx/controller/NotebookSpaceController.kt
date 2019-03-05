@@ -11,6 +11,6 @@ class NotebookSpaceController: Controller() {
     fun updateEvaluationConsole(results: String) {
         view.evaluationConsole.children.clear()
         view.evaluationConsole.children.add(Text(results))
-        view.rerunButton.isDisable = true
+        // view.rerunButton.isDisable = true
     }
 }

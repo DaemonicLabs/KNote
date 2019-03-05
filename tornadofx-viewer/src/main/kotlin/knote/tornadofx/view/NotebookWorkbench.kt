@@ -9,7 +9,6 @@ class NotebookWorkbench : Workspace() {
     override fun onBeforeShow() {
         workspace.dock<NotebookSpace>(PageManagerScope(
                 dashboard.pageManager,
-                dashboard.pageManagerObject,
                 dashboard.pageViewModels)
         )
     }

@@ -28,12 +28,7 @@ class PageViewModel(file: File, pageId: String, script: String, results: String?
 }
 
 class PageManagerScope(val pageManager: PageManager,
-                       val pageManagerObject: KObservableObject<Notebook, PageManager?>,
                        val pageViewModels: List<PageViewModel>): Scope()
-
-class PageManagerChangeListener(val pageName: String, scope: PageManagerScope): FXEvent(EventBus.RunOn.BackgroundThread, scope)
-
-class PageManagerEvent(val eval: Page?) : FXEvent(EventBus.RunOn.BackgroundThread)
 
 
 

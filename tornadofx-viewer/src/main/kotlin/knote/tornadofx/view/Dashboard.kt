@@ -18,7 +18,6 @@ import tornadofx.*
 class Dashboard: View() {
 
     lateinit var pageManager: PageManager
-    lateinit var pageManagerObject: KObservableObject<Notebook, PageManager?>
     val pageViewModels: ArrayList<PageViewModel> = arrayListOf()
     val controller: DashboardController by inject()
 
@@ -30,7 +29,6 @@ class Dashboard: View() {
         notebooks.forEach { (id, notebook) ->
             logger.info("id: $notebook.id")
             pageManager = notebook.pageManager!!
-            pageManagerObject = notebook.pageManagerObject
 
             val pages = pageManager.pages
 
