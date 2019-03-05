@@ -15,7 +15,7 @@ class NotebookSpace: View(), PageManagerImpl.PageListener {
 
     var pages = arrayListOf<PageViewModel>().observable()
     private val tools = (1..10).toList()
-    var evaluationConsole = VBox()
+    lateinit var evaluationConsole: VBox
 
     override val scope = super.scope as PageManagerScope
     private val controller: NotebookSpaceController by inject()

@@ -9,8 +9,9 @@ class NotebookSpaceController: Controller() {
     private val view: NotebookSpace by inject()
 
     fun updateEvaluationConsole(results: String) {
+        val resultAvi = Text("REEE")
         view.evaluationConsole.children.clear()
-        view.evaluationConsole.children.add(Text(results))
+        view.evaluationConsole.children.add(resultAvi)
         // view.rerunButton.isDisable = true
     }
 }
