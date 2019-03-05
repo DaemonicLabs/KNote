@@ -1,5 +1,6 @@
 package knote.api
 
+import knote.PageManagerImpl
 import knote.script.PageScript
 import knote.util.KObservableMap
 import kotlin.reflect.KType
@@ -24,4 +25,5 @@ interface PageManager {
     fun executeAll(): Map<String, Any>
     fun resultType(pageId: String): KType?
     fun findPage(pageId: String): Page?
+    fun setPageListener(listener: PageManagerImpl.PageListener)
 }

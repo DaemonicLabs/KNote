@@ -4,7 +4,7 @@ import knote.tornadofx.model.PageManagerScope
 import tornadofx.*
 
 class NotebookWorkbench : Workspace() {
-    val dashboard: Dashboard by inject()
+    private val dashboard: Dashboard by inject()
 
     override fun onBeforeShow() {
         workspace.dock<NotebookWorkbench>(PageManagerScope(

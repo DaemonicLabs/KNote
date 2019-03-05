@@ -5,6 +5,8 @@ import javafx.scene.control.Button
 import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
+import knote.PageManagerImpl
+import knote.api.PageManager
 import knote.tornadofx.Styles
 import knote.tornadofx.controller.NotebookSpaceController
 import knote.tornadofx.model.PageManagerChangeListener
@@ -13,32 +15,26 @@ import knote.tornadofx.model.PageManagerScope
 import knote.tornadofx.model.PageViewModel
 import tornadofx.*
 
-class NotebookSpace: View() {
+class NotebookSpace: View(), PageManagerImpl.PageListener {
+
     var pages = arrayListOf<PageViewModel>().observable()
-    // lateinit var currentPage: PageViewModel
-    val tools = (1..10).toList()
+    private val tools = (1..10).toList()
     var evaluationConsole = VBox()
     var rerunButton = Button()
 
     override val scope = super.scope as PageManagerScope
-    // val controller: NotebookSpaceController by inject()
+    private val controller: NotebookSpaceController by inject()
 
     init {
         scope.pageViewModels.forEach {
             pages.add(it)
         }
 
-        // scope.pageManagerObject.asProperty
-        //        .readOnlyProperty.addListener(ChangeListener { observable,
-        //                                                       oldValue,
-        //                                                       newValue ->
-        //    controller.updateEvaluationConsole(newValue?.pages!![currentPage.pageId]!!.result.toString())
-        // })
+        scope.pageManager.setPageListener(this)
+    }
 
-        subscribe<PageManagerChangeListener> { event ->
-            val eval = scope.pageManager.evalPage(event.pageName)
-            fire(PageManagerEvent(eval))
-        }
+    override fun onResultsUpdated(result: Any?) {
+        controller.updateEvaluationConsole(result.toString())
     }
 
     override val root = tabpane {
@@ -75,12 +71,11 @@ class NotebookSpace: View() {
                                         rerunButton.isDisable = true
                                         pages.forEach { page ->
                                             if (page.dirtyState) {
-                                                // currentPage = page
                                                 page.file.printWriter().use { out ->
                                                     out.println(page.script)
                                                 }
-                                                fire(PageManagerChangeListener(page.pageId, scope))
-                                                // scope.pageManager.evalPage(page.pageId)
+
+                                                scope.pageManager.evalPage(page.pageId)
                                                 page.dirtyState = false
                                             }
                                         }

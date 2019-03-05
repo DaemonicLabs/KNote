@@ -19,14 +19,17 @@ import kotlin.reflect.full.declaredMemberFunctions
 import kotlin.script.experimental.api.ScriptDiagnostic
 import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
 
-internal class PageManagerImpl(
+class PageManagerImpl(
     private val notebook: NotebookImpl,
     private val host: BasicJvmScriptingHost,
     private val workingDir: File
 ) : PageManager {
+
     companion object : KLogging()
 
     val notebookScript get() = notebook.compiledScript!!
+
+    private var pageListener: PageListener? = null
 
     override val pages: MutableKObservableMap<String, Page> = MutableKObservableMap()
 
@@ -42,6 +45,15 @@ internal class PageManagerImpl(
         startWatcher()
 
         // loop over all pages that are evaluated but have no result yet
+    }
+
+    // provide a way for another class to set the listener
+    override fun setPageListener(listener: PageListener) {
+        this.pageListener = listener
+    }
+
+    interface PageListener {
+        fun onResultsUpdated(result: Any?)
     }
 
     override fun executeAll(): Map<String, Any> {
@@ -131,8 +143,10 @@ internal class PageManagerImpl(
             return null
         }
 
+        pageListener?.onResultsUpdated(page.result)
         page.errored = false
         page.result = null
+
         return page
     }
 
