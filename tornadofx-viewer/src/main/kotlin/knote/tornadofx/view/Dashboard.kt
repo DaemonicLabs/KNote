@@ -23,8 +23,6 @@ class Dashboard: View() {
     val controller: DashboardController by inject()
 
     init {
-        FX.defaultWorkspace = NotebookWorkbench::class
-
         KNote.NOTEBOOK_MANAGER.evalNotebooks()
         val notebooks = KNote.NOTEBOOK_MANAGER.notebooks
 

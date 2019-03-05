@@ -7,7 +7,7 @@ class NotebookWorkbench : Workspace() {
     private val dashboard: Dashboard by inject()
 
     override fun onBeforeShow() {
-        workspace.dock<NotebookWorkbench>(PageManagerScope(
+        workspace.dock<NotebookSpace>(PageManagerScope(
                 dashboard.pageManager,
                 dashboard.pageManagerObject,
                 dashboard.pageViewModels)
