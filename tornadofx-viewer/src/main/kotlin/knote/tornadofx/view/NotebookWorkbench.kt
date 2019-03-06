@@ -9,7 +9,6 @@ import tornadofx.*
 class NotebookWorkbench : Workspace() {
     private val dashboard: Dashboard by inject()
     private val dashboardController: DashboardController by inject()
-    private val notebookViewModel: NotebookViewModel by inject()
 
     val notebooks = dashboard.notebookModels
 

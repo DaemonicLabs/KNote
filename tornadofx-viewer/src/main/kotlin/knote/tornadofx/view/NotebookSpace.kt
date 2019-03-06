@@ -71,7 +71,7 @@ class NotebookSpace: View(), PageManagerImpl.PageListener {
                                                     out.println(page.script)
                                                 }
 
-                                                scope.pageManager.evalPage(page.pageId)
+                                                scope.pageManager.getResultOrExec(page.pageId)
                                                 page.dirtyState = false
                                             }
                                         }

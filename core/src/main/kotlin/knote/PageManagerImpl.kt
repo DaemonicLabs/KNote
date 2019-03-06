@@ -143,7 +143,6 @@ class PageManagerImpl(
             return null
         }
 
-        pageListener?.onResultsUpdated(page.result)
         page.errored = false
         page.result = null
 
@@ -280,6 +279,8 @@ class PageManagerImpl(
         val page = pages[pageId] as? PageImpl ?: run {
             evalPage(pageId) ?: return null
         }
+        
+        pageListener?.onResultsUpdated(page.result)
         return page.result ?: execPage(pageId)
     }
 
