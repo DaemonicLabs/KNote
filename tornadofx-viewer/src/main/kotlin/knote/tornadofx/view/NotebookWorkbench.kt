@@ -14,14 +14,15 @@ class NotebookWorkbench : Workspace() {
 
     override fun onBeforeShow() {
         val currentNotebook = notebooks.filter {
-            it.notebook.id == dashboardController.notebookId
+            it.notebook?.id == dashboardController.notebookId
         }
 
-        val notebookModel = NotebookModel(currentNotebook[0].notebook,
+        val notebookScope = NotebookScope(
+                currentNotebook[0].notebook,
                 currentNotebook[0].pageManager,
                 currentNotebook[0].pageViewModels
         )
 
-        workspace.dockInNewScope<NotebookSpace>(NotebookViewModel(notebookModel))
+        workspace.dock<NotebookSpace>(notebookScope)
     }
 }

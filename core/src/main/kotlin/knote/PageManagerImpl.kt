@@ -226,7 +226,7 @@ class PageManagerImpl(
         }
 
         pageListener?.onResultsUpdated(page.result)
-        return page.result ?: execPage(pageId)
+        return page.result ?: executePage(pageId)
     }
 
     override fun updateSourceCode(pageId: String, content: String) {

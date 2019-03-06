@@ -5,9 +5,7 @@ import javafx.beans.property.SimpleListProperty
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
 import knote.api.Notebook
-import knote.api.Page
 import knote.api.PageManager
-import knote.util.KObservableObject
 import tornadofx.*
 import java.io.File
 
@@ -18,12 +16,12 @@ class NotebookModel(notebook: Notebook, pageManager: PageManager, pageViewModels
     val pageManagerProperty = SimpleObjectProperty(this, "", pageManager)
     var pageManager by pageManagerProperty
 
-    val pageViewModelsProperty = SimpleListProperty(this, "", pageViewModels.observable())
+    val pageViewModelsProperty = SimpleListProperty(this, "", pageViewModels?.observable())
     var pageViewModels by pageViewModelsProperty
 
 }
 
-class NotebookViewModel(notebook: NotebookModel): ItemViewModel<NotebookModel>() {
+class NotebookViewModel(notebookModel: NotebookModel? = null): ItemViewModel<NotebookModel>() {
     val notebook = bind(NotebookModel::notebookProperty, autocommit = true)
     val pageManager = bind(NotebookModel::pageManagerProperty, autocommit = true)
     val pageViewModels = bind(NotebookModel::pageViewModelsProperty, autocommit = true)
@@ -48,7 +46,9 @@ class PageViewModel(file: File, pageId: String, script: String, results: String?
 
 class NotebookScope(val notebook: Notebook,
                     val pageManager: PageManager,
-                    val pageViewModels: List<PageViewModel>): Scope()
+                    val pageViewModels: List<PageViewModel>): Scope() {
+    val model = NotebookViewModel()
+}
 
 class PageManagerScope(val pageManager: PageManager,
                        val pageViewModels: List<PageViewModel>): Scope()
