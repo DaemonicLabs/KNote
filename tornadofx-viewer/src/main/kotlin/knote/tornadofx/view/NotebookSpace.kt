@@ -6,6 +6,7 @@ import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
 import knote.PageManagerImpl
 import knote.tornadofx.Styles
+import knote.tornadofx.controller.DashboardController
 import knote.tornadofx.controller.NotebookSpaceController
 import knote.tornadofx.model.NotebookScope
 import knote.tornadofx.model.PageManagerScope
@@ -20,6 +21,8 @@ class NotebookSpace: View(), PageManagerImpl.PageListener {
 
     override val scope = super.scope as NotebookScope
     private val controller: NotebookSpaceController by inject()
+    private val dashboard: Dashboard by inject()
+    private val dashboardController: DashboardController by inject()
 
     init {
         scope.pageViewModels.forEach {
@@ -106,7 +109,7 @@ class NotebookSpace: View(), PageManagerImpl.PageListener {
                                     }
                                 }
                                 item("Notebooks") {
-                                    datagrid(tools) {
+                                    datagrid(dashboard.notebookList.observable()) {
                                         maxCellsInRow = 2
                                         cellWidth = 100.0
                                         cellHeight = 100.0
@@ -120,6 +123,7 @@ class NotebookSpace: View(), PageManagerImpl.PageListener {
                                                 label(it.toString())
                                             }
                                         }
+                                        onUserSelect(2) { dashboardController.showWorkbench(it.toString()) }
                                     }
                                 }
                                 item("JVM Dependencies") {

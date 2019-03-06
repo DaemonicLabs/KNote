@@ -16,7 +16,7 @@ class Dashboard: View() {
 
     lateinit var pageManager: PageManager
     val notebookModels: ArrayList<NotebookModel> = arrayListOf()
-    private val notebookList: ArrayList<String> = arrayListOf()
+    val notebookList: ArrayList<String> = arrayListOf()
     private val controller: DashboardController by inject()
 
     init {
