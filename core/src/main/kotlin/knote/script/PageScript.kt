@@ -8,7 +8,6 @@ import mu.KLogging
 import mu.KotlinLogging
 import java.io.File
 import kotlin.reflect.KProperty
-import kotlin.reflect.full.declaredFunctions
 import kotlin.reflect.full.isSubtypeOf
 import kotlin.script.experimental.annotations.KotlinScript
 
@@ -32,18 +31,27 @@ open class PageScript(
         return null
     }
 
+    /**
+     * TO be used from within the page script
+     */
+    val cachedResult: Any?
+      get() {
+          val pageManager = KNote.NOTEBOOK_MANAGER.getPageManager(notebook.id) ?: return null
+          return pageManager.executePageCached(id)!!
+      }
+
     fun <This, T> This.inject(pageId: String? = null): PageResult<This, T> {
         val delegate = object : PageResult<This, T> {
             override fun getValue(self: This, property: KProperty<*>): T {
                 val dependencyId = pageId ?: property.name
                 logger.debug("property: ${property.name}")
                 logger.debug("notebook: $notebook")
-//                val notebook = KNote.NOTEBOOK_MANAGER.evalNotebook(notebook.id)!!
+//                val notebook = KNote.NOTEBOOK_MANAGER.compileNotebook(notebook.id)!!
                 logger.debug("notebook.pageManager: ${notebook.pageManager}")
                 val pageManager = KNote.NOTEBOOK_MANAGER.getPageManager(notebook.id)!!
                 logger.debug("notebook.pageManager: ${notebook.pageManager}")
                 //TODO: add typecheck
-                val result = pageManager.getResultOrExec(dependencyId)!!
+                val result = pageManager.executePageCached(dependencyId)!!
                 val depPage = pageManager.pages[dependencyId]!!
                 val page = pageManager.pages[id]!!
                 logger.debug("result: $result")

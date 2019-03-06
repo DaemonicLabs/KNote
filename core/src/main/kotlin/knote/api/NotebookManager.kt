@@ -30,8 +30,8 @@ interface NotebookManager {
     var notebookFilter: List<String>?
 
     fun evalNotebooks()
-    fun findNotebook(notebookId: String): Notebook?
-    fun evalNotebook(notebookId: String): Notebook?
+    fun compileNotebookCached(notebookId: String): Notebook?
+    fun compileNotebook(notebookId: String): Notebook?
 
     val listNotebookFiles: Array<out File>
     fun getPageManager(notebookId: String): PageManager?

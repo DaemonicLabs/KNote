@@ -48,13 +48,13 @@ object PageDependency : KLogging() {
         object : PageResult<Nothing?, T> {
             override fun getValue(self: Nothing?, property: KProperty<*>): T {
                 val dependencyId = property.name
-                val notebook = KNote.NOTEBOOK_MANAGER.findNotebook(notebookId)
+                val notebook = KNote.NOTEBOOK_MANAGER.compileNotebookCached(notebookId)
                 require(notebook != null) { "cannot find notebook $notebookId" }
                 PageScript.logger.debug("property: ${property.name}")
                 PageScript.logger.debug("notebook: $notebook")
                 val pageManager = KNote.NOTEBOOK_MANAGER.getPageManager(notebook.id)!!
                 PageScript.logger.debug("notebook.pageManager: ${notebook.pageManager}")
-                val result = pageManager.getResultOrExec(dependencyId)!!
+                val result = pageManager.executePageCached(dependencyId)!!
                 val depPage = pageManager.pages[dependencyId]!!
                 val page = pageManager.pages[pageId]!!
                 PageScript.logger.debug("result: $result")

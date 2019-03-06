@@ -4,26 +4,26 @@ import knote.PageManagerImpl
 import knote.script.PageScript
 import knote.util.KObservableMap
 import kotlin.reflect.KType
-import kotlin.script.experimental.api.ScriptDiagnostic
 
 interface PageManager {
     val pages: KObservableMap<String, Page>
 
     /**
-     * Evaluate and Execute a page
+     * Compiles a page
      */
-    fun evalPage(pageId: String): Page?
-
-    fun getResultOrExec(pageId: String): Any?
+    fun compilePageCached(pageId: String): Page?
+    fun compilePage(pageId: String): Page?
 
     /**
      * Execute Page without recompiling the script
      */
-    fun execPage(pageId: String): Any?
+    fun executePageCached(pageId: String): Any?
+    fun executePage(pageId: String): Any?
 
     fun updateSourceCode(pageId: String, content: String)
+
     fun executeAll(): Map<String, Any>
+
     fun resultType(pageId: String): KType?
-    fun findPage(pageId: String): Page?
     fun setPageListener(listener: PageManagerImpl.PageListener)
 }
