@@ -74,7 +74,7 @@ class NotebookSpace: View(), PageManagerImpl.PageListener {
                                                     out.println(page.script)
                                                 }
 
-                                                scope.pageManager.getResultOrExec(page.pageId)
+                                                scope.pageManager.executePageCached(page.pageId)
                                                 page.dirtyState = false
                                             }
                                         }
