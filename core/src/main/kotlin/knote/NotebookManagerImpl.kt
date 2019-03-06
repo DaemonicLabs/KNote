@@ -41,6 +41,10 @@ internal object NotebookManagerImpl : NotebookManager, KLogging() {
             file.isFile && file.name.endsWith(".notebook.kts")
         }
 
+    override fun listAvailable() = listNotebookFiles.map {file ->
+        file.name.substringBeforeLast(".notebook.kts")
+    }
+
     override fun evalNotebooks() {
         logger.info("listNotebookFiles: $listNotebookFiles")
 

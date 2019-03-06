@@ -4,6 +4,7 @@ import knote.KNote
 import knote.api.Notebook
 import knote.api.PageResult
 import knote.data.PageImpl
+import knote.md.KNTextBuilder
 import mu.KLogging
 import mu.KotlinLogging
 import java.io.File
@@ -23,6 +24,9 @@ open class PageScript(
 ) {
     val logger = KotlinLogging.logger(id)
 
+    var text: String = ""
+        private set
+
     companion object : KLogging()
 
     override fun toString() = "PageScript(id=$id)"
@@ -35,10 +39,10 @@ open class PageScript(
      * TO be used from within the page script
      */
     val cachedResult: Any?
-      get() {
-          val pageManager = KNote.NOTEBOOK_MANAGER.getPageManager(notebook.id) ?: return null
-          return pageManager.executePageCached(id)!!
-      }
+        get() {
+            val pageManager = KNote.NOTEBOOK_MANAGER.getPageManager(notebook.id) ?: return null
+            return pageManager.executePageCached(id)!!
+        }
 
     fun <This, T> This.inject(pageId: String? = null): PageResult<This, T> {
         val delegate = object : PageResult<This, T> {
@@ -71,6 +75,18 @@ open class PageScript(
         }
         logger.debug("created delegate for $pageId")
         return delegate
+    }
+
+    fun markdownText(block: KNTextBuilder.() -> Unit) {
+        text = knote.md.markdownText(block = block).toString()
+    }
+
+    // TODO: PathWatcher for changes in file dependencies
+    // TODO: basic functions to load file contents
+
+
+    internal fun invalidate() {
+
     }
 
     // TODO: visualize data

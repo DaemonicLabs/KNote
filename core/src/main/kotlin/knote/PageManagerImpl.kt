@@ -40,8 +40,6 @@ internal class PageManagerImpl(
         }
 
         startWatcher()
-
-        // loop over all pages that are evaluated but have no result yet
     }
 
     override fun executeAll(): Map<String, Any> {
@@ -133,30 +131,29 @@ internal class PageManagerImpl(
 
         page.errored = false
         page.result = null
+        if(page.text != pageScript.text) {
+            page.text = pageScript.text
+        }
         return page
     }
 
     private fun invalidatePage(id: String): Set<String>? {
         val page = pages[id] as? PageImpl ?: return null
+        page.compiledScript?.invalidate()
         page.compiledScript = null
+        page.text = ""
 
         invalidateResult(id)
         return page.dependencies
-//        dependencies.forEach { dependency, dependents ->
-//            dependents -= id
-//        }
     }
 
     private fun invalidateResult(pageId: String) {
         val page = pages[pageId] as PageImpl
         logger.debug("invalidating result for '$pageId'")
-//        logger.debug("dependencies of $pageId: ${page.dependencies}")
         page.result = null
 
         // find all pages depending on this page and invalidate them too
         pages.forEach { depId, depPage ->
-            //            logger.debug("dependencies of $depId: ${depPage.dependencies}")
-//            if(depId == pageId) return@forEach
             if (pageId in depPage.dependencies) {
                 invalidateResult(depId)
             }
@@ -185,12 +182,8 @@ internal class PageManagerImpl(
             compilePage(pageId)?.compiledScript ?: return null
         }
         logger.debug("executing '$pageId'")
-//        logger.debug("arguments: $parameters")
-//        logger.debug("arguments: ${parameters.values.map { it::class }}")
         val result = try {
             pageScript.process()
-//            processFunction.callBy(parameters)
-//            processFunction.call(parameters.values)
         } catch (e: Exception) {
             logger.error("executing process function failed", e)
             page.errored = true

@@ -7,3 +7,7 @@ fun process(): String {
     logger.info(">>>> executing step $id")
     return "one, two=$two, three=$three"
 }
+
+markdownText {
+    +"first page"
+}

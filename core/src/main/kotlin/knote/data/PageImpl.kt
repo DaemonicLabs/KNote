@@ -10,9 +10,11 @@ class PageImpl(
     override val id: String,
     file: File,
     fileContent: String = file.readText(),
+    text: String = "",
     compiledScript: PageScript? = null,
     reports: List<ScriptDiagnostic>? = null
 ) : Page {
+    override val textObject: MutableKObservableObject<Page, String> = MutableKObservableObject(text)
     override val fileObject: MutableKObservableObject<Page, File> = MutableKObservableObject(file)
     override val fileContentObject: MutableKObservableObject<Page, String> = MutableKObservableObject(fileContent)
     override val compiledScriptObject: MutableKObservableObject<Page, PageScript?> =
@@ -23,6 +25,7 @@ class PageImpl(
     override val dependenciesObject: MutableKObservableObject<Page, Set<String>> =
         MutableKObservableObject(setOf())
 
+    override var text by textObject
     override var file by fileObject
     override var fileContent by fileContentObject
     override var compiledScript by compiledScriptObject

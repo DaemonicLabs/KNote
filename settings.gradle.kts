@@ -22,3 +22,4 @@ rootProject.name = "KNote"
 include("core")
 include("gradle-plugin")
 include("tornadofx-viewer")
+include("markdown")

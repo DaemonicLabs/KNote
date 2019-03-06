@@ -34,5 +34,6 @@ interface NotebookManager {
     fun compileNotebook(notebookId: String): Notebook?
 
     val listNotebookFiles: Array<out File>
+    fun listAvailable(): List<String>
     fun getPageManager(notebookId: String): PageManager?
 }
