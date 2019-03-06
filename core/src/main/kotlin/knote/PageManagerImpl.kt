@@ -47,27 +47,27 @@ internal class PageManagerImpl(
     override fun executeAll(): Map<String, Any> {
         notebookScript.pageFiles.forEach {
             val id = it.name.substringBeforeLast(".page.kts")
-            pages[id]?.compiledScript ?: evalPage(it)
+            pages[id]?.compiledScript ?: compilePage(it)
         }
         while (pages.any { (id, page) -> page.result == null && !(page as PageImpl).errored }) {
             pages.filterValues { it.result == null }
                 .forEach { id, page ->
-                    id to getResultOrExec(id)
+                    id to executePageCached(id)
                 }
         }
         return pages.mapValues { (id, page) ->
-            getResultOrExec(id) ?: "errored: ${(page as PageImpl).errored}"
+            executePageCached(id) ?: "errored: ${(page as PageImpl).errored}"
         }
     }
 
     override fun resultType(pageId: String): KType? {
-        val page = findPage(pageId) ?: run {
+        val page = compilePageCached(pageId) ?: run {
             logger.warn("could not find page $pageId")
             return null
         }
         val pageScript = page.compiledScript ?: run {
             logger.warn("script for page $pageId is not compiled")
-            evalPage(pageId)?.compiledScript ?: return null
+            compilePage(pageId)?.compiledScript ?: return null
         }
         val processFunction =
             pageScript::class.declaredMemberFunctions.find { it.name == "process" } ?: run {
@@ -77,19 +77,19 @@ internal class PageManagerImpl(
         return processFunction.returnType
     }
 
-    override fun findPage(pageId: String): Page? = pages[pageId] ?: run {
-        evalPage(pageId) ?: run {
-            logger.warn("evalPage($pageId) returned null")
+    override fun compilePageCached(pageId: String): Page? = pages[pageId] ?: run {
+        compilePage(pageId) ?: run {
+            logger.warn("compilePage($pageId) returned null")
             null
         }
     }
 
-    override fun evalPage(pageId: String): Page? {
+    override fun compilePage(pageId: String): Page? {
         val file = notebookScript.fileForPage(pageId, logger) ?: return null
-        return evalPage(file, pageId)
+        return compilePage(file, pageId)
     }
 
-    fun evalPage(file: File, id: String = file.name.substringBeforeLast(".page.kts")): Page? {
+    fun compilePage(file: File, id: String = file.name.substringBeforeLast(".page.kts")): Page? {
         require(file.exists()) {
             "page: $id does not exist ($file)"
         }
@@ -174,71 +174,16 @@ internal class PageManagerImpl(
         val continuations = page.dependencies
 
         continuations.forEach {
-            getResultOrExec(it)
+            executePageCached(it)
         }
     }
 
-    override fun execPage(pageId: String): Any? {
+    override fun executePage(pageId: String): Any? {
         val page = pages[pageId] as PageImpl
         val pageScript = page.compiledScript ?: run {
             logger.debug("page $pageId not evaluated yet")
-            evalPage(pageId)?.compiledScript ?: return null
+            compilePage(pageId)?.compiledScript ?: return null
         }
-//        val processFunction = pageScript::class.declaredFunctions.find {
-//            it.name == "process"
-//        } ?: run {
-//            logger.debug("no function `process` found")
-//            return null
-//        }
-
-//        val parameters = processFunction.parameters.associate { parameter ->
-//            logger.debug("parameter: $parameter")
-//            logger.debug("parameter.name: ${parameter.name}")
-//            logger.debug("parameter.annotations: ${parameter.annotations}")
-//            logger.debug("parameter.type: ${parameter.type}")
-//            when (parameter.kind) {
-//                KParameter.Kind.INSTANCE -> {
-//                    return@associate parameter to pageScript
-//                }
-//                else -> {
-//                }
-//            }
-//            val fromPage = parameter.findAnnotation<FromPage>()
-//            require(fromPage != null) { "parameter: ${parameter.name} is not annotated with PageResult" }
-//            val paramId = fromPage.source.takeIf { it.isNotBlank() } ?: parameter.name!!
-//            page.dependencies as MutableSet += paramId
-//            val paramResult = getResultOrExec(paramId) ?: return null
-//            // require result to be assignable to the parameter
-//            val paramPage = pages[paramId] ?: return null
-//            val parameterScript = paramPage.compiledScript ?: return null
-//            val parameterProcessFunc =
-//                parameterScript::class.declaredMemberFunctions.find { it.name == "process" } ?: run {
-//                    logger.error("no function `process` found in $paramId")
-//                    return null
-//                }
-//            require(parameterProcessFunc.returnType.isSubtypeOf(parameter.type)) {
-//                logger.error("${parameterProcessFunc.returnType} is not a subtype of requested ${parameter.type}")
-//                logger.error("on page: $pageId")
-//                logger.info("parameter script: ${parameterScript.id}")
-//                logger.info("expected type: ${parameter.type}")
-//                logger.info("return type: ${parameterProcessFunc.returnType}")
-//                logger.info("parameter process function: $parameterProcessFunc")
-//                println()
-//                page.compiledScript = null
-//                "${parameterProcessFunc.returnType} is not a subtype of requested ${parameter.type}"
-//            }
-        // TODO: ensure actual type of paramResult is accessible
-//            val paramClass = paramResult::class
-//            logger.debug("paramResult::class: $paramClass")
-//            logger.debug("paramResult::class.visibility : ${paramClass.visibility}")
-//            if(paramClass.visibility == KVisibility.INTERNAL) {
-//                val proxyResult = ProxyUtil.createProxy(paramResult, parameter.type.jvmErasure.java)
-//                logger.debug("paramResult::class: ${proxyResult::class}")
-//                return@associate parameter to proxyResult
-//            }
-//
-//            parameter to (paramResult)
-//        }
         logger.debug("executing '$pageId'")
 //        logger.debug("arguments: $parameters")
 //        logger.debug("arguments: ${parameters.values.map { it::class }}")
@@ -262,11 +207,11 @@ internal class PageManagerImpl(
         return result
     }
 
-    override fun getResultOrExec(pageId: String): Any? {
+    override fun executePageCached(pageId: String): Any? {
         val page = pages[pageId] as? PageImpl ?: run {
-            evalPage(pageId) ?: return null
+            compilePage(pageId) ?: return null
         }
-        return page.result ?: execPage(pageId)
+        return page.result ?: executePage(pageId)
     }
 
     override fun updateSourceCode(pageId: String, content: String) {
@@ -285,26 +230,26 @@ internal class PageManagerImpl(
                 val event = watchEvent.kind()
                 if (!file.name.endsWith(".page.kts")) continue
 
+                logger.info("event: $path, ${event.name()}")
                 timeout?.cancel()
                 timeout = launch {
-                    logger.info("event: $path, ${event.name()}")
                     delay(1000)
 
                     val id = file.name.substringBeforeLast(".page.kts")
                     when (event.name()) {
                         "ENTRY_CREATE" -> {
                             logger.debug("${watchEvent.context()} was created")
-                            evalPage(file)
+                            compilePage(file)
                         }
                         "ENTRY_MODIFY" -> {
                             logger.debug("${watchEvent.context()} was modified")
                             invalidatePage(id)
                             logger.debug("invalidated pages: ${pages.filterValues { it.result == null }.keys}}")
-                            evalPage(file)
+                            compilePage(file)
                             // ensure all pages have their results cached again
                             notebookScript.pageFiles.forEach {
                                 val id = it.name.substringBeforeLast(".page.kts")
-                                val result = getResultOrExec(id)
+                                val result = executePageCached(id)
                                 logger.info("[$id] => $result")
                             }
                         }

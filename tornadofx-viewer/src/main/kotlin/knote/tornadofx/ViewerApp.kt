@@ -25,7 +25,7 @@ class ViewerApp : App(Workspace::class) {
 //            pageManager.executeAll()
             val pages = pageManager.pages
             pages.forEach { (pageId, page) ->
-                val result = pageManager.getResultOrExec(pageId)
+                val result = pageManager.executePageCached(pageId)
                 logger.info("[$pageId]: ${result?.let { "KClass: ${it::class}" }} value: '$result'")
                 convertNotebookScriptToParams(page, result.toString())
             }

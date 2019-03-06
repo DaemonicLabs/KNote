@@ -66,7 +66,7 @@ class Workbench : View() {
                                                 }
                                             }
                                         }
-                                        page.results = scope.manager.execPage(page.pageName).toString()
+                                        page.results = scope.manager.executePage(page.pageName).toString()
                                         evaluationText = text(page.results)
                                     }
                                 }

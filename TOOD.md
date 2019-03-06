@@ -9,6 +9,10 @@
 - [ ] register Result Adapter
 - [ ] get closest matching Result Adapter for given KType
 
+## Page
+
+- [ ] register other files to watch for triggering a reload or rerun
+
 ## Script Compiler
 
 - [ ] Handle Compilation Fail different than waiting on results to be available
@@ -28,7 +32,6 @@ possibly annotations on method arguments
 - [x] Extension
 - [x] ShadowJar tasks
 
-
 # GUI TornadoFx
 
 - [ ] Page dependency digraph drawer with clickable features
@@ -36,3 +39,13 @@ possibly annotations on method arguments
 
 - [ ] RichTextFX  
       https://github.com/FXMisc/RichTextFX/wiki
+
+# Visualizations
+
+- raw
+- String
+- Table (differing column count)
+- Plot
+  - Bars
+  - Lines
+  - Pie Chart

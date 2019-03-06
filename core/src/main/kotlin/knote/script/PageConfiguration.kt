@@ -113,7 +113,7 @@ class PageConfiguration : ScriptCompilationConfiguration({
 //                }
 //                startedPages += pageId
 
-//                val notebook = KNote.NOTEBOOK_MANAGER.findNotebook(notebookId)
+//                val notebook = KNote.NOTEBOOK_MANAGER.compileNotebookCached(notebookId)
 //                if(notebook != null) {
 //                    logger.error("notebook $notebookId could not be loaded")
 //                    reports += ScriptDiagnostic(
@@ -130,7 +130,6 @@ class PageConfiguration : ScriptCompilationConfiguration({
                     )
                     return@onAnnotations ResultWithDiagnostics.Failure(reports)
                 }
-//                val page = pageManager.findPage(pageId)!! as PageImpl
                 val generatedSrc = rootDir.resolve("build").resolve(".knote").resolve(notebookId).absoluteFile
                 generatedSrc.mkdirs()
                 val pageDependencies = fromPageAnnotations
@@ -177,13 +176,13 @@ class PageConfiguration : ScriptCompilationConfiguration({
 //                    ide.dependenciesSources.append(dependencyScripts)
                 }
             }
-            loopDetector.remove(pageId)
+//            loopDetector.remove(pageId)
             compilationConfiguration.asSuccess(reports)
         }
     }
 }) {
     companion object : KLogging() {
-        val loopDetector: MutableMap<String, MutableList<String>> = mutableMapOf()
+//        val loopDetector: MutableMap<String, MutableList<String>> = mutableMapOf()
     }
 }
 

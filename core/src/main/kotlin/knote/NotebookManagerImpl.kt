@@ -50,7 +50,7 @@ internal object NotebookManagerImpl : NotebookManager, KLogging() {
                 notebookFilter?.let { filter -> id in filter } ?: true
             }
             .forEach {
-                NotebookManagerImpl.evalNotebook(it)
+                NotebookManagerImpl.compileNotebook(it)
             }
         startWatcher()
     }
@@ -59,7 +59,7 @@ internal object NotebookManagerImpl : NotebookManager, KLogging() {
      * evaluates a single notebook file
      * and registers its pages
      */
-    override fun evalNotebook(notebookId: String): Notebook? {
+    override fun compileNotebook(notebookId: String): Notebook? {
         if (notebookFilter?.let { notebookId !in it } == true) {
             logger.error("$notebookId rejected by notebookFilter: $notebookFilter")
             return null
@@ -93,7 +93,7 @@ internal object NotebookManagerImpl : NotebookManager, KLogging() {
     }
 
     override fun getPageManager(notebookId: String): PageManager? {
-        val notebook = findNotebook(notebookId) as? NotebookImpl ?: run {
+        val notebook = compileNotebookCached(notebookId) as? NotebookImpl ?: run {
             logger.error("cannot load notebook $notebookId")
             return null
         }
@@ -113,8 +113,8 @@ internal object NotebookManagerImpl : NotebookManager, KLogging() {
         notebook.pageManager = null
     }
 
-    override fun findNotebook(notebookId: String) = notebooks[notebookId] ?: run {
-        evalNotebook(notebookId)
+    override fun compileNotebookCached(notebookId: String) = notebooks[notebookId] ?: run {
+        compileNotebook(notebookId)
     }
 
     private var watchJob: Job? = null
@@ -143,13 +143,13 @@ internal object NotebookManagerImpl : NotebookManager, KLogging() {
                     when (watchEvent.kind().name()) {
                         "ENTRY_CREATE" -> {
                             logger.debug("$path was created")
-                            evalNotebook(id)
+                            compileNotebook(id)
                         }
                         "ENTRY_MODIFY" -> {
                             logger.debug("$path was modified")
                             // TODO: delete all pages and readd
                             invalidateNotebook(id)
-                            evalNotebook(id)
+                            compileNotebook(id)
                         }
                         "ENTRY_DELETE" -> {
                             logger.debug("$path was deleted")
