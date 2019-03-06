@@ -6,8 +6,10 @@ import tornadofx.*
 class DashboardController: Controller() {
 
     private val dashboard: Dashboard by inject()
+    lateinit var notebookId: String
 
-    fun showWorkbench() {
+    fun showWorkbench(notebookId: String) {
+        this.notebookId = notebookId
         dashboard.currentWindow?.hide()
         workspace.openWindow()
     }

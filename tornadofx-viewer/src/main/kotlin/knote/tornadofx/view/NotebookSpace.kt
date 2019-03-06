@@ -7,6 +7,7 @@ import javafx.scene.paint.Color
 import knote.PageManagerImpl
 import knote.tornadofx.Styles
 import knote.tornadofx.controller.NotebookSpaceController
+import knote.tornadofx.model.NotebookScope
 import knote.tornadofx.model.PageManagerScope
 import knote.tornadofx.model.PageViewModel
 import tornadofx.*
@@ -17,7 +18,7 @@ class NotebookSpace: View(), PageManagerImpl.PageListener {
     private val tools = (1..10).toList()
     lateinit var evaluationConsole: VBox
 
-    override val scope = super.scope as PageManagerScope
+    override val scope = super.scope as NotebookScope
     private val controller: NotebookSpaceController by inject()
 
     init {
@@ -105,7 +106,21 @@ class NotebookSpace: View(), PageManagerImpl.PageListener {
                                     }
                                 }
                                 item("Notebooks") {
-                                    text("notebooks")
+                                    datagrid(tools) {
+                                        maxCellsInRow = 2
+                                        cellWidth = 100.0
+                                        cellHeight = 100.0
+
+                                        paddingTop = 15.0
+                                        paddingLeft = 35.0
+                                        minWidth = 300.0
+
+                                        cellCache {
+                                            stackpane {
+                                                label(it.toString())
+                                            }
+                                        }
+                                    }
                                 }
                                 item("JVM Dependencies") {
                                     text("List of JVM dependencies here")

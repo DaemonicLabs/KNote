@@ -4,22 +4,20 @@ import javafx.application.Application
 import javafx.application.Platform
 import javafx.scene.text.Font
 import knote.KNote
-import knote.api.Notebook
 import knote.api.PageManager
 import knote.tornadofx.ViewerApp
 import knote.tornadofx.controller.DashboardController
-import knote.tornadofx.controller.NotebookSpaceController
-import knote.tornadofx.model.PageManagerScope
+import knote.tornadofx.model.NotebookModel
 import knote.tornadofx.model.PageViewModel
-import knote.util.KObservableObject
 import mu.KLogging
 import tornadofx.*
 
 class Dashboard: View() {
 
     lateinit var pageManager: PageManager
-    val pageViewModels: ArrayList<PageViewModel> = arrayListOf()
-    val controller: DashboardController by inject()
+    val notebookModels: ArrayList<NotebookModel> = arrayListOf()
+    private val notebookList: ArrayList<String> = arrayListOf()
+    private val controller: DashboardController by inject()
 
     init {
         KNote.NOTEBOOK_MANAGER.evalNotebooks()
@@ -27,9 +25,11 @@ class Dashboard: View() {
 
         // TODO include a mechanism to choose a notebook, but we'll make the first notebook default for now
         notebooks.forEach { (id, notebook) ->
+            notebookList.add(notebook.id)
             logger.info("id: $notebook.id")
             pageManager = notebook.pageManager!!
 
+            val pageViewModels: ArrayList<PageViewModel> = arrayListOf()
             val pages = pageManager.pages
 
             pages.forEach { (pageId, page) ->
@@ -42,14 +42,11 @@ class Dashboard: View() {
                         page.result?.toString() ?: ""
                 ))
             }
+            notebookModels.add(NotebookModel(notebook, pageManager, pageViewModels.observable()))
         }
     }
 
-    // TODO() get configs to get list of notebooks
-
-    val notebooklist = listOf("NotebookSpace 1", "NotebookSpace 2", "NotebookSpace 3", "Notebook4").observable()
-
-    private val paginator = DataGridPaginator(notebooklist, itemsPerPage = 4)
+    private val paginator = DataGridPaginator(notebookList.observable(), itemsPerPage = 4)
 
     override val root = borderpane {
         setPrefSize(450.0, 550.0)
@@ -81,7 +78,7 @@ class Dashboard: View() {
                     }
                 }
                 onUserSelect(2) {
-                    controller.showWorkbench()
+                    controller.showWorkbench(it.toString())
                 }
             }
         }
