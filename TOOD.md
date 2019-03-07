@@ -31,6 +31,9 @@ possibly annotations on method arguments
 
 - [x] Extension
 - [x] ShadowJar tasks
+- [ ] register notebooks in extension
+- [ ] set dependencies for notebook
+- [ ] different configuration and shadowJar tasks for each notebook
 
 # GUI TornadoFx
 

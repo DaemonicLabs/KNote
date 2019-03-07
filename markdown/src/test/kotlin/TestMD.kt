@@ -1,4 +1,6 @@
+import knote.md.inlineHtml
 import knote.md.markdownText
+import kotlinx.html.img
 import net.steppschuh.markdowngenerator.list.TaskListItem
 
 fun main() {
@@ -11,13 +13,21 @@ fun main() {
         )
         code("./gradlew publishToMavenLocal")
         newLine()
+        newLine()
         list {
             +"element 1"
             +"element 2"
         }
+        newLine()
         taskList(
-            TaskListItem("")
+            TaskListItem("task", true),
+            TaskListItem("next", false),
+            TaskListItem("last")
         )
+
+        +inlineHtml {
+            img(src = "something.png")
+        }
     }
     println(text)
 }

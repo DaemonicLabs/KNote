@@ -7,7 +7,19 @@ plugins {
 }
 
 knote {
-
+    notebook("msleep") {
+        dependencies {
+            knote(group = "com.github.holgerbrandl", name = "krangl", version = "-SNAPSHOT")
+        }
+    }
+    notebook("statistics") {
+        dependencies {
+            knote(group = "org.nield", name = "kotlin-statistics", version = "1.2.1")
+        }
+    }
+    notebook("test_knote") {
+        
+    }
 }
 
 val wrapper = tasks.getByName<Wrapper>("wrapper") {
@@ -33,12 +45,6 @@ repositories {
     mavenCentral()
     jcenter()
     maven(url = "https://jitpack.io" )
-}
-
-dependencies {
-    knote(group = "org.nield", name = "kotlin-statistics", version = "1.2.1")
-    knote(group = "com.github.holgerbrandl", name = "krangl", version = "-SNAPSHOT")
-    knote(group = "org.jetbrains.kotlinx", name = "kotlinx-html-jvm", version = "0.6.12")
 }
 
 val ideaActive = System.getProperty("idea.active") == "true"

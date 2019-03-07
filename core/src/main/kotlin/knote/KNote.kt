@@ -9,11 +9,22 @@ import mu.KLogging
 import java.io.File
 
 object KNote : KLogging() {
-    private val workingDir = File(System.getProperty("user.dir")).absoluteFile!!
+    val notebookDir = System.getProperty("knote.notebookDir")?.let { File(it) }
+        ?: throw IllegalStateException("no -Dknote.notebookDir passed")
+    val rootDir = File(System.getProperty("user.dir")!!)
+    val notebookId = System.getProperty("knote.id") ?: run {
+        throw IllegalStateException("no -Dknote.id passed")
+    }
+
     private val jobs: MutableList<Job> = mutableListOf()
 
+    val cacheDir = rootDir
+        .resolve("build")
+        .resolve(".knote-cache")
+        .apply { mkdirs() }
+
     init {
-        logger.info("workingDir: $workingDir")
+        logger.info("notebookDir: $notebookDir")
     }
 
     @Deprecated("use knote.api.Notebook::pageManager")
@@ -27,5 +38,8 @@ object KNote : KLogging() {
     fun shutdown() {
         logger.info("doing shutdown")
         jobs.forEach { it.cancel() }
+    }
+
+    fun evalNotebook() {
     }
 }

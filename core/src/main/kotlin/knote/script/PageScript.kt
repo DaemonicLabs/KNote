@@ -40,7 +40,7 @@ open class PageScript(
      */
     val cachedResult: Any?
         get() {
-            val pageManager = KNote.NOTEBOOK_MANAGER.getPageManager(notebook.id) ?: return null
+            val pageManager = KNote.NOTEBOOK_MANAGER.getPageManager() ?: return null
             return pageManager.executePageCached(id)!!
         }
 
@@ -52,7 +52,7 @@ open class PageScript(
                 logger.debug("notebook: $notebook")
 //                val notebook = KNote.NOTEBOOK_MANAGER.compileNotebook(notebook.id)!!
                 logger.debug("notebook.pageManager: ${notebook.pageManager}")
-                val pageManager = KNote.NOTEBOOK_MANAGER.getPageManager(notebook.id)!!
+                val pageManager = KNote.NOTEBOOK_MANAGER.getPageManager()!!
                 logger.debug("notebook.pageManager: ${notebook.pageManager}")
                 //TODO: add typecheck
                 val result = pageManager.executePageCached(dependencyId)!!

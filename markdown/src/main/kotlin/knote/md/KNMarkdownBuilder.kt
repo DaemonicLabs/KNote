@@ -165,7 +165,7 @@ open class KNMarkdownBuilder<S : MarkdownBuilder<S, T>?, T : MarkdownElement>(
      * @param block quote builder
      * @see KNQuoteBuilder#KNQuoteBuilder(QuoteBuilder)
      */
-    fun quote(block: KNQuoteBuilder.() -> Unit) {
+    inline fun quote(block: KNQuoteBuilder.() -> Unit) {
         val builder = parent.beginQuote()
         val knBuilder = KNQuoteBuilder(builder)
         knBuilder.block()
@@ -188,7 +188,7 @@ open class KNMarkdownBuilder<S : MarkdownBuilder<S, T>?, T : MarkdownElement>(
      * @param language the code language for syntax highlighting
      * @see KNCodeBlockBuilder#KNCodeBlockBuilder(CodeBlockBuilder)
      */
-    fun codeBlock(
+    inline fun codeBlock(
         language: String = CodeBlock.LANGUAGE_UNKNOWN,
         block: KNCodeBlockBuilder.() -> Unit
     ) {
@@ -227,7 +227,7 @@ open class KNMarkdownBuilder<S : MarkdownBuilder<S, T>?, T : MarkdownElement>(
      *
      * @see KNListBuilder#KNListBuilder(ListBuilder)
      */
-    fun list(block: KNListBuilder.() -> Unit) {
+    inline fun list(block: KNListBuilder.() -> Unit) {
         val builder = parent.beginList()
         val knBuilder = KNListBuilder(builder)
         knBuilder.block()
@@ -291,5 +291,5 @@ open class KNMarkdownBuilder<S : MarkdownBuilder<S, T>?, T : MarkdownElement>(
      * Returns the root {@link MarkdownBuilder#markdownElement}
      * @return {@link MarkdownBuilder#markdownElement}
      */
-    fun build() = parent.build()
+    fun build(): T = parent.build()
 }

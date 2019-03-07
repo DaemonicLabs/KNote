@@ -122,7 +122,7 @@ class PageConfiguration : ScriptCompilationConfiguration({
 //                    )
 //                    return@onAnnotations ResultWithDiagnostics.Failure(reports)
 //                }
-                val pageManager: PageManager = KNote.NOTEBOOK_MANAGER.getPageManager(notebookId) ?: run {
+                val pageManager: PageManager = KNote.NOTEBOOK_MANAGER.getPageManager() ?: run {
                     logger.error("pageManager for $notebookId could not be loaded")
                     reports += ScriptDiagnostic(
                         "pageManager for $notebookId could not be loaded",

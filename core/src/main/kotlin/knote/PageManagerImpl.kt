@@ -97,7 +97,7 @@ internal class PageManagerImpl(
         val (pageScript, reports) = EvalScript.evalScript<PageScript>(
             host,
             file,
-            args = *arrayOf(notebook, id, workingDir)
+            args = *arrayOf(notebook, id, KNote.notebookDir)
         )
         page.fileContent = file.readText()
         page.reports = reports

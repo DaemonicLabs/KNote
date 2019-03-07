@@ -15,20 +15,17 @@ class ViewerApp : App(Workspace::class) {
     private val pages: ArrayList<PageModel> = arrayListOf()
 
     init {
-        KNote.NOTEBOOK_MANAGER.evalNotebooks()
-        val notebooks = KNote.NOTEBOOK_MANAGER.notebooks
+        val notebook = KNote.NOTEBOOK_MANAGER.notebook!!
 
         // TODO() make sure every workspace is one notebook
-        notebooks.forEach { (id, notebook) ->
-            logger.info("id: $id")
-            pageManager = notebook.pageManager!!
+        logger.info("id: ${notebook.id}")
+        pageManager = notebook.pageManager!!
 //            pageManager.executeAll()
-            val pages = pageManager.pages
-            pages.forEach { (pageId, page) ->
-                val result = pageManager.executePageCached(pageId)
-                logger.info("[$pageId]: ${result?.let { "KClass: ${it::class}" }} value: '$result'")
-                convertNotebookScriptToParams(page, result.toString())
-            }
+        val pages = pageManager.pages
+        pages.forEach { (pageId, page) ->
+            val result = pageManager.executePageCached(pageId)
+            logger.info("[$pageId]: ${result?.let { "KClass: ${it::class}" }} value: '$result'")
+            convertNotebookScriptToParams(page, result.toString())
         }
     }
 
@@ -45,7 +42,6 @@ class ViewerApp : App(Workspace::class) {
     companion object : KLogging() {
         @JvmStatic
         fun main(vararg args: String) {
-            KNote.NOTEBOOK_MANAGER.notebookFilter = args.toList()
             Application.launch(ViewerApp::class.java, *args)
         }
     }
