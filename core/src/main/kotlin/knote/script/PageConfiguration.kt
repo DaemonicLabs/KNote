@@ -69,18 +69,20 @@ class PageConfiguration : ScriptCompilationConfiguration({
         onAnnotations(FromPage::class) { context ->
             logger.debug("on annotations")
             val scriptFile = (context.script as FileScriptSource).file
-            val rootDir = scriptFile.parentFile.parentFile
+            val notebookDir = scriptFile.parentFile
+            System.setProperty("knote.notebookDir", notebookDir.path)
+            val notebookId = scriptFile.parentFile.parentFile.name
+            System.setProperty("knote.id", notebookId)
 
-            val notebookId = scriptFile.parentFile.name.substringBeforeLast("_pages")
             val pageId = scriptFile.name.substringBeforeLast(".page.kts")
 
             val reports = mutableListOf<ScriptDiagnostic>()
             reports += ScriptDiagnostic(
-                "rootDir: $rootDir",
+                "notebookDir: $notebookDir",
                 ScriptDiagnostic.Severity.INFO
             )
 
-            System.setProperty("user.dir", rootDir.absolutePath)
+//            System.setProperty("user.dir", rootDir.absolutePath)
 
             val annotations = context.collectedData?.get(ScriptCollectedData.foundAnnotations)?.also { annotations ->
                 if(annotations.isNotEmpty()) {
@@ -130,7 +132,7 @@ class PageConfiguration : ScriptCompilationConfiguration({
                     )
                     return@onAnnotations ResultWithDiagnostics.Failure(reports)
                 }
-                val generatedSrc = rootDir.resolve("build").resolve(".knote").resolve(notebookId).absoluteFile
+                val generatedSrc = KNote.rootDir.resolve("build").resolve(".knote").resolve(notebookId).absoluteFile
                 generatedSrc.mkdirs()
                 val pageDependencies = fromPageAnnotations
                     .map { it.source }

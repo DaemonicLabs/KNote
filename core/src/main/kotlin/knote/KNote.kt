@@ -27,8 +27,7 @@ object KNote : KLogging() {
         logger.info("notebookDir: $notebookDir")
     }
 
-    @Deprecated("use knote.api.Notebook::pageManager")
-    val PAGE_REGISTRIES: KObservableMap<String, PageManager> = MutableKObservableMap()
+    // TODO: merge notebook manager into KNote
     val NOTEBOOK_MANAGER: NotebookManager = NotebookManagerImpl
 
     fun cancelOnShutDown(job: Job) {

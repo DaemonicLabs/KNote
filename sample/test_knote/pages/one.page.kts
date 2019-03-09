@@ -1,5 +1,8 @@
-@file:FromPage("two")
-@file:FromPage("three")
+//@file:FromPage("two")
+//@file:FromPage("three")
+
+val two: String by inject()
+val three: String by inject()
 
 logger.info(">>>> evaluating step $id")
 
