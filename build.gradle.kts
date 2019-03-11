@@ -140,7 +140,7 @@ subprojects {
 //            field("BUILD") value versionSuffix
             field("VERSION") value Constants.KNote.version
             field("FULL_VERSION") value fullVersion
-            field("BUILD_NUMBER") value buildnumber
+            field("BUILD_NUMBER") value if (Env.isCI) buildnumber else -1
             field("COMPILE_TIMESTAMP") value (System.currentTimeMillis() / 1000)
         }
     }

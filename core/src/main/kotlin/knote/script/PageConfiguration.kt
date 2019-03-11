@@ -55,11 +55,17 @@ class PageConfiguration : ScriptCompilationConfiguration({
                 "beforeCompiling time: ${System.currentTimeMillis()}",
                 ScriptDiagnostic.Severity.DEBUG
             )
-            val compileTime = Date.from(Instant.ofEpochSecond( CoreConstants.COMPILE_TIMESTAMP ))
             reports += ScriptDiagnostic(
-                "COMPILE_TIMESTAMP: ${compileTime}",
+                "knote version: ${CoreConstants.FULL_VERSION}",
                 ScriptDiagnostic.Severity.INFO
             )
+            if(CoreConstants.BUILD_NUMBER < 0) {
+                val compileTime = Date.from(Instant.ofEpochSecond( CoreConstants.COMPILE_TIMESTAMP ))
+                reports += ScriptDiagnostic(
+                    "COMPILE_TIMESTAMP: $compileTime",
+                    ScriptDiagnostic.Severity.INFO
+                )
+            }
 
             ScriptCompilationConfiguration(context.compilationConfiguration) {
                 ide.acceptedLocations.append(ScriptAcceptedLocation.Project)
