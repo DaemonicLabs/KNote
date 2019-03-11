@@ -2,7 +2,6 @@ import moe.nikky.counter.CounterExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import plugin.ConstantsExtension
 import plugin.GenerateConstantsTask
-import java.util.Date
 
 plugins {
     kotlin("jvm") version Constants.Kotlin.version
@@ -220,5 +219,18 @@ subprojects {
                 }
             }
         }
+    }
+
+    val clean = tasks.getByName<Delete>("clean") {
+        doLast {
+            project.rootDir.resolve("out").run {
+                logger.lifecycle("deleting {}", this)
+                deleteRecursively()
+            }
+        }
+    }
+
+    val publishToMavenLocal = tasks.getByName<Task>("publishToMavenLocal") {
+        dependsOn(clean)
     }
 }
