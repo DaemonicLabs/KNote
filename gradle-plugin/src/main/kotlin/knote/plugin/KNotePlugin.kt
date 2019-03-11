@@ -122,7 +122,7 @@ open class KNotePlugin : Plugin<Project> {
                     group = "shadow"
                     from(main.output)
                     archiveBaseName.set("${id}_tornadofx-viewer")
-                    configurations = listOf(knoteDepScope.knoteFXConfiguration)
+                    configurations = listOf(knoteDepScope.knoteConfiguration, knoteDepScope.knoteFXConfiguration)
                     manifest {
                         attributes(
                             mapOf(
@@ -135,7 +135,6 @@ open class KNotePlugin : Plugin<Project> {
 
                 task<JavaExec>("${id}_run") {
                     dependsOn(shadowCore)
-//                        dependsOn(copyLibs)
                     val jarFile = shadowCore.archiveFile.get()
                     group = "application"
 //                    args = listOf(id)
@@ -152,8 +151,7 @@ open class KNotePlugin : Plugin<Project> {
                 }
                 task<JavaExec>("${id}_runViewer") {
                     dependsOn(shadowViewer)
-//                        dependsOn(copyLibs)
-                    val jarFile = shadowCore.archiveFile.get()
+                    val jarFile = shadowViewer.archiveFile.get()
                     group = "application"
 //                    args = listOf(id)
                     systemProperty("knote.notebookDir", notebookModel.notebookDir.path)
