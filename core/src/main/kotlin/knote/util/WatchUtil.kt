@@ -37,7 +37,7 @@ fun watchActor(path: Path, actorScope: suspend ActorScope<WatchEvent<Path>>.() -
             key.reset()
         }
     }
-    KNote.cancelOnShutDown(job)
+//    KNote.cancelOnShutDown(job)
     return job
 }
 

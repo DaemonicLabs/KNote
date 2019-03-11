@@ -15,7 +15,8 @@
 
 ## Script Compiler
 
-- [ ] Handle Compilation Fail different than waiting on results to be available
+- [x] Handle Compilation Fail different than waiting on results to be available
+  - `compiledScript` will be `null`
 
 ## PathWatcher
 

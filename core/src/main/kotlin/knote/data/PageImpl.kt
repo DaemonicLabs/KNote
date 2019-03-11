@@ -2,8 +2,11 @@ package knote.data
 
 import knote.api.Page
 import knote.script.PageScript
+import knote.util.KObservableList
+import knote.util.MutableKObservableList
 import knote.util.MutableKObservableObject
 import java.io.File
+import java.nio.file.Path
 import kotlin.script.experimental.api.ScriptDiagnostic
 
 class PageImpl(
@@ -24,6 +27,7 @@ class PageImpl(
     override val resultObject: MutableKObservableObject<Page, Any?> = MutableKObservableObject(null)
     override val dependenciesObject: MutableKObservableObject<Page, Set<String>> =
         MutableKObservableObject(setOf())
+    override val fileInputs: MutableKObservableList<Path> = MutableKObservableList()
 
     override var text by textObject
     override var file by fileObject

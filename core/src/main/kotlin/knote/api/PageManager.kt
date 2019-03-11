@@ -1,6 +1,7 @@
 package knote.api
 
 import knote.util.KObservableMap
+import java.io.File
 import kotlin.reflect.KType
 
 interface PageManager {
@@ -23,4 +24,5 @@ interface PageManager {
     fun executeAll(): Map<String, Any>
 
     fun resultType(pageId: String): KType?
+    fun watchDataFile(id: String, file: File)
 }

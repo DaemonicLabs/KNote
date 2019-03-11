@@ -19,6 +19,7 @@ open class NotebookScript(
     override fun toString() = "NotebookScript(id=$id, title=$title, description=$description)"
 
     var pageRoot: File = notebookDir.resolve("pages")
+    var dataRoot: File = notebookDir.resolve("data")
 
     val pageFiles: Array<out File>
         get() = pageRoot.listFiles { file -> file.isFile && file.name.endsWith(".page.kts") }

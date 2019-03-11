@@ -12,14 +12,12 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mu.KLogging
-import java.io.File
 
 internal object NotebookManagerImpl : NotebookManager, KLogging() {
     override val notebookObject: MutableKObservableObject<NotebookManager, Notebook?> = MutableKObservableObject(null)
     override var notebook by notebookObject
 
     private val host = EvalScript.createJvmScriptingHost(KNote.cacheDir)
-    private val workingDir get() = File(System.getProperty("user.dir")).absoluteFile!!
 
     init {
         startWatcher()
@@ -58,7 +56,7 @@ internal object NotebookManagerImpl : NotebookManager, KLogging() {
             return notebook
         }
 
-        notebook.pageManager = PageManagerImpl(notebook, host, workingDir)
+        notebook.pageManager = PageManagerImpl(notebook, host)
         return notebook
     }
 
@@ -69,7 +67,7 @@ internal object NotebookManagerImpl : NotebookManager, KLogging() {
             return null
         }
         return notebook.pageManager
-            ?: return PageManagerImpl(notebook, host, workingDir).also {
+            ?: return PageManagerImpl(notebook, host).also {
                 notebook.pageManager = it
             }
 //            notebook.pageManager = PageManagerImpl(notebook, host, workingDir)
@@ -92,7 +90,7 @@ internal object NotebookManagerImpl : NotebookManager, KLogging() {
     private fun startWatcher() {
         logger.debug("starting notebook watcher")
         watchJob?.cancel()
-        watchJob = watchActor(KNote.notebookDir.toPath()) {
+        val job = watchActor(KNote.notebookDir.toPath()) {
             var timeout: Job? = null
             for (watchEvent in channel) {
                 val path = watchEvent.context()
@@ -126,6 +124,8 @@ internal object NotebookManagerImpl : NotebookManager, KLogging() {
                 }
             }
         }
+        KNote.cancelOnShutDown(job)
+        watchJob = job
         logger.trace("started notebook watcher")
     }
 }
