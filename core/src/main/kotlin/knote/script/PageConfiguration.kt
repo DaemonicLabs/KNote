@@ -51,6 +51,11 @@ class PageConfiguration : ScriptCompilationConfiguration({
 
         beforeCompiling { context ->
             val reports = mutableListOf<ScriptDiagnostic>()
+            val scriptFile = (context.script as FileScriptSource).file
+            val notebookDir = scriptFile.parentFile.parentFile
+            val notebookId = scriptFile.parentFile.parentFile.name
+            val pageId = scriptFile.name.substringBeforeLast(".page.kts")
+
             reports += ScriptDiagnostic(
                 "beforeCompiling time: ${System.currentTimeMillis()}",
                 ScriptDiagnostic.Severity.DEBUG
@@ -66,6 +71,14 @@ class PageConfiguration : ScriptCompilationConfiguration({
                     ScriptDiagnostic.Severity.INFO
                 )
             }
+            reports += ScriptDiagnostic(
+                "notebook id: $notebookId",
+                ScriptDiagnostic.Severity.INFO
+            )
+            reports += ScriptDiagnostic(
+                "page id: $pageId",
+                ScriptDiagnostic.Severity.INFO
+            )
 
             ScriptCompilationConfiguration(context.compilationConfiguration) {
                 ide.acceptedLocations.append(ScriptAcceptedLocation.Project)
