@@ -1,5 +1,5 @@
-//@file:FromPage("sleepData")
-import krangl.*
+import krangl.DataFrame
+import krangl.filter
 
 val sleepData: DataFrame by inject()
 

@@ -1,7 +1,11 @@
 package knote.script
 
+import knote.annotations.FromPage
+import knote.core.CoreConstants
 import knote.poet.PageMarker
 import mu.KLogging
+import java.time.Instant
+import java.util.Date
 import kotlin.script.experimental.api.ScriptAcceptedLocation
 import kotlin.script.experimental.api.ScriptCompilationConfiguration
 import kotlin.script.experimental.api.ScriptDiagnostic
@@ -10,6 +14,7 @@ import kotlin.script.experimental.api.asSuccess
 import kotlin.script.experimental.api.defaultImports
 import kotlin.script.experimental.api.ide
 import kotlin.script.experimental.api.refineConfiguration
+import kotlin.script.experimental.host.FileScriptSource
 import kotlin.script.experimental.jvm.dependenciesFromCurrentContext
 import kotlin.script.experimental.jvm.jvm
 
@@ -40,11 +45,26 @@ class NotebookConfiguration : ScriptCompilationConfiguration({
                 ScriptDiagnostic.Severity.DEBUG
             )
 
+            val compileTime = Date.from(Instant.ofEpochSecond( CoreConstants.COMPILE_TIMESTAMP ))
+            reports += ScriptDiagnostic(
+                "COMPILE_TIMESTAMP: ${compileTime}",
+                ScriptDiagnostic.Severity.INFO
+            )
+
             ScriptCompilationConfiguration(context.compilationConfiguration) {
                 ide.acceptedLocations.append(ScriptAcceptedLocation.Project)
             }.asSuccess(reports)
         }
 
+        this.onAnnotations(FromPage::class) { context ->
+            val reports = mutableListOf<ScriptDiagnostic>()
+            val scriptFile = (context.script as FileScriptSource).file
+            val rootDir = scriptFile.parentFile
+
+            ScriptCompilationConfiguration(context.compilationConfiguration) {
+                    ide.acceptedLocations.append(ScriptAcceptedLocation.Project)
+            }.asSuccess(reports)
+        }
 //        onAnnotations(Import::class) { context ->
 //            logger.debug("on annotations")
 //            val scriptFile = (context.script as FileScriptSource).file

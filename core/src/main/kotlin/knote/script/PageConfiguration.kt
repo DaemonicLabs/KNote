@@ -69,7 +69,7 @@ class PageConfiguration : ScriptCompilationConfiguration({
         onAnnotations(FromPage::class) { context ->
             logger.debug("on annotations")
             val scriptFile = (context.script as FileScriptSource).file
-            val notebookDir = scriptFile.parentFile
+            val notebookDir = scriptFile.parentFile.parentFile
             System.setProperty("knote.notebookDir", notebookDir.path)
             val notebookId = scriptFile.parentFile.parentFile.name
             System.setProperty("knote.id", notebookId)
