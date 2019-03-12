@@ -36,18 +36,18 @@ class Workbench : View() {
                                                 it.script = new
                                             }
                                         }
-                                            when (it.results) {
-                                                is String -> {
-                                                    textarea(it.resultsProperty) {
-                                                        isEditable = false
-                                                        font = Font.font(java.awt.Font.MONOSPACED, font.size)
-                                                        hgrow = Priority.ALWAYS
-                                                        vgrow = Priority.ALWAYS
-                                                        minHeight = 280.0
-                                                    }
+                                        when (it.results) {
+                                            is String -> {
+                                                textarea(it.resultsProperty) {
+                                                    isEditable = false
+                                                    font = Font.font(java.awt.Font.MONOSPACED, font.size)
+                                                    hgrow = Priority.ALWAYS
+                                                    vgrow = Priority.ALWAYS
+                                                    minHeight = 280.0
                                                 }
-                                                else -> TODO()
                                             }
+                                            else -> TODO()
+                                        }
                                     }
                                 }
                             }

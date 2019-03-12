@@ -1,6 +1,5 @@
 package knote.util
 
-import knote.KNote
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.ActorScope

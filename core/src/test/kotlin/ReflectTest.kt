@@ -1,6 +1,6 @@
 import kotlin.reflect.KParameter
 
-object ReflectTest{
+object ReflectTest {
     @JvmStatic
     fun main(args: Array<String>) {
         val arg = Argument("value")
@@ -27,7 +27,7 @@ class Reflector {
         println("calling testFun($arg)")
         return "test($arg)"
     }
-
 }
+
 interface IArg
 data class Argument(val value: String) : IArg

@@ -1,8 +1,8 @@
 package knote.script
 
 import knote.KNote
-import knote.api.Notebook
 import knote.api.DelegatedResult
+import knote.api.Notebook
 import knote.data.PageImpl
 import knote.isSubDirectoryOf
 import knote.md.KNTextBuilder
@@ -85,14 +85,15 @@ open class PageScript(
         pageManager.watchDataFile(id, file)
         // TODO: add to input files
 
-        return object: DelegatedResult<This, T> {
+        return object : DelegatedResult<This, T> {
             override fun getValue(self: This, property: KProperty<*>): T {
                 logger.info("loading $file")
                 return transform(file)
             }
         }
     }
-    fun <This> loadData(file: File)  = loadData<This, File>(file) { file ->
+
+    fun <This> loadData(file: File) = loadData<This, File>(file) { file ->
         file
     }
 
@@ -103,9 +104,7 @@ open class PageScript(
     // TODO: PathWatcher for changes in file dependencies
     // TODO: basic functions to load file contents
 
-
     internal fun invalidate() {
-
     }
 
     // TODO: visualize data

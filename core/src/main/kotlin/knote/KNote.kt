@@ -1,9 +1,6 @@
 package knote
 
 import knote.api.NotebookManager
-import knote.api.PageManager
-import knote.util.KObservableMap
-import knote.util.MutableKObservableMap
 import kotlinx.coroutines.Job
 import mu.KLogging
 import java.io.File

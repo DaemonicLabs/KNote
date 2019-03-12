@@ -274,12 +274,14 @@ open class KNMarkdownBuilder<S : MarkdownBuilder<S, T>?, T : MarkdownElement>(
     fun append(value: MarkdownSerializable) {
         parent.append(value)
     }
+
     /**
      * Appends two new lines to the existing root {@link MarkdownBuilder#markdownElement}.
      */
     fun newParagraph() {
         parent.newParagraph()
     }
+
     /**
      * Appends a new line to the existing root {@link MarkdownBuilder#markdownElement}.
      */

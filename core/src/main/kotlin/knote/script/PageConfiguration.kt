@@ -53,7 +53,7 @@ class PageConfiguration : ScriptCompilationConfiguration({
             val reports = mutableListOf<ScriptDiagnostic>()
             val scriptFile = (context.script as FileScriptSource).file
             val notebookDir = scriptFile.parentFile.parentFile
-            val notebookId = scriptFile.parentFile.parentFile.name
+            val notebookId = notebookDir.name
             val pageId = scriptFile.name.substringBeforeLast(".page.kts")
 
             reports += ScriptDiagnostic(
@@ -64,8 +64,8 @@ class PageConfiguration : ScriptCompilationConfiguration({
                 "knote version: ${CoreConstants.FULL_VERSION}",
                 ScriptDiagnostic.Severity.INFO
             )
-            if(CoreConstants.BUILD_NUMBER < 0) {
-                val compileTime = Date.from(Instant.ofEpochSecond( CoreConstants.COMPILE_TIMESTAMP ))
+            if (CoreConstants.BUILD_NUMBER < 0) {
+                val compileTime = Date.from(Instant.ofEpochSecond(CoreConstants.COMPILE_TIMESTAMP))
                 reports += ScriptDiagnostic(
                     "COMPILE_TIMESTAMP: $compileTime",
                     ScriptDiagnostic.Severity.INFO
@@ -90,7 +90,7 @@ class PageConfiguration : ScriptCompilationConfiguration({
             val scriptFile = (context.script as FileScriptSource).file
             val notebookDir = scriptFile.parentFile.parentFile
             System.setProperty("knote.notebookDir", notebookDir.path)
-            val notebookId = scriptFile.parentFile.parentFile.name
+            val notebookId = notebookDir.name
             System.setProperty("knote.id", notebookId)
 
             val pageId = scriptFile.name.substringBeforeLast(".page.kts")
@@ -104,7 +104,7 @@ class PageConfiguration : ScriptCompilationConfiguration({
 //            System.setProperty("user.dir", rootDir.absolutePath)
 
             val annotations = context.collectedData?.get(ScriptCollectedData.foundAnnotations)?.also { annotations ->
-                if(annotations.isNotEmpty()) {
+                if (annotations.isNotEmpty()) {
                     reports += ScriptDiagnostic("file_annotations: $annotations", ScriptDiagnostic.Severity.DEBUG)
                 }
                 if (annotations.any { it is InvalidScriptResolverAnnotation }) {
@@ -158,7 +158,7 @@ class PageConfiguration : ScriptCompilationConfiguration({
                     .distinct()
                     .associate { depId ->
                         // TODO: DETECT CIRCULAR DEPENDENCIES
-                        if(depId == pageId) {
+                        if (depId == pageId) {
                             reports += ScriptDiagnostic(
                                 "page $pageId depends on itself",
                                 ScriptDiagnostic.Severity.FATAL

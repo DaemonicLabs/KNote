@@ -1,9 +1,6 @@
 package knote
 
 import java.io.File
-import kotlin.reflect.jvm.internal.impl.load.java.lazy.ContextKt.child
-
-
 
 fun File.isSubDirectoryOf(folder: File): Boolean {
     val folder = folder.getCanonicalFile()

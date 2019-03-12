@@ -32,7 +32,7 @@ internal object NotebookManagerImpl : NotebookManager, KLogging() {
         val notebookId = KNote.notebookId
         logger.debug("attempting to construct notebook '$notebookId'")
         val file = KNote.notebookDir.resolve("$notebookId.notebook.kts")
-        if(!file.exists()) {
+        if (!file.exists()) {
             logger.error("notebook: $notebookId does not exist ($file)")
             return null
         }
@@ -42,7 +42,7 @@ internal object NotebookManagerImpl : NotebookManager, KLogging() {
             file,
             args = *arrayOf(notebookId, KNote.notebookDir)
         )
-        if(notebook == null) {
+        if (notebook == null) {
             notebook = NotebookImpl(
                 id = notebookId,
                 file = file
@@ -67,10 +67,9 @@ internal object NotebookManagerImpl : NotebookManager, KLogging() {
             return null
         }
         return notebook.pageManager
-            ?: return PageManagerImpl(notebook, host).also {
+            ?: PageManagerImpl(notebook, host).also {
                 notebook.pageManager = it
             }
-//            notebook.pageManager = PageManagerImpl(notebook, host, workingDir)
     }
 
     private fun invalidateNotebook() {
@@ -98,7 +97,7 @@ internal object NotebookManagerImpl : NotebookManager, KLogging() {
                 val event = watchEvent.kind()
                 if (!file.name.endsWith(".notebook.kts")) continue
                 val id = file.name.substringBeforeLast(".notebook.kts")
-                if(id != KNote.notebookId) continue
+                if (id != KNote.notebookId) continue
                 timeout?.cancel()
                 timeout = launch {
                     PageManagerImpl.logger.info("event: $path, ${event.name()}")

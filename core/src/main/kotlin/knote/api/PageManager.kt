@@ -11,12 +11,14 @@ interface PageManager {
      * Compiles a page
      */
     fun compilePageCached(pageId: String): Page?
+
     fun compilePage(pageId: String): Page?
 
     /**
      * Execute Page without recompiling the script
      */
     fun executePageCached(pageId: String): Any?
+
     fun executePage(pageId: String): Any?
 
     fun updateSourceCode(pageId: String, content: String)

@@ -2,7 +2,6 @@ package knote.api
 
 import knote.script.PageScript
 import knote.util.KObservableList
-import knote.util.KObservableMap
 import knote.util.KObservableObject
 import java.io.File
 import java.nio.file.Path

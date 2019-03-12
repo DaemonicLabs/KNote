@@ -12,6 +12,7 @@ class KNoteDependencyScope(id: String, project: Project) {
         val configuration = knoteConfiguration
         dependencies.getOrPut(configuration) { mutableListOf() } += "$group:$name:$version"
     }
+
     fun knotefx(group: String, name: String, version: String) {
         val configuration = knoteFXConfiguration
         dependencies.getOrPut(configuration) { mutableListOf() } += "$group:$name:$version"

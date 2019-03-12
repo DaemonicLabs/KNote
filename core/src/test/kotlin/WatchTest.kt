@@ -5,7 +5,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mu.KLogging
 import java.io.File
-import java.lang.Thread.sleep
 import java.nio.file.Path
 
 object WatchTest : KLogging() {

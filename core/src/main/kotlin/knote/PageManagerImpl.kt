@@ -131,7 +131,7 @@ internal class PageManagerImpl(
 
         page.errored = false
         page.result = null
-        if(page.text != pageScript.text) {
+        if (page.text != pageScript.text) {
             page.text = pageScript.text
         }
         return page
@@ -270,6 +270,7 @@ internal class PageManagerImpl(
 
         logger.trace("started page watcher")
     }
+
     private var watchDataJob: Job? = null
 
     private fun startDataWatcher() {
@@ -284,7 +285,7 @@ internal class PageManagerImpl(
                 logger.info("event: $path, ${event.name()}")
 
 
-                if(event.name() == "ENTRY_DELETE" || event.name() == "OVERFLOW") continue
+                if (event.name() == "ENTRY_DELETE" || event.name() == "OVERFLOW") continue
                 // TODO: readd editing timeout
                 timeout?.cancel()
                 timeout = launch {
@@ -294,7 +295,7 @@ internal class PageManagerImpl(
                         "ENTRY_CREATE" -> {
                             logger.debug("${watchEvent.context()} was created")
                             pages.forEach { pageId, page ->
-                                if(path in page.fileInputs) {
+                                if (path in page.fileInputs) {
                                     executePage(pageId)
                                 }
                             }
@@ -303,13 +304,13 @@ internal class PageManagerImpl(
                             logger.debug("${watchEvent.context()} was modified")
                             var executed = false
                             pages.forEach { pageId, page ->
-                                if(path in page.fileInputs) {
+                                if (path in page.fileInputs) {
                                     executePage(pageId)
                                     executed = true
                                 }
                             }
                             // ensure all pages have their results cached again
-                            if(executed) {
+                            if (executed) {
                                 notebookScript.pageFiles.forEach {
                                     val id = it.name.substringBeforeLast(".page.kts")
                                     val result = executePageCached(id)
@@ -330,6 +331,7 @@ internal class PageManagerImpl(
 
         logger.trace("started data watcher")
     }
+
     internal fun stopWatcher() {
         watchPageJob?.cancel()
         watchPageJob = null

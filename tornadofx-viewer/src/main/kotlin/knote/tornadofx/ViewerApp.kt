@@ -11,15 +11,13 @@ import tornadofx.*
 import java.io.BufferedReader
 
 class ViewerApp : App(Workspace::class) {
-    lateinit var pageManager: PageManager
+    var pageManager: PageManager
     private val pages: ArrayList<PageModel> = arrayListOf()
 
     init {
-        val notebook = KNote.NOTEBOOK_MANAGER.notebook!!
-
-        // TODO() make sure every workspace is one notebook
-        logger.info("id: ${notebook.id}")
-        pageManager = notebook.pageManager!!
+        logger.info("id: ${KNote.notebookId}")
+        pageManager = KNote.NOTEBOOK_MANAGER.getPageManager()
+            ?: throw IllegalStateException("cannot load page manager for ${KNote.notebookId}")
 //            pageManager.executeAll()
         val pages = pageManager.pages
         pages.forEach { (pageId, page) ->

@@ -5,7 +5,8 @@ import net.steppschuh.markdowngenerator.list.TaskListItem
 
 fun main() {
     val text = markdownText {
-        codeBlock("kotlin",
+        codeBlock(
+            "kotlin",
             """
                 import blah
                 fun main() = println("Hello World")
