@@ -1,8 +1,10 @@
 package knote.tornadofx.view
 
+import javafx.beans.property.SimpleStringProperty
 import javafx.collections.ListChangeListener
 import javafx.geometry.Side
 import javafx.scene.control.TabPane
+import javafx.scene.input.KeyCode
 import javafx.scene.layout.Priority
 import javafx.scene.paint.Color
 import javafx.scene.text.Font
@@ -31,7 +33,7 @@ class NotebookSpace : View() {
                                 textProperty().addListener { _, _, new ->
                                     addedPage.dirtyState = true
 //                                                it.script = new
-                                    val pageManager = KNote.NOTEBOOK_MANAGER.getPageManager()!!
+                                    val pageManager = KNote.NOTEBOOK_MANAGER.pageManager
                                     pageManager.updateSourceCode(addedPage.pageId, new)
                                 }
                                 font = Font.font("monospaced", font.size)
@@ -123,5 +125,30 @@ class NotebookSpace : View() {
         scope.pageViewModels.forEach { addedPage ->
             tabPage(addedPage)
         }
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        logger.info("clicked create")
+
+        val pageId = SimpleStringProperty("new_page")
+        dialog {
+            label("page ID")
+            textfield (pageId) {
+                setOnKeyPressed { event ->
+                    if (event.code == KeyCode.ENTER) {
+                        this@dialog.close()
+                        logger.info("creating new page '${pageId.value}'")
+                        scope.pageManager.createPage(pageId.value)
+                    }
+                }
+            }
+        }!!
+    }
+
+    override fun onDelete() {
+        super.onDelete()
+        logger.info("clicked delete")
+//        scope.pageViewModels.remove()
     }
 }

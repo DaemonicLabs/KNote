@@ -6,6 +6,7 @@ import knote.data.NotebookImpl
 import knote.data.PageImpl
 import knote.host.EvalScript
 import knote.host.EvalScript.posToString
+import knote.script.NotebookScript
 import knote.script.PageScript
 import knote.util.MutableKObservableMap
 import knote.util.watchActor
@@ -219,6 +220,11 @@ internal class PageManagerImpl(
     override fun updateSourceCode(pageId: String, content: String) {
         val file = notebookScript.fileForPage(pageId, logger) ?: return
         file.writeText(content)
+    }
+
+    override fun createPage(pageId: String) {
+        val newPageFile = notebookScript.pageRoot.resolve("$pageId.page.kts")
+        newPageFile.createNewFile()
     }
 
     override fun watchDataFile(pageId: String, file: File) {

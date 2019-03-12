@@ -14,10 +14,9 @@ import tornadofx.*
 class NotebookWorkbench : Workspace() {
     val logger = KotlinLogging.logger {}
     override fun onBeforeShow() {
-        KNote.NOTEBOOK_MANAGER.compileNotebook()
+        KNote.NOTEBOOK_MANAGER.compileNotebookCached()
         logger.info("id: ${KNote.notebookId}")
-        val pageManager = KNote.NOTEBOOK_MANAGER.getPageManager()
-            ?: throw IllegalStateException("cannot load page manager for ${KNote.notebookId}")
+        val pageManager = KNote.NOTEBOOK_MANAGER.pageManager
 
         val pageViewModels: ObservableList<PageViewModel> = observableList()
 

@@ -1,11 +1,16 @@
 package knote.data
 
+import knote.KNote
+import knote.NotebookManagerImpl
+import knote.PageManagerImpl
 import knote.api.Notebook
 import knote.api.PageManager
+import knote.host.EvalScript
 import knote.script.NotebookScript
 import knote.util.MutableKObservableObject
 import java.io.File
 import kotlin.script.experimental.api.ScriptDiagnostic
+import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
 
 class NotebookImpl(
     override val id: String,

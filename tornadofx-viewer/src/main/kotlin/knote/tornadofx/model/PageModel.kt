@@ -55,7 +55,8 @@ class PageViewModel(val page: Page, dirtyState: Boolean = false) {
 
 class NotebookScope(val notebook: Notebook,
                     val pageManager: PageManager,
-                    val pageViewModels: ObservableList<PageViewModel>): Scope() {
+                    val pageViewModels: ObservableList<PageViewModel>
+): Scope() {
     val model = NotebookViewModel()
 }
 

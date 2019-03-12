@@ -143,14 +143,7 @@ class PageConfiguration : ScriptCompilationConfiguration({
 //                    )
 //                    return@onAnnotations ResultWithDiagnostics.Failure(reports)
 //                }
-                val pageManager: PageManager = KNote.NOTEBOOK_MANAGER.getPageManager() ?: run {
-                    logger.error("pageManager for $notebookId could not be loaded")
-                    reports += ScriptDiagnostic(
-                        "pageManager for $notebookId could not be loaded",
-                        ScriptDiagnostic.Severity.ERROR
-                    )
-                    return@onAnnotations ResultWithDiagnostics.Failure(reports)
-                }
+                val pageManager: PageManager = KNote.NOTEBOOK_MANAGER.pageManager
                 val generatedSrc = KNote.rootDir.resolve("build").resolve(".knote").resolve(notebookId).absoluteFile
                 generatedSrc.mkdirs()
                 val pageDependencies = fromPageAnnotations
