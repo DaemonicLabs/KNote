@@ -274,7 +274,8 @@ internal class PageManagerImpl(
     private var watchDataJob: Job? = null
 
     private fun startDataWatcher() {
-        logger.debug("starting page watcher")
+        logger.debug("starting data watcher")
+        notebookScript.dataRoot.mkdirs()
         val job = watchActor(notebookScript.dataRoot.absoluteFile.toPath()) {
             var timeout: Job? = null
             for (watchEvent in channel) {
