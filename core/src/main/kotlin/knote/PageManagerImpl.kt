@@ -275,7 +275,7 @@ internal class PageManagerImpl(
     private fun startDataWatcher() {
         logger.debug("starting page watcher")
         val job = watchActor(notebookScript.dataRoot.absoluteFile.toPath()) {
-//            var timeout: Job? = null
+            var timeout: Job? = null
             for (watchEvent in channel) {
                 val path = watchEvent.context()
                 val file = notebookScript.dataRoot.resolve(path.toFile()).absoluteFile
@@ -283,10 +283,12 @@ internal class PageManagerImpl(
 
                 logger.info("event: $path, ${event.name()}")
 
+
+                if(event.name() == "ENTRY_DELETE" || event.name() == "OVERFLOW") continue
                 // TODO: readd editing timeout
-//                timeout?.cancel()
-//                timeout = launch {
-//                    delay(1000)
+                timeout?.cancel()
+                timeout = launch {
+                    delay(1000)
 
                     when (event.name()) {
                         "ENTRY_CREATE" -> {
@@ -320,7 +322,7 @@ internal class PageManagerImpl(
                         }
                         "OVERFLOW" -> logger.debug("${watchEvent.context()} overflow")
                     }
-//                }
+                }
             }
         }
         KNote.cancelOnShutDown(job)

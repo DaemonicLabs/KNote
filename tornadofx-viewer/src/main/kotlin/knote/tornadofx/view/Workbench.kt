@@ -1,6 +1,5 @@
 package knote.tornadofx.view
 
-import javafx.beans.property.SimpleStringProperty
 import javafx.geometry.Side
 import javafx.scene.layout.Priority
 import javafx.scene.paint.Color
