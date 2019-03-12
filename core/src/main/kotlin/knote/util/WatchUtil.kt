@@ -1,6 +1,5 @@
 package knote.util
 
-import knote.KNote
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.ActorScope
@@ -37,7 +36,7 @@ fun watchActor(path: Path, actorScope: suspend ActorScope<WatchEvent<Path>>.() -
             key.reset()
         }
     }
-    KNote.cancelOnShutDown(job)
+//    KNote.cancelOnShutDown(job)
     return job
 }
 

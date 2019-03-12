@@ -57,7 +57,7 @@ class MutableKObservableList<E> : ArrayList<E>(), KObservableList<E> {
         }
     }
 
-    override fun set(index: Int, element: E): E {
+    override operator fun set(index: Int, element: E): E {
         return super.set(index, element).also {
             execCallback(this)
         }

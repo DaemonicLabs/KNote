@@ -5,7 +5,7 @@ import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.asTypeName
 import knote.KNote
-import knote.api.PageResult
+import knote.api.DelegatedResult
 import knote.data.PageImpl
 import knote.script.PageScript
 import mu.KLogging
@@ -44,15 +44,15 @@ object PageDependency : KLogging() {
         return output.resolve("$fileName.kt")
     }
 
-    fun <T> injectFromNotebook(notebookId: String, pageId: String): PageResult<Nothing?, T> =
-        object : PageResult<Nothing?, T> {
+    fun <T> injectFromNotebook(notebookId: String, pageId: String): DelegatedResult<Nothing?, T> =
+        object : DelegatedResult<Nothing?, T> {
             override fun getValue(self: Nothing?, property: KProperty<*>): T {
                 val dependencyId = property.name
-                val notebook = KNote.NOTEBOOK_MANAGER.compileNotebookCached(notebookId)
+                val notebook = KNote.NOTEBOOK_MANAGER.compileNotebookCached()
                 require(notebook != null) { "cannot find notebook $notebookId" }
                 PageScript.logger.debug("property: ${property.name}")
                 PageScript.logger.debug("notebook: $notebook")
-                val pageManager = KNote.NOTEBOOK_MANAGER.getPageManager(notebook.id)!!
+                val pageManager = KNote.NOTEBOOK_MANAGER.getPageManager()!!
                 PageScript.logger.debug("notebook.pageManager: ${notebook.pageManager}")
                 val result = pageManager.executePageCached(dependencyId)!!
                 val depPage = pageManager.pages[dependencyId]!!

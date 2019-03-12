@@ -29,7 +29,7 @@ object EvalScript : KLogging() {
         return host
     }
 
-    inline fun <reified T: Any> evalScript(
+    inline fun <reified T : Any> evalScript(
         host: BasicJvmScriptingHost,
         scriptFile: File,
         vararg args: Any?,
@@ -51,7 +51,7 @@ object EvalScript : KLogging() {
         compilationConfig = compilationConfig
     )
 
-        // this should fix linenumbers from the logger
+    // this should fix linenumbers from the logger
     fun <T : Any> evalScriptNoInline(
         host: BasicJvmScriptingHost,
         scriptFile: File,

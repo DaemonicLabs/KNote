@@ -15,7 +15,8 @@
 
 ## Script Compiler
 
-- [ ] Handle Compilation Fail different than waiting on results to be available
+- [x] Handle Compilation Fail different than waiting on results to be available
+  - `compiledScript` will be `null`
 
 ## PathWatcher
 
@@ -31,6 +32,9 @@ possibly annotations on method arguments
 
 - [x] Extension
 - [x] ShadowJar tasks
+- [ ] register notebooks in extension
+- [ ] set dependencies for notebook
+- [ ] different configuration and shadowJar tasks for each notebook
 
 # GUI TornadoFx
 

@@ -11,24 +11,19 @@ import tornadofx.*
 import java.io.BufferedReader
 
 class ViewerApp : App(Workspace::class) {
-    lateinit var pageManager: PageManager
+    var pageManager: PageManager
     private val pages: ArrayList<PageModel> = arrayListOf()
 
     init {
-        KNote.NOTEBOOK_MANAGER.evalNotebooks()
-        val notebooks = KNote.NOTEBOOK_MANAGER.notebooks
-
-        // TODO() make sure every workspace is one notebook
-        notebooks.forEach { (id, notebook) ->
-            logger.info("id: $id")
-            pageManager = notebook.pageManager!!
+        logger.info("id: ${KNote.notebookId}")
+        pageManager = KNote.NOTEBOOK_MANAGER.getPageManager()
+            ?: throw IllegalStateException("cannot load page manager for ${KNote.notebookId}")
 //            pageManager.executeAll()
-            val pages = pageManager.pages
-            pages.forEach { (pageId, page) ->
-                val result = pageManager.executePageCached(pageId)
-                logger.info("[$pageId]: ${result?.let { "KClass: ${it::class}" }} value: '$result'")
-                convertNotebookScriptToParams(page, result.toString())
-            }
+        val pages = pageManager.pages
+        pages.forEach { (pageId, page) ->
+            val result = pageManager.executePageCached(pageId)
+            logger.info("[$pageId]: ${result?.let { "KClass: ${it::class}" }} value: '$result'")
+            convertNotebookScriptToParams(page, result.toString())
         }
     }
 
@@ -45,7 +40,6 @@ class ViewerApp : App(Workspace::class) {
     companion object : KLogging() {
         @JvmStatic
         fun main(vararg args: String) {
-            KNote.NOTEBOOK_MANAGER.notebookFilter = args.toList()
             Application.launch(ViewerApp::class.java, *args)
         }
     }

@@ -23,4 +23,5 @@ dependencies {
     }
 
     api(Constants.Coroutines.dependency)
+    api(project(":markdown"))
 }
