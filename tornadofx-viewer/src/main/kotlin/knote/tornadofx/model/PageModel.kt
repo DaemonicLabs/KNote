@@ -10,14 +10,14 @@ import knote.api.PageManager
 import knote.util.asProperty
 import tornadofx.*
 
-class NotebookModel(notebook: Notebook, pageManager: PageManager, pageViewModels: List<PageViewModel>) {
+class NotebookModel(notebook: Notebook, pageManager: PageManager, pageViewModels: ObservableList<PageViewModel>) {
     val notebookProperty = SimpleObjectProperty(this, "", notebook)
     var notebook by notebookProperty
 
     val pageManagerProperty = SimpleObjectProperty(this, "", pageManager)
     var pageManager by pageManagerProperty
 
-    val pageViewModelsProperty = SimpleListProperty(this, "", pageViewModels?.observable())
+    val pageViewModelsProperty = SimpleListProperty(this, "", pageViewModels)
     var pageViewModels by pageViewModelsProperty
 
 }

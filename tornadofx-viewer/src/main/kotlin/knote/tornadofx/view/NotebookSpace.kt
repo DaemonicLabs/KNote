@@ -22,25 +22,25 @@ class NotebookSpace : View() {
 
     override val scope = super.scope as NotebookScope
 
-    fun TabPane.tabPage(addedPage: PageViewModel) {
-        logger.info("adding tab for page: ${addedPage.pageId}")
-        tab(addedPage.pageId) {
+    fun TabPane.tabPage(page: PageViewModel) {
+        logger.info("adding tab for page: ${page.pageId}")
+        tab(page.pageId) {
             borderpane {
                 center {
                     vbox {
                         vbox {
-                            textarea(addedPage.script) {
+                            textarea(page.script) {
                                 textProperty().addListener { _, _, new ->
-                                    addedPage.dirtyState = true
+                                    page.dirtyState = true
 //                                                it.script = new
                                     val pageManager = KNote.NOTEBOOK_MANAGER.pageManager
-                                    pageManager.updateSourceCode(addedPage.pageId, new)
+                                    pageManager.updateSourceCode(page.pageId, new)
                                 }
                                 font = Font.font("monospaced", font.size)
                             }
                             // TODO() redo results to accept any, check NikkyAi's branch update for that
                             vbox {
-                                textarea(stringBinding(addedPage.resultProperty) { get().toString() }) {
+                                textarea(stringBinding(page.resultProperty) { get().toString() }) {
                                     isEditable = false
                                     font = Font.font("monospaced", font.size)
                                     style {
@@ -58,9 +58,9 @@ class NotebookSpace : View() {
                             hbox {
                                 pane { hboxConstraints { hGrow = Priority.ALWAYS } }
                                 button("Force Rerun") {
-                                    enableWhen(addedPage.dirtyStateProperty)
+                                    enableWhen(page.dirtyStateProperty)
                                     setOnAction {
-                                        scope.pageManager.executePage(addedPage.pageId)
+                                        scope.pageManager.executePage(page.pageId)
                                     }
                                 }
                             }
@@ -120,6 +120,15 @@ class NotebookSpace : View() {
                         tabs.remove(tab)
                     }
                 }
+                if(change.wasUpdated()) {
+                    logger.debug("updated: ${change}")
+                }
+                if(change.wasReplaced()) {
+                    logger.debug("replaced: ${change}")
+                }
+                if(change.wasPermutated()) {
+                    logger.debug("permutated: ${change}")
+                }
             }
         })
         scope.pageViewModels.forEach { addedPage ->
@@ -147,8 +156,11 @@ class NotebookSpace : View() {
     }
 
     override fun onDelete() {
-        super.onDelete()
         logger.info("clicked delete")
+        val text = root.selectionModel.selectedItem.text
+        val toRemove = scope.pageViewModels.first { it.pageId == text }
+
+        scope.pageManager.removePage(toRemove.pageId)
 //        scope.pageViewModels.remove()
     }
 }

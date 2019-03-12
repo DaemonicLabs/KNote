@@ -6,7 +6,6 @@ import knote.data.NotebookImpl
 import knote.data.PageImpl
 import knote.host.EvalScript
 import knote.host.EvalScript.posToString
-import knote.script.NotebookScript
 import knote.script.PageScript
 import knote.util.MutableKObservableMap
 import knote.util.watchActor
@@ -153,7 +152,6 @@ internal class PageManagerImpl(
 
         invalidateResult(id)
 
-        pages.remove(id)
         return page.dependencies
     }
 
@@ -170,6 +168,7 @@ internal class PageManagerImpl(
         }
         // remove all old dependencies this page had
         page.dependencies = setOf()
+        pages.remove(pageId)
     }
 
     private fun updateResult(pageId: String, result: Any) {
@@ -227,6 +226,11 @@ internal class PageManagerImpl(
         newPageFile.createNewFile()
     }
 
+    override fun removePage(pageId: String) {
+        val page = pages[pageId] ?: return
+        page.file.delete()
+    }
+
     override fun watchDataFile(pageId: String, file: File) {
         val page = pages[pageId] as? PageImpl ?: run {
             throw IllegalStateException("page $pageId cannot be loaded as PageImpl")
@@ -271,15 +275,16 @@ internal class PageManagerImpl(
                         "ENTRY_DELETE" -> {
                             logger.debug("${watchEvent.context()} was deleted")
                             invalidatePage(id)
+                            pages.remove(id)
                         }
                         "OVERFLOW" -> logger.debug("${watchEvent.context()} overflow")
                     }
                     // ensure all pages have their results cached again
-                    notebookScript.pageFiles.forEach {
-                        val id = it.name.substringBeforeLast(".page.kts")
-                        val result = executePageCached(id)
-                        logger.info("[$id] => $result")
-                    }
+//                    notebookScript.pageFiles.forEach {
+//                        val id = it.name.substringBeforeLast(".page.kts")
+//                        val result = executePageCached(id)
+//                        logger.info("[$id] => $result")
+//                    }
                 }
             }
         }
