@@ -1,9 +1,10 @@
 package knote.tornadofx.view
 
+import javafx.beans.property.SimpleStringProperty
 import javafx.geometry.Side
 import javafx.scene.layout.Priority
 import javafx.scene.paint.Color
-import javafx.scene.text.Text
+import javafx.scene.text.Font
 
 import knote.tornadofx.model.PageModel
 import knote.tornadofx.model.PageRegistryScope
@@ -13,7 +14,7 @@ class Workbench : View() {
 
     var pages = arrayListOf<PageModel>().observable()
     val tools = (1..10).toList()
-    var evaluationText = Text()
+    val evaluationText = SimpleStringProperty()
     override val scope = super.scope as PageRegistryScope
 
     init {
@@ -37,21 +38,19 @@ class Workbench : View() {
                                                 it.script = new
                                             }
                                         }
-                                        vbox {
                                             when (it.results) {
                                                 is String -> {
-                                                    evaluationText = text(it.results)
-                                                    add(evaluationText)
+                                                    evaluationText.value = it.results
+                                                    textarea(evaluationText) {
+                                                        isEditable = false
+                                                        font = Font.font(java.awt.Font.MONOSPACED, font.size)
+                                                        hgrow = Priority.ALWAYS
+                                                        vgrow = Priority.ALWAYS
+                                                        minHeight = 280.0
+                                                    }
                                                 }
                                                 else -> TODO()
                                             }
-                                            minHeight = 280.0
-                                            style {
-                                                backgroundColor += Color.WHITE
-                                                backgroundColor += Color.WHITE
-                                                padding = box(10.px)
-                                            }
-                                        }
                                     }
                                 }
                             }
@@ -67,7 +66,7 @@ class Workbench : View() {
                                             }
                                         }
                                         page.results = scope.manager.executePage(page.pageName).toString()
-                                        evaluationText = text(page.results)
+                                        evaluationText.value = page.results
                                     }
                                 }
                             }
