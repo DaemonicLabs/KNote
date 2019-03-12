@@ -3,11 +3,11 @@ package knote.tornadofx.model
 import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleListProperty
 import javafx.beans.property.SimpleObjectProperty
-import javafx.beans.property.SimpleStringProperty
 import knote.api.Notebook
+import knote.api.Page
 import knote.api.PageManager
+import knote.util.asProperty
 import tornadofx.*
-import java.io.File
 
 class NotebookModel(notebook: Notebook, pageManager: PageManager, pageViewModels: List<PageViewModel>) {
     val notebookProperty = SimpleObjectProperty(this, "", notebook)
@@ -27,21 +27,29 @@ class NotebookViewModel(notebookModel: NotebookModel? = null): ItemViewModel<Not
     val pageViewModels = bind(NotebookModel::pageViewModelsProperty, autocommit = true)
 }
 
-class PageViewModel(file: File, pageId: String, script: String, results: String? = null, dirtyState: Boolean = false) {
-    val fileProperty = SimpleObjectProperty(this, "", file)
-    var file by fileProperty
+class PageViewModel(val page: Page, dirtyState: Boolean = false) {
+    val fileProperty = nonNullObjectBinding(page.fileObject.asProperty) {
+        get()
+    }
+    val file by fileProperty
 
-    val pageIdProperty = SimpleStringProperty(this, "", pageId)
-    var pageId by pageIdProperty
+    // this value cannot change, so why make it observable ?
+    val pageId = page.id
 
-    val scriptProperty = SimpleStringProperty(this, "", script)
-    var script by scriptProperty
-
-    val resultsProperty = SimpleStringProperty(this, "", results)
-    var results by resultsProperty
+    val scriptProperty = stringBinding(page.fileContentObject.asProperty) {
+        get()
+    }
+    val script by scriptProperty
 
     val dirtyStateProperty = SimpleBooleanProperty(this, "", dirtyState)
     var dirtyState by dirtyStateProperty
+
+    val resultProperty = objectBinding(page.resultObject.asProperty) {
+        this@PageViewModel.dirtyState = false
+        get()
+    }
+    val result by resultProperty
+
 }
 
 class NotebookScope(val notebook: Notebook,

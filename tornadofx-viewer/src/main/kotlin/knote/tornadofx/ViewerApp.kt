@@ -1,11 +1,11 @@
 package knote.tornadofx
 
-import knote.tornadofx.view.Dashboard
 import knote.tornadofx.view.NotebookWorkbench
 import tornadofx.*
 
-class ViewerApp : App(Dashboard::class) {
+class ViewerApp : App(NotebookWorkbench::class) {
     init {
-        FX.defaultWorkspace = NotebookWorkbench::class
+//        FX.defaultWorkspace = NotebookWorkbench::class
+//        workspace.openWindow()
     }
 }

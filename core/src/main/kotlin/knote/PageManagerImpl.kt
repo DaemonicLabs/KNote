@@ -19,16 +19,13 @@ import kotlin.reflect.full.declaredMemberFunctions
 import kotlin.script.experimental.api.ScriptDiagnostic
 import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
 
-class PageManagerImpl(
+internal class PageManagerImpl(
     private val notebook: NotebookImpl,
     private val host: BasicJvmScriptingHost
 ) : PageManager {
-
     companion object : KLogging()
 
     val notebookScript get() = notebook.compiledScript!!
-
-    private var pageListener: PageListener? = null
 
     override val pages: MutableKObservableMap<String, Page> = MutableKObservableMap()
 
@@ -43,15 +40,6 @@ class PageManagerImpl(
 
         startPageWatcher()
         startDataWatcher()
-    }
-
-    // provide a way for another class to set the listener
-    override fun setPageListener(listener: PageListener) {
-        this.pageListener = listener
-    }
-
-    interface PageListener {
-        fun onResultsUpdated(result: Any?)
     }
 
     override fun executeAll(): Map<String, Any> {
@@ -217,8 +205,6 @@ class PageManagerImpl(
         val page = pages[pageId] as? PageImpl ?: run {
             compilePage(pageId) ?: return null
         }
-
-        pageListener?.onResultsUpdated(page.result)
         return page.result ?: executePage(pageId)
     }
 
@@ -288,7 +274,8 @@ class PageManagerImpl(
     private var watchDataJob: Job? = null
 
     private fun startDataWatcher() {
-        logger.debug("starting page watcher")
+        logger.debug("starting data watcher")
+        notebookScript.dataRoot.mkdirs()
         val job = watchActor(notebookScript.dataRoot.absoluteFile.toPath()) {
             var timeout: Job? = null
             for (watchEvent in channel) {

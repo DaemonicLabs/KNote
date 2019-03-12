@@ -2,37 +2,25 @@ package knote.tornadofx.view
 
 import javafx.geometry.Side
 import javafx.scene.layout.Priority
-import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
-import knote.PageManagerImpl
+import javafx.scene.text.Font
+import knote.KNote
 import knote.tornadofx.Styles
-import knote.tornadofx.controller.DashboardController
-import knote.tornadofx.controller.NotebookSpaceController
 import knote.tornadofx.model.NotebookScope
 import knote.tornadofx.model.PageViewModel
 import tornadofx.*
 
-class NotebookSpace: View(), PageManagerImpl.PageListener {
+class NotebookSpace : View() {
 
     var pages = arrayListOf<PageViewModel>().observable()
     private val tools = (1..10).toList()
-    lateinit var evaluationConsole: VBox
 
     override val scope = super.scope as NotebookScope
-    private val controller: NotebookSpaceController by inject()
-    private val dashboard: Dashboard by inject()
-    private val dashboardController: DashboardController by inject()
 
     init {
         scope.pageViewModels.forEach {
             pages.add(it)
         }
-
-        scope.pageManager.setPageListener(this)
-    }
-
-    override fun onResultsUpdated(result: Any?) {
-        controller.updateEvaluationConsole(result.toString())
     }
 
     override val root = tabpane {
@@ -47,34 +35,36 @@ class NotebookSpace: View(), PageManagerImpl.PageListener {
                                         textarea(it.script) {
                                             textProperty().addListener { _, _, new ->
                                                 it.dirtyState = true
-                                                it.script = new
+//                                                it.script = new
+                                                val pageManager = KNote.NOTEBOOK_MANAGER.getPageManager()!!
+                                                pageManager.updateSourceCode(it.pageId, new)
                                             }
+                                            font = Font.font("monospaced", font.size)
                                         }
-                                        // TODO() redo results to accept any, check Nikki's branch update for that
-                                        evaluationConsole = vbox {
-                                            when (it.results) {
-                                                is String -> {
-                                                    add(text(it.results))
+                                        // TODO() redo results to accept any, check NikkyAi's branch update for that
+                                        vbox {
+                                            textarea(stringBinding(it.resultProperty) { get().toString() }) {
+                                                isEditable = false
+                                                font = Font.font("monospaced", font.size)
+                                                style {
+                                                    hgrow = Priority.ALWAYS
+                                                    vgrow = Priority.ALWAYS
                                                 }
-                                                else -> TODO()
+                                            }
+                                            style {
+                                                hgrow = Priority.ALWAYS
+                                                vgrow = Priority.ALWAYS
                                             }
                                             minHeight = 280.0
                                         }.addClass(Styles.evaluationConsole)
-                                    }
-                                }
-                            }
-                            hbox {
-                                pane { hboxConstraints { hGrow = Priority.ALWAYS } }
-                                button("Rerun") {
-                                    setOnAction {
-                                        pages.forEach { page ->
-                                            if (page.dirtyState) {
-                                                page.file.printWriter().use { out ->
-                                                    out.println(page.script)
-                                                }
 
-                                                scope.pageManager.executePageCached(page.pageId)
-                                                page.dirtyState = false
+                                        hbox {
+                                            pane { hboxConstraints { hGrow = Priority.ALWAYS } }
+                                            button("Force Rerun") {
+                                                enableWhen(it.dirtyStateProperty)
+                                                setOnAction {
+                                                    scope.pageManager.executePage(page.pageId)
+                                                }
                                             }
                                         }
                                     }
@@ -105,24 +95,6 @@ class NotebookSpace: View(), PageManagerImpl.PageListener {
                                                 label(it.toString())
                                             }
                                         }
-                                    }
-                                }
-                                item("Notebooks") {
-                                    datagrid(dashboard.notebookList.observable()) {
-                                        maxCellsInRow = 2
-                                        cellWidth = 100.0
-                                        cellHeight = 100.0
-
-                                        paddingTop = 15.0
-                                        paddingLeft = 35.0
-                                        minWidth = 300.0
-
-                                        cellCache {
-                                            stackpane {
-                                                label(it.toString())
-                                            }
-                                        }
-                                        onUserSelect(2) { dashboardController.showWorkbench(it.toString()) }
                                     }
                                 }
                                 item("JVM Dependencies") {
