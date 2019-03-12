@@ -14,7 +14,13 @@ import kotlinx.coroutines.launch
 import mu.KLogging
 
 internal object NotebookManagerImpl : NotebookManager, KLogging() {
-    override val notebookObject: MutableKObservableObject<NotebookManager, Notebook?> = MutableKObservableObject(null)
+    private val notebookScriptFile = KNote.notebookDir.resolve("${KNote.notebookId}.notebook.kts")
+    override val notebookObject: MutableKObservableObject<NotebookManager, Notebook> = MutableKObservableObject(
+        NotebookImpl(
+            id = KNote.notebookId,
+            file = notebookScriptFile
+        )
+    )
     override var notebook by notebookObject
 
     private val host = EvalScript.createJvmScriptingHost(KNote.cacheDir)
@@ -31,23 +37,16 @@ internal object NotebookManagerImpl : NotebookManager, KLogging() {
     override fun compileNotebook(): Notebook? {
         val notebookId = KNote.notebookId
         logger.debug("attempting to construct notebook '$notebookId'")
-        val file = KNote.notebookDir.resolve("$notebookId.notebook.kts")
-        if (!file.exists()) {
-            logger.error("notebook: $notebookId does not exist ($file)")
+        if (!notebookScriptFile.exists()) {
+            logger.error("notebook: $notebookId does not exist ($notebookScriptFile)")
             return null
         }
 //        val id = file.name.substringBeforeLast(".notebook.kts")
         val (notebookScript, reports) = EvalScript.evalScript<NotebookScript>(
             host,
-            file,
+            notebookScriptFile,
             args = *arrayOf(notebookId, KNote.notebookDir)
         )
-        if (notebook == null) {
-            notebook = NotebookImpl(
-                id = notebookId,
-                file = file
-            )
-        }
         val notebook = notebook as NotebookImpl
         notebook.reports = reports
         notebook.compiledScript = notebookScript

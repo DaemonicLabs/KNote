@@ -3,7 +3,7 @@ package knote.api
 import knote.util.KObservableObject
 
 interface NotebookManager {
-    val notebookObject: KObservableObject<NotebookManager, Notebook?>
+    val notebookObject: KObservableObject<NotebookManager, Notebook>
     val notebook get() = notebookObject.value
 
     fun compileNotebookCached(): Notebook?
