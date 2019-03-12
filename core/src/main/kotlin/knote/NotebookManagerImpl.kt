@@ -55,7 +55,9 @@ internal object NotebookManagerImpl : NotebookManager, KLogging() {
             return notebook
         }
 
-        notebook.pageManager = PageManagerImpl(notebook, host)
+        if(notebook.pageManager == null) {
+            notebook.pageManager = PageManagerImpl(notebook, host)
+        }
         return notebook
     }
 
@@ -80,7 +82,9 @@ internal object NotebookManagerImpl : NotebookManager, KLogging() {
         notebook.pageManager = null
     }
 
-    override fun compileNotebookCached() = notebookObject.value ?: run {
+    override fun compileNotebookCached() = notebookObject.value.takeIf {
+        it.compiledScript != null
+    } ?: run {
         compileNotebook()
     }
 

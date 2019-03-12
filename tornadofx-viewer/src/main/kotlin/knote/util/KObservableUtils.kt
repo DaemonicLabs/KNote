@@ -17,6 +17,7 @@ inline val <reified E> KObservableList<E>.asObservable: ReadOnlyListProperty<E>
                 observableList.setAll(new)
             }
         }
+        mutableList.addAll(this)
         return observableList.readOnlyProperty
     }
 
@@ -32,6 +33,9 @@ inline val <reified K, reified V> KObservableMap<K, V>.asObservable: ReadOnlyMap
                 mutableMap.entries.removeAll(removed)
                 mutableMap.putAll(added)
             }
+        }
+        forEach { key, value ->
+            mutableMap[key] = value
         }
         return observableMap.readOnlyProperty
     }

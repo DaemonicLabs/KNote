@@ -35,7 +35,4 @@ object KNote : KLogging() {
         logger.info("doing shutdown")
         jobs.forEach { it.cancel() }
     }
-
-    fun evalNotebook() {
-    }
 }

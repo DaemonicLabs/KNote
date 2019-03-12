@@ -3,6 +3,7 @@ package knote.tornadofx.model
 import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleListProperty
 import javafx.beans.property.SimpleObjectProperty
+import javafx.collections.ObservableList
 import knote.api.Notebook
 import knote.api.Page
 import knote.api.PageManager
@@ -54,7 +55,7 @@ class PageViewModel(val page: Page, dirtyState: Boolean = false) {
 
 class NotebookScope(val notebook: Notebook,
                     val pageManager: PageManager,
-                    val pageViewModels: List<PageViewModel>): Scope() {
+                    val pageViewModels: ObservableList<PageViewModel>): Scope() {
     val model = NotebookViewModel()
 }
 
