@@ -51,6 +51,8 @@ object BindingUtil : KLogging() {
             if (mapped == null) {
                 change.map.removeListener(this)
             } else {
+                logger.info("was added: ${change.wasAdded()}")
+                logger.info("was removed: ${change.wasRemoved()}")
                 if(change.wasAdded()) {
                     val value = mapper.invoke(change.key, change.valueAdded)
                     indexMap[change.key] = mapped.size

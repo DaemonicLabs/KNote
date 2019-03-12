@@ -97,9 +97,11 @@ internal class PageManagerImpl(
         require(file.exists()) {
             "page: $id does not exist ($file)"
         }
-        val page = pages.getOrPut(id) {
-            PageImpl(id, file)
-        } as PageImpl
+        val page = pages[id] as? PageImpl ?: run {
+            PageImpl(id, file).also {
+                pages[id] = it
+            }
+        }
         val (pageScript, reports) = EvalScript.evalScript<PageScript>(
             host,
             file,
@@ -168,7 +170,6 @@ internal class PageManagerImpl(
         }
         // remove all old dependencies this page had
         page.dependencies = setOf()
-        pages.remove(pageId)
     }
 
     private fun updateResult(pageId: String, result: Any) {

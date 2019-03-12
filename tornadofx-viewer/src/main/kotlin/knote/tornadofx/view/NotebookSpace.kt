@@ -24,7 +24,7 @@ class NotebookSpace : View() {
 
     fun TabPane.tabPage(page: PageViewModel) {
         logger.info("adding tab for page: ${page.pageId}")
-        tab(page.pageId) {
+        val tab = tab(page.pageId) {
             borderpane {
                 center {
                     vbox {
@@ -40,7 +40,7 @@ class NotebookSpace : View() {
                             }
                             // TODO() redo results to accept any, check NikkyAi's branch update for that
                             vbox {
-                                textarea(stringBinding(page.resultProperty) { get().toString() }) {
+                                textarea(page.resultStringProperty) {
                                     isEditable = false
                                     font = Font.font("monospaced", font.size)
                                     style {
@@ -101,6 +101,7 @@ class NotebookSpace : View() {
                 }
             }
         }
+        this.selectionModel.select(tab)
     }
 
     override val root = tabpane {
@@ -110,7 +111,7 @@ class NotebookSpace : View() {
                 if (change.wasAdded()) {
                     logger.debug("added: ${change.addedSubList}")
                     change.addedSubList.forEach { addedPage ->
-                        tabPage(addedPage)
+                       tabPage(addedPage)
                     }
                 }
                 if (change.wasRemoved()) {

@@ -49,6 +49,10 @@ class PageViewModel(val page: Page, dirtyState: Boolean = false) {
         this@PageViewModel.dirtyState = false
         get()
     }
+    val resultStringProperty = stringBinding(page.resultObject.asProperty) {
+        this@PageViewModel.dirtyState = false
+        get().toString()
+    }
     val result by resultProperty
 
 }
