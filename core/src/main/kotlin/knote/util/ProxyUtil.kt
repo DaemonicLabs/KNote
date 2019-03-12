@@ -23,7 +23,7 @@ object ProxyUtil : KLogging() {
 //                println("method.parameters: ${it.parameters}")
 //            }
             val methodRef = value::class.declaredFunctions.find { it.name == method.name }!!
-            if(args == null) {
+            if (args == null) {
                 methodRef.call(value).also {
                     println("result: $it")
                     println("result: ${it!!::class}")

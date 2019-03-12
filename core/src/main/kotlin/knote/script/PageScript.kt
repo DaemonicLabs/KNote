@@ -1,9 +1,11 @@
 package knote.script
 
 import knote.KNote
+import knote.api.DelegatedResult
 import knote.api.Notebook
-import knote.api.PageResult
 import knote.data.PageImpl
+import knote.isSubDirectoryOf
+import knote.md.KNTextBuilder
 import mu.KLogging
 import mu.KotlinLogging
 import java.io.File
@@ -19,9 +21,13 @@ import kotlin.script.experimental.annotations.KotlinScript
 open class PageScript(
     val notebook: Notebook,
     val id: String,
-    val rootDir: File
+    val notebookDir: File
 ) {
     val logger = KotlinLogging.logger(id)
+
+    val dataFolder = notebookDir.resolve("data")
+    var text: String = ""
+        private set
 
     companion object : KLogging()
 
@@ -35,20 +41,20 @@ open class PageScript(
      * TO be used from within the page script
      */
     val cachedResult: Any?
-      get() {
-          val pageManager = KNote.NOTEBOOK_MANAGER.getPageManager(notebook.id) ?: return null
-          return pageManager.executePageCached(id)!!
-      }
+        get() {
+            val pageManager = KNote.NOTEBOOK_MANAGER.getPageManager() ?: return null
+            return pageManager.executePageCached(id)!!
+        }
 
-    fun <This, T> This.inject(pageId: String? = null): PageResult<This, T> {
-        val delegate = object : PageResult<This, T> {
+    fun <This, T> This.inject(pageId: String? = null): DelegatedResult<This, T> {
+        val delegate = object : DelegatedResult<This, T> {
             override fun getValue(self: This, property: KProperty<*>): T {
                 val dependencyId = pageId ?: property.name
                 logger.debug("property: ${property.name}")
                 logger.debug("notebook: $notebook")
 //                val notebook = KNote.NOTEBOOK_MANAGER.compileNotebook(notebook.id)!!
                 logger.debug("notebook.pageManager: ${notebook.pageManager}")
-                val pageManager = KNote.NOTEBOOK_MANAGER.getPageManager(notebook.id)!!
+                val pageManager = KNote.NOTEBOOK_MANAGER.getPageManager()!!
                 logger.debug("notebook.pageManager: ${notebook.pageManager}")
                 //TODO: add typecheck
                 val result = pageManager.executePageCached(dependencyId)!!
@@ -71,6 +77,34 @@ open class PageScript(
         }
         logger.debug("created delegate for $pageId")
         return delegate
+    }
+
+    fun <This, T> loadData(file: File, transform: (File) -> T): DelegatedResult<This, T> {
+        require(file.isSubDirectoryOf(dataFolder))
+        val pageManager = KNote.NOTEBOOK_MANAGER.getPageManager()!!
+        pageManager.watchDataFile(id, file)
+        // TODO: add to input files
+
+        return object : DelegatedResult<This, T> {
+            override fun getValue(self: This, property: KProperty<*>): T {
+                logger.info("loading $file")
+                return transform(file)
+            }
+        }
+    }
+
+    fun <This> loadData(file: File) = loadData<This, File>(file) { file ->
+        file
+    }
+
+    fun markdownText(block: KNTextBuilder.() -> Unit) {
+        text = knote.md.markdownText(block = block).toString()
+    }
+
+    // TODO: PathWatcher for changes in file dependencies
+    // TODO: basic functions to load file contents
+
+    internal fun invalidate() {
     }
 
     // TODO: visualize data

@@ -9,7 +9,6 @@ import knote.tornadofx.Styles
 import knote.tornadofx.controller.DashboardController
 import knote.tornadofx.controller.NotebookSpaceController
 import knote.tornadofx.model.NotebookScope
-import knote.tornadofx.model.PageManagerScope
 import knote.tornadofx.model.PageViewModel
 import tornadofx.*
 

@@ -11,14 +11,15 @@ import kotlin.script.experimental.annotations.KotlinScript
 )
 open class NotebookScript(
     val id: String,
-    val rootDir: File
+    val notebookDir: File
 ) {
     var title: String = ""
     var description: String = ""
 
     override fun toString() = "NotebookScript(id=$id, title=$title, description=$description)"
 
-    var pageRoot: File = rootDir.resolve("${id}_pages")
+    var pageRoot: File = notebookDir.resolve("pages")
+    var dataRoot: File = notebookDir.resolve("data")
 
     val pageFiles: Array<out File>
         get() = pageRoot.listFiles { file -> file.isFile && file.name.endsWith(".page.kts") }

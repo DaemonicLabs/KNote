@@ -21,8 +21,7 @@ import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
 
 class PageManagerImpl(
     private val notebook: NotebookImpl,
-    private val host: BasicJvmScriptingHost,
-    private val workingDir: File
+    private val host: BasicJvmScriptingHost
 ) : PageManager {
 
     companion object : KLogging()
@@ -42,9 +41,8 @@ class PageManagerImpl(
             }
         }
 
-        startWatcher()
-
-        // loop over all pages that are evaluated but have no result yet
+        startPageWatcher()
+        startDataWatcher()
     }
 
     // provide a way for another class to set the listener
@@ -111,7 +109,7 @@ class PageManagerImpl(
         val (pageScript, reports) = EvalScript.evalScript<PageScript>(
             host,
             file,
-            args = *arrayOf(notebook, id, workingDir)
+            args = *arrayOf(notebook, id, KNote.notebookDir)
         )
         page.fileContent = file.readText()
         page.reports = reports
@@ -145,31 +143,30 @@ class PageManagerImpl(
 
         page.errored = false
         page.result = null
-
+        if (page.text != pageScript.text) {
+            page.text = pageScript.text
+        }
         return page
     }
 
     private fun invalidatePage(id: String): Set<String>? {
         val page = pages[id] as? PageImpl ?: return null
+        page.compiledScript?.invalidate()
         page.compiledScript = null
+        page.text = ""
+        page.fileInputs.clear()
 
         invalidateResult(id)
         return page.dependencies
-//        dependencies.forEach { dependency, dependents ->
-//            dependents -= id
-//        }
     }
 
     private fun invalidateResult(pageId: String) {
         val page = pages[pageId] as PageImpl
         logger.debug("invalidating result for '$pageId'")
-//        logger.debug("dependencies of $pageId: ${page.dependencies}")
         page.result = null
 
         // find all pages depending on this page and invalidate them too
         pages.forEach { depId, depPage ->
-            //            logger.debug("dependencies of $depId: ${depPage.dependencies}")
-//            if(depId == pageId) return@forEach
             if (pageId in depPage.dependencies) {
                 invalidateResult(depId)
             }
@@ -198,12 +195,8 @@ class PageManagerImpl(
             compilePage(pageId)?.compiledScript ?: return null
         }
         logger.debug("executing '$pageId'")
-//        logger.debug("arguments: $parameters")
-//        logger.debug("arguments: ${parameters.values.map { it::class }}")
         val result = try {
             pageScript.process()
-//            processFunction.callBy(parameters)
-//            processFunction.call(parameters.values)
         } catch (e: Exception) {
             logger.error("executing process function failed", e)
             page.errored = true
@@ -234,10 +227,19 @@ class PageManagerImpl(
         file.writeText(content)
     }
 
-    private var watchJob: Job? = null
-    private fun startWatcher() {
-        NotebookManagerImpl.logger.debug("starting page watcher")
-        watchJob = watchActor(notebookScript.pageRoot.absoluteFile.toPath()) {
+    override fun watchDataFile(pageId: String, file: File) {
+        val page = pages[pageId] as? PageImpl ?: run {
+            throw IllegalStateException("page $pageId cannot be loaded as PageImpl")
+        }
+        val relative = file.relativeTo(notebookScript.dataRoot)
+        val path = relative.toPath()
+        page.fileInputs.add(path)
+    }
+
+    private var watchPageJob: Job? = null
+    private fun startPageWatcher() {
+        logger.debug("starting page watcher")
+        val job = watchActor(notebookScript.pageRoot.absoluteFile.toPath()) {
             var timeout: Job? = null
             for (watchEvent in channel) {
                 val path = watchEvent.context()
@@ -277,12 +279,77 @@ class PageManagerImpl(
                 }
             }
         }
+        KNote.cancelOnShutDown(job)
+        watchPageJob = job
 
-        NotebookManagerImpl.logger.trace("started page watcher")
+        logger.trace("started page watcher")
+    }
+
+    private var watchDataJob: Job? = null
+
+    private fun startDataWatcher() {
+        logger.debug("starting page watcher")
+        val job = watchActor(notebookScript.dataRoot.absoluteFile.toPath()) {
+            var timeout: Job? = null
+            for (watchEvent in channel) {
+                val path = watchEvent.context()
+                val file = notebookScript.dataRoot.resolve(path.toFile()).absoluteFile
+                val event = watchEvent.kind()
+
+                logger.info("event: $path, ${event.name()}")
+
+
+                if (event.name() == "ENTRY_DELETE" || event.name() == "OVERFLOW") continue
+                // TODO: readd editing timeout
+                timeout?.cancel()
+                timeout = launch {
+                    delay(1000)
+
+                    when (event.name()) {
+                        "ENTRY_CREATE" -> {
+                            logger.debug("${watchEvent.context()} was created")
+                            pages.forEach { pageId, page ->
+                                if (path in page.fileInputs) {
+                                    executePage(pageId)
+                                }
+                            }
+                        }
+                        "ENTRY_MODIFY" -> {
+                            logger.debug("${watchEvent.context()} was modified")
+                            var executed = false
+                            pages.forEach { pageId, page ->
+                                if (path in page.fileInputs) {
+                                    executePage(pageId)
+                                    executed = true
+                                }
+                            }
+                            // ensure all pages have their results cached again
+                            if (executed) {
+                                notebookScript.pageFiles.forEach {
+                                    val id = it.name.substringBeforeLast(".page.kts")
+                                    val result = executePageCached(id)
+                                    logger.info("[$id] => $result")
+                                }
+                            }
+                        }
+                        "ENTRY_DELETE" -> {
+                            logger.debug("${watchEvent.context()} was deleted")
+                        }
+                        "OVERFLOW" -> logger.debug("${watchEvent.context()} overflow")
+                    }
+                }
+            }
+        }
+        KNote.cancelOnShutDown(job)
+        watchPageJob = job
+
+        logger.trace("started data watcher")
     }
 
     internal fun stopWatcher() {
-        watchJob?.cancel()
-        watchJob = null
+        watchPageJob?.cancel()
+        watchPageJob = null
+        watchDataJob?.cancel()
+        watchDataJob = null
     }
 }

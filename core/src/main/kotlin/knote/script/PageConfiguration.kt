@@ -51,13 +51,32 @@ class PageConfiguration : ScriptCompilationConfiguration({
 
         beforeCompiling { context ->
             val reports = mutableListOf<ScriptDiagnostic>()
+            val scriptFile = (context.script as FileScriptSource).file
+            val notebookDir = scriptFile.parentFile.parentFile
+            val notebookId = notebookDir.name
+            val pageId = scriptFile.name.substringBeforeLast(".page.kts")
+
             reports += ScriptDiagnostic(
                 "beforeCompiling time: ${System.currentTimeMillis()}",
                 ScriptDiagnostic.Severity.DEBUG
             )
-            val compileTime = Date.from(Instant.ofEpochSecond( CoreConstants.COMPILE_TIMESTAMP ))
             reports += ScriptDiagnostic(
-                "COMPILE_TIMESTAMP: ${compileTime}",
+                "knote version: ${CoreConstants.FULL_VERSION}",
+                ScriptDiagnostic.Severity.INFO
+            )
+            if (CoreConstants.BUILD_NUMBER < 0) {
+                val compileTime = Date.from(Instant.ofEpochSecond(CoreConstants.COMPILE_TIMESTAMP))
+                reports += ScriptDiagnostic(
+                    "COMPILE_TIMESTAMP: $compileTime",
+                    ScriptDiagnostic.Severity.INFO
+                )
+            }
+            reports += ScriptDiagnostic(
+                "notebook id: $notebookId",
+                ScriptDiagnostic.Severity.INFO
+            )
+            reports += ScriptDiagnostic(
+                "page id: $pageId",
                 ScriptDiagnostic.Severity.INFO
             )
 
@@ -69,21 +88,23 @@ class PageConfiguration : ScriptCompilationConfiguration({
         onAnnotations(FromPage::class) { context ->
             logger.debug("on annotations")
             val scriptFile = (context.script as FileScriptSource).file
-            val rootDir = scriptFile.parentFile.parentFile
+            val notebookDir = scriptFile.parentFile.parentFile
+            System.setProperty("knote.notebookDir", notebookDir.path)
+            val notebookId = notebookDir.name
+            System.setProperty("knote.id", notebookId)
 
-            val notebookId = scriptFile.parentFile.name.substringBeforeLast("_pages")
             val pageId = scriptFile.name.substringBeforeLast(".page.kts")
 
             val reports = mutableListOf<ScriptDiagnostic>()
             reports += ScriptDiagnostic(
-                "rootDir: $rootDir",
+                "notebookDir: $notebookDir",
                 ScriptDiagnostic.Severity.INFO
             )
 
-            System.setProperty("user.dir", rootDir.absolutePath)
+//            System.setProperty("user.dir", rootDir.absolutePath)
 
             val annotations = context.collectedData?.get(ScriptCollectedData.foundAnnotations)?.also { annotations ->
-                if(annotations.isNotEmpty()) {
+                if (annotations.isNotEmpty()) {
                     reports += ScriptDiagnostic("file_annotations: $annotations", ScriptDiagnostic.Severity.DEBUG)
                 }
                 if (annotations.any { it is InvalidScriptResolverAnnotation }) {
@@ -122,7 +143,7 @@ class PageConfiguration : ScriptCompilationConfiguration({
 //                    )
 //                    return@onAnnotations ResultWithDiagnostics.Failure(reports)
 //                }
-                val pageManager: PageManager = KNote.NOTEBOOK_MANAGER.getPageManager(notebookId) ?: run {
+                val pageManager: PageManager = KNote.NOTEBOOK_MANAGER.getPageManager() ?: run {
                     logger.error("pageManager for $notebookId could not be loaded")
                     reports += ScriptDiagnostic(
                         "pageManager for $notebookId could not be loaded",
@@ -130,14 +151,14 @@ class PageConfiguration : ScriptCompilationConfiguration({
                     )
                     return@onAnnotations ResultWithDiagnostics.Failure(reports)
                 }
-                val generatedSrc = rootDir.resolve("build").resolve(".knote").resolve(notebookId).absoluteFile
+                val generatedSrc = KNote.rootDir.resolve("build").resolve(".knote").resolve(notebookId).absoluteFile
                 generatedSrc.mkdirs()
                 val pageDependencies = fromPageAnnotations
                     .map { it.source }
                     .distinct()
                     .associate { depId ->
                         // TODO: DETECT CIRCULAR DEPENDENCIES
-                        if(depId == pageId) {
+                        if (depId == pageId) {
                             reports += ScriptDiagnostic(
                                 "page $pageId depends on itself",
                                 ScriptDiagnostic.Severity.FATAL

@@ -14,36 +14,30 @@ import tornadofx.*
 
 class Dashboard: View() {
 
-    lateinit var pageManager: PageManager
+    var pageManager: PageManager
     val notebookModels: ArrayList<NotebookModel> = arrayListOf()
     val notebookList: ArrayList<String> = arrayListOf()
     private val controller: DashboardController by inject()
 
     init {
-        KNote.NOTEBOOK_MANAGER.evalNotebooks()
-        val notebooks = KNote.NOTEBOOK_MANAGER.notebooks
+        logger.info("id: ${KNote.notebookId}")
+        pageManager = KNote.NOTEBOOK_MANAGER.getPageManager()
+                ?: throw IllegalStateException("cannot load page manager for ${KNote.notebookId}")
 
-        // TODO include a mechanism to choose a notebook, but we'll make the first notebook default for now
-        notebooks.forEach { (id, notebook) ->
-            notebookList.add(notebook.id)
-            logger.info("id: $notebook.id")
-            pageManager = notebook.pageManager!!
+        val pageViewModels: ArrayList<PageViewModel> = arrayListOf()
+        val pages = pageManager.pages
 
-            val pageViewModels: ArrayList<PageViewModel> = arrayListOf()
-            val pages = pageManager.pages
-
-            pages.forEach { (pageId, page) ->
-                val result = pageManager.executePageCached(pageId)
-                logger.info("[$pageId]: ${result?.let { "KClass: ${it::class}" }} value: '$result'")
-                pageViewModels.add(PageViewModel(
-                        page.file,
-                        page.id,
-                        page.fileContent,
-                        page.result?.toString() ?: ""
-                ))
-            }
-            notebookModels.add(NotebookModel(notebook, pageManager, pageViewModels.observable()))
+        pages.forEach { (pageId, page) ->
+            val result = pageManager.executePageCached(pageId)
+            logger.info("[$pageId]: ${result?.let { "KClass: ${it::class}" }} value: '$result'")
+            pageViewModels.add(PageViewModel(
+                    page.file,
+                    page.id,
+                    page.fileContent,
+                    page.result?.toString() ?: ""
+            ))
         }
+        notebookModels.add(NotebookModel(KNote.NOTEBOOK_MANAGER.notebook, pageManager, pageViewModels.observable()))
     }
 
     private val paginator = DataGridPaginator(notebookList.observable(), itemsPerPage = 4)
@@ -94,8 +88,8 @@ class Dashboard: View() {
     companion object : KLogging() {
         @JvmStatic
         fun main(vararg args: String) {
-            KNote.NOTEBOOK_MANAGER.notebookFilter = args.toList()
             Application.launch(ViewerApp::class.java, *args)
         }
     }
+
 }

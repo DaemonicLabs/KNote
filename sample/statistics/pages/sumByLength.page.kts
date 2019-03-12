@@ -1,5 +1,7 @@
-@file:FromPage("sequence")
+//@file:FromPage("sequence")
 import org.nield.kotlinstatistics.sumBy
+
+val sequence: Sequence<Item> by inject()
 
 fun process(): Map<Int, Double>? {
     println("sequence: ${sequence.toList()}")
