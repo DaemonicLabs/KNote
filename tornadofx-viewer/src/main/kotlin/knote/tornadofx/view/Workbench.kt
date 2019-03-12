@@ -14,7 +14,6 @@ class Workbench : View() {
 
     var pages = arrayListOf<PageModel>().observable()
     val tools = (1..10).toList()
-    val evaluationText = SimpleStringProperty()
     override val scope = super.scope as PageRegistryScope
 
     init {
@@ -40,8 +39,7 @@ class Workbench : View() {
                                         }
                                             when (it.results) {
                                                 is String -> {
-                                                    evaluationText.value = it.results
-                                                    textarea(evaluationText) {
+                                                    textarea(it.resultsProperty) {
                                                         isEditable = false
                                                         font = Font.font(java.awt.Font.MONOSPACED, font.size)
                                                         hgrow = Priority.ALWAYS
@@ -66,7 +64,6 @@ class Workbench : View() {
                                             }
                                         }
                                         page.results = scope.manager.executePage(page.pageName).toString()
-                                        evaluationText.value = page.results
                                     }
                                 }
                             }
