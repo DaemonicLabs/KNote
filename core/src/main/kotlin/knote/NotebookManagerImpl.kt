@@ -55,32 +55,39 @@ internal object NotebookManagerImpl : NotebookManager, KLogging() {
             return notebook
         }
 
-        notebook.pageManager = PageManagerImpl(notebook, host)
+        if(notebook.pageManager == null) {
+            notebook.pageManager = PageManagerImpl(notebook, host)
+        }
         return notebook
     }
 
-    override fun getPageManager(): PageManager? {
+    override val pageManager: PageManager
+    get() {
         val notebookId = KNote.notebookId
         val notebook = compileNotebookCached() as? NotebookImpl ?: run {
             logger.error("cannot load notebook $notebookId")
-            return null
+            throw IllegalStateException("cannot load notebook for $notebookId")
         }
-        return notebook.pageManager
-            ?: PageManagerImpl(notebook, host).also {
+        val pageManager = notebook.pageManager.let {
+            it ?: PageManagerImpl(notebook, host).also {
                 notebook.pageManager = it
             }
+        }
+        return pageManager
     }
 
     private fun invalidateNotebook() {
-        val notebook = notebookObject.value?.let { it as NotebookImpl } ?: return
+        val notebook = notebookObject.value as NotebookImpl
         notebook.compiledScript = null
         notebook.reports = null
-        val oldRegistry = notebook.pageManager?.let { it as PageManagerImpl }
-        oldRegistry?.stopWatcher()
-        notebook.pageManager = null
+        val pageManager = notebook.pageManager as PageManagerImpl
+        pageManager.stopWatcher()
+//        notebook.pageManager = null
     }
 
-    override fun compileNotebookCached() = notebookObject.value ?: run {
+    override fun compileNotebookCached() = notebookObject.value.takeIf {
+        it.compiledScript != null
+    } ?: run {
         compileNotebook()
     }
 

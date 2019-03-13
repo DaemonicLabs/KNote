@@ -42,7 +42,7 @@ open class PageScript(
      */
     val cachedResult: Any?
         get() {
-            val pageManager = KNote.NOTEBOOK_MANAGER.getPageManager() ?: return null
+            val pageManager = KNote.NOTEBOOK_MANAGER.pageManager
             return pageManager.executePageCached(id)!!
         }
 
@@ -53,8 +53,7 @@ open class PageScript(
                 logger.debug("property: ${property.name}")
                 logger.debug("notebook: $notebook")
 //                val notebook = KNote.NOTEBOOK_MANAGER.compileNotebook(notebook.id)!!
-                logger.debug("notebook.pageManager: ${notebook.pageManager}")
-                val pageManager = KNote.NOTEBOOK_MANAGER.getPageManager()!!
+                val pageManager = KNote.NOTEBOOK_MANAGER.pageManager
                 logger.debug("notebook.pageManager: ${notebook.pageManager}")
                 //TODO: add typecheck
                 val result = pageManager.executePageCached(dependencyId)!!
@@ -81,7 +80,7 @@ open class PageScript(
 
     fun <This, T> loadData(file: File, transform: (File) -> T): DelegatedResult<This, T> {
         require(file.isSubDirectoryOf(dataFolder))
-        val pageManager = KNote.NOTEBOOK_MANAGER.getPageManager()!!
+        val pageManager = KNote.NOTEBOOK_MANAGER.pageManager
         pageManager.watchDataFile(id, file)
         // TODO: add to input files
 

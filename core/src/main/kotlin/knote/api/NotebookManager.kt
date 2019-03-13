@@ -8,6 +8,5 @@ interface NotebookManager {
 
     fun compileNotebookCached(): Notebook?
     fun compileNotebook(): Notebook?
-
-    fun getPageManager(): PageManager?
+    val pageManager: PageManager
 }

@@ -52,7 +52,7 @@ object PageDependency : KLogging() {
                 require(notebook != null) { "cannot find notebook $notebookId" }
                 PageScript.logger.debug("property: ${property.name}")
                 PageScript.logger.debug("notebook: $notebook")
-                val pageManager = KNote.NOTEBOOK_MANAGER.getPageManager()!!
+                val pageManager = KNote.NOTEBOOK_MANAGER.pageManager
                 PageScript.logger.debug("notebook.pageManager: ${notebook.pageManager}")
                 val result = pageManager.executePageCached(dependencyId)!!
                 val depPage = pageManager.pages[dependencyId]!!

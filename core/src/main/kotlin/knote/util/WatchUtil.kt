@@ -6,10 +6,13 @@ import kotlinx.coroutines.channels.ActorScope
 import kotlinx.coroutines.channels.actor
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import mu.KotlinLogging
 import java.nio.file.Path
 import java.nio.file.StandardWatchEventKinds
 import java.nio.file.WatchEvent
+import java.nio.file.WatchKey
 import java.nio.file.WatchService
+import java.util.concurrent.TimeUnit
 
 enum class WatchEvents {
     ENTRY_CREATE,
@@ -18,15 +21,24 @@ enum class WatchEvents {
     ENTRY_DELETE
 }
 
+private val logger = KotlinLogging.logger {}
 fun watchActor(path: Path, actorScope: suspend ActorScope<WatchEvent<Path>>.() -> Unit): Job {
     val actor = GlobalScope.actor(block = actorScope)
     val job = GlobalScope.launch {
         val watcher = path.watch()
         while (true) {
             //The watcher blocks until an event is available
-            val key = watcher.take()
+            var watchKey: WatchKey?
+            do {
+                if (!isActive) return@launch
+                watchKey = watcher.poll(5, TimeUnit.SECONDS) ?: null
+            } while(watchKey == null)
+            val key = watchKey
 
-            if (!isActive) key.cancel()
+            if (!isActive) {
+                key.cancel()
+                return@launch
+            }
 
             //Now go through each event on the folder
             key.pollEvents().forEach { it ->

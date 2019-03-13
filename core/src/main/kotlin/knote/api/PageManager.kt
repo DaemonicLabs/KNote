@@ -27,4 +27,6 @@ interface PageManager {
 
     fun resultType(pageId: String): KType?
     fun watchDataFile(id: String, file: File)
+    fun createPage(pageId: String)
+    fun removePage(pageId: String)
 }

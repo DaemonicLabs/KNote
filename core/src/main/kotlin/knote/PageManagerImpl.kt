@@ -9,9 +9,12 @@ import knote.host.EvalScript.posToString
 import knote.script.PageScript
 import knote.util.MutableKObservableMap
 import knote.util.watchActor
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import mu.KLogging
 import java.io.File
 import kotlin.reflect.KType
@@ -23,7 +26,10 @@ internal class PageManagerImpl(
     private val notebook: NotebookImpl,
     private val host: BasicJvmScriptingHost
 ) : PageManager {
-    companion object : KLogging()
+    companion object : KLogging() {
+        private var watchPageJob: Job? = null
+        private var watchDataJob: Job? = null
+    }
 
     val notebookScript get() = notebook.compiledScript!!
 
@@ -91,9 +97,11 @@ internal class PageManagerImpl(
         require(file.exists()) {
             "page: $id does not exist ($file)"
         }
-        val page = pages.getOrPut(id) {
-            PageImpl(id, file)
-        } as PageImpl
+        val page = pages[id] as? PageImpl ?: run {
+            PageImpl(id, file).also {
+                pages[id] = it
+            }
+        }
         val (pageScript, reports) = EvalScript.evalScript<PageScript>(
             host,
             file,
@@ -145,6 +153,7 @@ internal class PageManagerImpl(
         page.fileInputs.clear()
 
         invalidateResult(id)
+
         return page.dependencies
     }
 
@@ -213,6 +222,16 @@ internal class PageManagerImpl(
         file.writeText(content)
     }
 
+    override fun createPage(pageId: String) {
+        val newPageFile = notebookScript.pageRoot.resolve("$pageId.page.kts")
+        newPageFile.createNewFile()
+    }
+
+    override fun removePage(pageId: String) {
+        val page = pages[pageId] ?: return
+        page.file.delete()
+    }
+
     override fun watchDataFile(pageId: String, file: File) {
         val page = pages[pageId] as? PageImpl ?: run {
             throw IllegalStateException("page $pageId cannot be loaded as PageImpl")
@@ -222,8 +241,12 @@ internal class PageManagerImpl(
         page.fileInputs.add(path)
     }
 
-    private var watchPageJob: Job? = null
     private fun startPageWatcher() {
+        runBlocking {
+            logger.debug("stopping old page watcher")
+            watchPageJob?.cancelAndJoin()
+        }
+        watchPageJob = null
         logger.debug("starting page watcher")
         val job = watchActor(notebookScript.pageRoot.absoluteFile.toPath()) {
             var timeout: Job? = null
@@ -235,7 +258,7 @@ internal class PageManagerImpl(
 
                 logger.info("event: $path, ${event.name()}")
                 timeout?.cancel()
-                timeout = launch {
+                timeout = launch(Dispatchers.IO) {
                     delay(1000)
 
                     val id = file.name.substringBeforeLast(".page.kts")
@@ -247,21 +270,22 @@ internal class PageManagerImpl(
                         "ENTRY_MODIFY" -> {
                             logger.debug("${watchEvent.context()} was modified")
                             invalidatePage(id)
-                            logger.debug("invalidated pages: ${pages.filterValues { it.result == null }.keys}}")
+                            logger.debug("invalidated pages: ${pages.filterValues { it.result == null }.keys}")
                             compilePage(file)
-                            // ensure all pages have their results cached again
-                            notebookScript.pageFiles.forEach {
-                                val id = it.name.substringBeforeLast(".page.kts")
-                                val result = executePageCached(id)
-                                logger.info("[$id] => $result")
-                            }
                         }
                         "ENTRY_DELETE" -> {
                             logger.debug("${watchEvent.context()} was deleted")
                             invalidatePage(id)
+                            pages.remove(id)
                         }
                         "OVERFLOW" -> logger.debug("${watchEvent.context()} overflow")
                     }
+                    // ensure all pages have their results cached again
+//                    notebookScript.pageFiles.forEach {
+//                        val id = it.name.substringBeforeLast(".page.kts")
+//                        val result = executePageCached(id)
+//                        logger.info("[$id] => $result")
+//                    }
                 }
             }
         }
@@ -271,9 +295,12 @@ internal class PageManagerImpl(
         logger.trace("started page watcher")
     }
 
-    private var watchDataJob: Job? = null
-
     private fun startDataWatcher() {
+        runBlocking {
+            logger.info("stopping old data watcher")
+            watchDataJob?.cancelAndJoin()
+        }
+        watchDataJob = null
         logger.debug("starting data watcher")
         notebookScript.dataRoot.mkdirs()
         val job = watchActor(notebookScript.dataRoot.absoluteFile.toPath()) {
@@ -285,11 +312,10 @@ internal class PageManagerImpl(
 
                 logger.info("event: $path, ${event.name()}")
 
-
                 if (event.name() == "ENTRY_DELETE" || event.name() == "OVERFLOW") continue
                 // TODO: readd editing timeout
                 timeout?.cancel()
-                timeout = launch {
+                timeout = launch(Dispatchers.IO)  {
                     delay(1000)
 
                     when (event.name()) {
