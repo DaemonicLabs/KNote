@@ -1,5 +1,3 @@
-package knote
-
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import mu.KLogging
