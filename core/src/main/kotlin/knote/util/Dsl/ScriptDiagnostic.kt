@@ -20,14 +20,14 @@ class PageIdDiagnostic(pageId: String): InfoDiagnostic(pageId)
 
 
 @ScriptDiagnosticDsl
-sealed class ErrorDiagnostic(val message: String) {
+class ErrorDiagnostic(val message: String) {
     operator fun invoke() {
         ScriptDiagnostic(message, ScriptDiagnostic.Severity.ERROR)
     }
 }
 
 @ScriptDiagnosticDsl
-sealed class DebugDiagnostic(val message: String) {
+class DebugDiagnostic(val message: String) {
     operator fun invoke() {
         ScriptDiagnostic(message, ScriptDiagnostic.Severity.DEBUG)
     }
