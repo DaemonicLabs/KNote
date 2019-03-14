@@ -1,10 +1,34 @@
 package knote.util.Dsl
 
-@ScriptDiagnosticDsl
-class INFODIAGNOSTIC(val message: String) {
+import kotlin.script.experimental.api.ScriptDiagnostic
 
+@ScriptDiagnosticDsl
+sealed class InfoDiagnostic(val message: String) {
+    operator fun invoke() {
+        ScriptDiagnostic(message, ScriptDiagnostic.Severity.INFO)
+    }
 }
 
-class InfoDiagnostic(val message: String)
-class CompileTimeStampDiagnostic(
-        val message: String = "COMPILETIMESTAMP")
+@ScriptDiagnosticDsl
+class CompileTimeStampDiagnostic(message: String = "COMPILE TIMESTAMP"): InfoDiagnostic(message)
+
+@ScriptDiagnosticDsl
+class NotebookIdDiagnostic(notebookId: String): InfoDiagnostic(notebookId)
+
+@ScriptDiagnosticDsl
+class PageIdDiagnostic(pageId: String): InfoDiagnostic(pageId)
+
+
+@ScriptDiagnosticDsl
+sealed class ErrorDiagnostic(val message: String) {
+    operator fun invoke() {
+        ScriptDiagnostic(message, ScriptDiagnostic.Severity.ERROR)
+    }
+}
+
+@ScriptDiagnosticDsl
+sealed class DebugDiagnostic(val message: String) {
+    operator fun invoke() {
+        ScriptDiagnostic(message, ScriptDiagnostic.Severity.DEBUG)
+    }
+}
