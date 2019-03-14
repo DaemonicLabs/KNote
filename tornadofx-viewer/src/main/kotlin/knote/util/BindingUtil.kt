@@ -1,7 +1,6 @@
 package knote.util
 
 import javafx.beans.WeakListener
-import javafx.collections.ListChangeListener
 import javafx.collections.MapChangeListener
 import javafx.collections.ObservableList
 import javafx.collections.ObservableMap
@@ -42,7 +41,6 @@ object BindingUtil : KLogging() {
                 val value = mapper.invoke(k, v)
                 indexMap[k] = mapped.size
                 mapped.add(value)
-                logger.debug("index map: $indexMap")
             }
         }
 
@@ -51,12 +49,9 @@ object BindingUtil : KLogging() {
             if (mapped == null) {
                 change.map.removeListener(this)
             } else {
-                logger.info("was added: ${change.wasAdded()}")
-                logger.info("was removed: ${change.wasRemoved()}")
                 if(change.wasAdded()) {
                     val value = mapper.invoke(change.key, change.valueAdded)
                     indexMap[change.key] = mapped.size
-                    logger.debug("index map: $indexMap")
                     mapped.add(value)
                 }
                 if (change.wasRemoved()) {
@@ -64,7 +59,6 @@ object BindingUtil : KLogging() {
                         mapped.removeAt(key)
                     } ?: run {
                         logger.error("did not remove '${change.key}'")
-                        logger.error("index map: $indexMap")
                     }
                     indexMap.remove(change.key)
                 }
