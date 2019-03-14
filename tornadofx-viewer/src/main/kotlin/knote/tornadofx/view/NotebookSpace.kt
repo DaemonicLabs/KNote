@@ -30,6 +30,23 @@ class NotebookSpace : View() {
     private val logger = KotlinLogging.logger {}
     private val tools = (1..10).toList()
 
+    /**
+     * TODO -
+     * 1) Kotlin highlighting
+     * 2) Remove "close" from tabs"
+     * 3) Create a more flexible input area -- Diagram model design
+     * 4) Jump to page dependencies and dependents at the drawer navigation
+     * 5) List file imports
+     * 6) Declare different result types - SPIKE
+     *    - string
+     *    - plot
+     *    - pie chart
+     *    - bar graph
+     *    (study Jupyter to find other types of input)
+     * 7) Restructure result output area -- Diagram model design
+     * 8) Include file inputs as tabs (i.e. csv/editor)
+     */
+
     var codeArea = CodeArea()
     var executor: ExecutorService = Executors.newSingleThreadExecutor()
 
@@ -131,8 +148,8 @@ class NotebookSpace : View() {
                                     }
                                 }
                             }
-                            item("JVM Dependencies") {
-                                text("List of JVM dependencies here")
+                            item("Page Dependencies") {
+                                text("List of page dependencies here")
                             }
                         }
                     }
