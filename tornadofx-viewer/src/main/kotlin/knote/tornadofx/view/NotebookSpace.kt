@@ -29,10 +29,10 @@ class NotebookSpace : View() {
                 center {
                     vbox {
                         vbox {
-                            textarea(page.script) {
+                            textarea(page.fileContent) {
                                 textProperty().addListener { _, _, new ->
                                     page.dirtyState = true
-//                                                it.script = new
+//                                                it.fileContent = new
                                     val pageManager = KNote.NOTEBOOK_MANAGER.pageManager
                                     pageManager.updateSourceCode(page.pageId, new)
                                 }
@@ -153,7 +153,7 @@ class NotebookSpace : View() {
                     }
                 }
             }
-        }!!
+        }
     }
 
     override fun onDelete() {

@@ -281,6 +281,10 @@ internal class PageManagerImpl(
                         "OVERFLOW" -> logger.debug("${watchEvent.context()} overflow")
                     }
                     // ensure all pages have their results cached again
+                    pages.forEach { pageId, page ->
+                        val result = executePageCached(pageId)
+                        logger.info("[$pageId] => $result")
+                    }
 //                    notebookScript.pageFiles.forEach {
 //                        val id = it.name.substringBeforeLast(".page.kts")
 //                        val result = executePageCached(id)

@@ -29,31 +29,27 @@ class NotebookViewModel(notebookModel: NotebookModel? = null): ItemViewModel<Not
 }
 
 class PageViewModel(val page: Page, dirtyState: Boolean = false) {
-    val fileProperty = nonNullObjectBinding(page.fileObject.asProperty) {
-        get()
-    }
+    val fileProperty = page.fileObject.asProperty
     val file by fileProperty
 
     // this value cannot change, so why make it observable ?
     val pageId = page.id
 
-    val scriptProperty = stringBinding(page.fileContentObject.asProperty) {
-        get()
-    }
-    val script by scriptProperty
+    val fileContentProperty = page.fileContentObject.asProperty
+    val fileContent by fileContentProperty
 
     val dirtyStateProperty = SimpleBooleanProperty(this, "", dirtyState)
     var dirtyState by dirtyStateProperty
 
     val resultProperty = objectBinding(page.resultObject.asProperty) {
         this@PageViewModel.dirtyState = false
-        get()
-    }
-    val resultStringProperty = stringBinding(page.resultObject.asProperty) {
-        this@PageViewModel.dirtyState = false
-        get().toString()
+        value
     }
     val result by resultProperty
+    val resultStringProperty = stringBinding(resultProperty) {
+        value.toString()
+    }
+    val resultString by resultStringProperty
 
 }
 
