@@ -45,6 +45,11 @@ object Constants {
         const val dependency = "com.github.jengelman.gradle.plugins:shadow:$version"
     }
 
+    object RichTextFX {
+        const val version = "0.9.3"
+        const val dependency = "org.fxmisc.richtext:richtextfx:$version"
+    }
+
     object KNote {
         const val major = 1
         const val minor = 0

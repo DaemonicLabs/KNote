@@ -24,7 +24,7 @@ class NotebookWorkbench : Workspace() {
             val result = pageManager.executePageCached(pageId)
             logger.info("[$pageId]: ${result?.let { "KClass: ${it::class}" }} value: '$result'")
             PageViewModel(
-                page
+                    page
             ).also {
                 logger.debug("mapped '$pageId'")
             }
@@ -32,10 +32,10 @@ class NotebookWorkbench : Workspace() {
 
         pageViewModels.addListener(ListChangeListener { change ->
             while(change.next()) {
-                if(change.wasAdded()) {
+                if (change.wasAdded()) {
                     logger.info("added: ${change.addedSubList}")
                 }
-                if(change.wasRemoved()) {
+                if (change.wasRemoved()) {
                     logger.info("removed: ${change.removed}")
                 }
             }
@@ -44,9 +44,9 @@ class NotebookWorkbench : Workspace() {
         val notebookModel = NotebookModel(KNote.NOTEBOOK_MANAGER.notebook, pageManager, pageViewModels)
 
         val notebookScope = NotebookScope(
-            notebookModel.notebook,
-            notebookModel.pageManager,
-            notebookModel.pageViewModels
+                notebookModel.notebook,
+                notebookModel.pageManager,
+                notebookModel.pageViewModels
         )
 
         workspace.dock<NotebookSpace>(notebookScope)
