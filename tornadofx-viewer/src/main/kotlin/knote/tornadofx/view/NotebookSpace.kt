@@ -60,6 +60,8 @@ class NotebookSpace : View() {
 
     private fun TabPane.tabPage(page: PageViewModel) {
         logger.info("adding tab for page: ${page.pageId}")
+
+        tabClosingPolicy = TabPane.TabClosingPolicy.UNAVAILABLE
         tab(page.pageId) {
             borderpane {
                 center {
