@@ -6,6 +6,9 @@ pluginManagement {
         maven(url = "http://maven.modmuss50.me") {
             name = "modmuss50"
         }
+        maven(url = "https://jitpack.io") {
+            name = "jitpack"
+        }
         mavenCentral()
         gradlePluginPortal()
     }

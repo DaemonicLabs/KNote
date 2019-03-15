@@ -83,7 +83,7 @@ class NotebookSpace : View() {
                             }.addClass(Styles.evaluationConsole)
 
                             hbox {
-                                pane { hboxConstraints { hGrow = Priority.ALWAYS } }
+                                pane { hgrow = Priority.ALWAYS }
                                 button("Force Rerun") {
                                     enableWhen(page.dirtyStateProperty)
                                     setOnAction {

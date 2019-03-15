@@ -50,6 +50,22 @@ object Constants {
         const val dependency = "org.fxmisc.richtext:richtextfx:$version"
     }
 
+    object KastreeCommon {
+        const val version = "0.3.0"
+        const val dependency = "com.github.cretz.kastree:kastree-ast-common::$version"
+    }
+
+    object KastreeJvm {
+        const val version = "0.3.0"
+        const val dependency = "com.github.cretz.kastree:kastree-ast-jvm::$version"
+    }
+
+    object KastreePsi {
+        const val version = "0.3.0"
+        const val dependency = "com.github.cretz.kastree:kastree-ast-psi::$version"
+    }
+
+
     object KNote {
         const val major = 1
         const val minor = 0

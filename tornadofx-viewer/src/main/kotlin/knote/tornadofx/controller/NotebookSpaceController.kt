@@ -11,16 +11,20 @@ import java.util.Collections
 import java.util.Random
 import java.util.regex.Pattern
 
-class NotebookSpaceController : Controller() {
-    fun computeHighlighting(ktFile: KtFile): StyleSpans<Collection<String>> {
-        var index: Int = 0
-        val spansBuilder = StyleSpansBuilder<Collection<String>>()
-        var lastKwEnd = 0
-        while (index < ktFile.text.length) {
-            val element = ktFile.findElementAt(index)
-            if( element == null) {
-                index += 1
-                continue
+class NotebookSpaceController: Controller() {
+
+    private val view: NotebookSpace by inject()
+
+    fun parseAST(textFile: String) {
+        // val file = Parser.parseFile(textFile, true)
+    }
+
+    fun computeHighlightingAsync(): Task<StyleSpans<Collection<String>>> {
+        val text = view.codeArea.text
+        val task = object : Task<StyleSpans<Collection<String>>>() {
+            @Throws(Exception::class)
+            override fun call(): StyleSpans<Collection<String>> {
+                return computeHighlighting(text)
             }
             logger.info("[$index] element: $element ${element::class}")
             logger.info(element.text)
