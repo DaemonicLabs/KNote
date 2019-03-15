@@ -41,7 +41,7 @@ object Constants {
     }
 
     object ShadowJar {
-        const val version = "4.0.4"
+        const val version = "5.0.0"
         const val dependency = "com.github.jengelman.gradle.plugins:shadow:$version"
     }
 
@@ -51,18 +51,19 @@ object Constants {
     }
 
     object KastreeCommon {
-        const val version = "0.4.0"
-        const val dependency = "com.github.cretz.kastree:kastree-ast-common:$version"
+        const val version = "-SNAPSHOT" // "0.4.0"
+        const val dependency = "com.github.Daemoniclabs.kastree:ast-common:$version"
     }
 
     object KastreeJvm {
-        const val version = "0.4.0"
-        const val dependency = "com.github.cretz.kastree:kastree-ast-jvm:$version"
+        const val version = "-SNAPSHOT" // "0.4.0"
+        const val dependency = "com.github.Daemoniclabs.kastree:ast-jvm:$version"
     }
 
     object KastreePsi {
-        const val version = "0.4.0"
-        const val dependency = "com.github.cretz.kastree:kastree-ast-psi:$version"
+        const val version = "-SNAPSHOT" // "0.4.0"
+//        const val dependency = "com.github.cretz.kastree:kastree-ast-psi:$version"
+        const val dependency = "com.github.Daemoniclabs.kastree:ast-psi:$version"
     }
 
 

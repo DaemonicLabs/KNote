@@ -46,7 +46,7 @@ open class PageScript(
             return pageManager.executePageCached(id)!!
         }
 
-    fun <This, T> This.inject(pageId: String? = null): DelegatedResult<This, T> {
+    inline fun <This, reified T> This.inject(pageId: String? = null): DelegatedResult<This, T> {
         val delegate = object : DelegatedResult<This, T> {
             override fun getValue(self: This, property: KProperty<*>): T {
                 val dependencyId = pageId ?: property.name
@@ -74,7 +74,7 @@ open class PageScript(
                 }
             }
         }
-        logger.debug("created delegate for $pageId")
+        logger.debug("created delegate for $pageId on $this for type ${T::class}")
         return delegate
     }
 

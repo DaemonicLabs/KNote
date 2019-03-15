@@ -8,3 +8,4 @@ run/
 libs/
 .cache/
 logs/
+*.hprof

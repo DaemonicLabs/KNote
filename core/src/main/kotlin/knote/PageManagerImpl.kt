@@ -105,6 +105,10 @@ internal class PageManagerImpl(
         val (pageScript, reports) = EvalScript.evalScript<PageScript>(
             host,
             file,
+            ktScriptCallback = { ktScript ->
+                logger.info("callback HERE, setting $ktScript")
+                (pages[id] as? PageImpl)?.ktScript = ktScript
+            },
             args = *arrayOf(notebook, id, KNote.notebookDir)
         )
         page.fileContent = file.readText()

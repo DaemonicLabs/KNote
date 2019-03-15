@@ -1,47 +1,69 @@
 package knote.tornadofx.controller
 
-import tornadofx.*
-import java.util.regex.Pattern
 import javafx.concurrent.Task
 import kastree.ast.psi.Parser
+import knote.script.KNConverter
 import knote.tornadofx.view.NotebookSpace
+import mu.KLogging
 import org.fxmisc.richtext.model.StyleSpans
 import org.fxmisc.richtext.model.StyleSpansBuilder
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.psiUtil.endOffset
+import org.jetbrains.kotlin.psi.psiUtil.nextLeaf
 import org.jetbrains.kotlin.psi.psiUtil.startOffset
 import tornadofx.Controller
 import java.util.Collections
-import java.util.Random
 import java.util.regex.Pattern
 
-class NotebookSpaceController: Controller() {
+class NotebookSpaceController : Controller() {
 
     private val view: NotebookSpace by inject()
 
     fun parseAST(textFile: String) {
-        val file = Parser.parseFile(textFile, true)
+        try {
+            val ast = KNConverter.convertScript(Parser.parsePsiFile(textFile))
+            logger.debug("ast: $ast")
+        } catch (e: Parser.ParseError) {
+            logger.error("ParseError on $textFile")
+            logger.error("parsing failed", e)
+        } catch (e: IllegalStateException) {
+            logger.error("IllegalStateException on $textFile")
+            logger.error("parsing failed", e)
+        }
     }
 
-    fun computeHighlightingAsync(): Task<StyleSpans<Collection<String>>> {
-        val text = view.codeArea.text
-        val task = object : Task<StyleSpans<Collection<String>>>() {
-            @Throws(Exception::class)
-            override fun call(): StyleSpans<Collection<String>> {
-                return computeHighlighting(text)
+//    fun computeHighlightingAsync(): Task<StyleSpans<Collection<String>>> {
+//        val text = view.codeArea.text
+//        val task = object : Task<StyleSpans<Collection<String>>>() {
+//            @Throws(Exception::class)
+//            override fun call(): StyleSpans<Collection<String>> {
+//                return computeHighlighting(text)
+//            }
+//        }
+//        view.executor.execute(task)
+//        return task
+//    }
+
+    fun applyHighlighting(highlighting: StyleSpans<Collection<String>>) {
+        view.codeArea.setStyleSpans(0, highlighting)
+    }
+
+    fun computeHighlighting(ktFile: KtFile): StyleSpans<Collection<String>> {
+        var index: Int = 0
+        val spansBuilder = StyleSpansBuilder<Collection<String>>()
+        var lastKwEnd = 0
+        while (index < ktFile.text.length) {
+            val element = ktFile.findElementAt(index)
+            if( element == null) {
+                index += 1
+                continue
             }
             logger.info("[$index] element: $element ${element::class}")
             logger.info(element.text)
 //            index += element.
             spansBuilder.add(Collections.emptyList(),  element.startOffset - lastKwEnd)
             //TODO: switch on element type and use the appropriate style classes here
-            val styleClass = when(Random().nextInt(3)) {
-                0 -> "keyword"
-                1 -> "string"
-                2 -> "comment"
-                else -> ""
-            }
-            spansBuilder.add(Collections.singleton(styleClass), element.endOffset - element.startOffset)
+            spansBuilder.add(Collections.singleton("keyword"), element.endOffset - element.startOffset)
             index = element.endOffset
             lastKwEnd = element.endOffset
         }

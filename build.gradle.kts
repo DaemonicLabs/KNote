@@ -27,6 +27,9 @@ allprojects {
     repositories {
         mavenCentral()
         jcenter()
+        maven(url = "https://jitpack.io/") {
+            name = "jitpack"
+        }
     }
 
     group = "daemoniclabs.knote${Env.branch}"
@@ -163,24 +166,6 @@ subprojects {
         configure<JavaApplication> {
             mainClassName = mainClass
         }
-
-//        val runDir = rootProject.file("run")
-//
-//        val run by tasks.getting(JavaExec::class) {
-//            workingDir = runDir
-//        }
-//
-//        val runShadow by tasks.getting(JavaExec::class) {
-//            workingDir = runDir
-//        }
-
-//        val shadowJar by tasks.getting(ShadowJar::class) {
-//            archiveClassifier.set("")
-//        }
-
-//        val build by tasks.getting(Task::class) {
-//            dependsOn(shadowJar)
-//        }
     }
 
     apply(plugin = "maven-publish")

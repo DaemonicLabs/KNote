@@ -8,13 +8,16 @@ import javafx.scene.input.KeyCode
 import javafx.scene.layout.Priority
 import javafx.scene.paint.Color
 import javafx.scene.text.Font
+import kastree.ast.psi.Parser
 import knote.KNote
+import knote.script.KNConverter
 import knote.tornadofx.Styles
 import knote.tornadofx.model.NotebookScope
 import knote.tornadofx.model.PageViewModel
 import mu.KotlinLogging
 import org.fxmisc.richtext.CodeArea
 import org.fxmisc.richtext.model.StyleSpans
+import tornadofx.ChangeListener
 import tornadofx.View
 import tornadofx.addClass
 import tornadofx.borderpane
@@ -39,6 +42,8 @@ import tornadofx.textarea
 import tornadofx.textfield
 import tornadofx.vbox
 import tornadofx.vgrow
+import java.time.Duration
+import java.util.Optional
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -59,8 +64,22 @@ class NotebookSpace : View() {
                             grow()
 
                             codearea(page.fileContent) {
+                                logger.info("ktScript initial: ${page.ktScript}")
+                                var ast = page.ktScript?.let {
+                                    KNConverter.convertScript(it)
+                                    val highlighting = controller.computeHighlighting(it)
+                                    controller.applyHighlighting(highlighting)
+                                }
+                                logger.info("ast: $ast")
 
-                                controller.parseAST(page.fileContent)
+//                                page.ktScriptProperty.addListener(ChangeListener { change, old, new ->
+//                                    logger.info("ktScript change: $old -> $new")
+//                                    if (new != null) {
+//                                        ast = KNConverter.convertScript(new)
+//                                        val highlighting = controller.computeHighlighting(new)
+//                                        controller.applyHighlighting(highlighting)
+//                                    }
+//                                })
 
                                 textProperty().addListener { _, _, new ->
                                     page.dirtyState = true
@@ -68,7 +87,31 @@ class NotebookSpace : View() {
                                     val pageManager = KNote.NOTEBOOK_MANAGER.pageManager
                                     pageManager.updateSourceCode(page.pageId, new)
                                 }
-                                font = Font.font("monospaced", font.size)
+
+                                grow()
+
+//                                multiPlainChanges()
+//                                    .successionEnds(Duration.ofMillis(500))
+//                                    .supplyTask(controller::computeHighlightingAsync)
+//                                    .awaitLatest(codeArea.multiPlainChanges())
+//                                    .filterMap { t ->
+//                                        if (t.isSuccess) {
+//                                            Optional.of(codeArea.multiPlainChanges()
+//                                                .successionEnds(Duration.ofMillis(500))
+//                                                .supplyTask(controller::computeHighlightingAsync)
+//                                                .awaitLatest(codeArea.multiPlainChanges())
+//                                                .filterMap { Optional.of(t.get()) })
+//                                        } else {
+//                                            t.failure.printStackTrace()
+//                                            Optional.of(codeArea.multiPlainChanges()
+//                                                .successionEnds(Duration.ofMillis(500))
+//                                                .supplyTask(controller::computeHighlightingAsync)
+//                                                .awaitLatest(codeArea.multiPlainChanges())
+//                                                .filterMap { Optional.empty<StyleSpans<Collection<String>>>() })
+//                                        }
+//                                    }
+//                                    .subscribe { controller::applyHighlighting }
+
                             }
                             // TODO() redo results to accept any, check NikkyAi's branch update for that
                             vbox {
@@ -176,7 +219,7 @@ class NotebookSpace : View() {
         val pageId = SimpleStringProperty("new_page")
         dialog {
             label("page ID")
-            textfield (pageId) {
+            textfield(pageId) {
                 setOnKeyPressed { event ->
                     if (event.code == KeyCode.ENTER) {
                         this@dialog.close()

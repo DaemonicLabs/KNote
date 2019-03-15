@@ -1,6 +1,11 @@
 package knote.host
 
+import knote.api.Page
+import knote.script.KTScriptCallback.ktScriptCallbackHandler
+import knote.util.MutableKObservableObject
 import mu.KLogging
+import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.psi.KtScript
 import java.io.File
 import kotlin.script.experimental.api.EvaluationResult
 import kotlin.script.experimental.api.ResultValue
@@ -19,11 +24,15 @@ import kotlin.script.experimental.jvmhost.BasicJvmScriptEvaluator
 import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
 import kotlin.script.experimental.jvmhost.JvmScriptCompiler
 import kotlin.script.experimental.jvmhost.createJvmCompilationConfigurationFromTemplate
+import kotlin.script.experimental.jvmhost.impl.withDefaults
 
 object EvalScript : KLogging() {
-    fun createJvmScriptingHost(cacheDir: File): BasicJvmScriptingHost {
+    fun createJvmScriptingHost(
+        cacheDir: File
+    ): BasicJvmScriptingHost {
         val cache = FileBasedScriptCache(cacheDir)
-        val compiler = JvmScriptCompiler(defaultJvmScriptingHostConfiguration, cache = cache)
+        val knJvmCompiler =  KNJvmCompilerImpl(defaultJvmScriptingHostConfiguration.withDefaults())
+        val compiler = JvmScriptCompiler(defaultJvmScriptingHostConfiguration, compilerProxy = knJvmCompiler, cache = cache)
         val evaluator = BasicJvmScriptEvaluator()
         val host = BasicJvmScriptingHost(compiler = compiler, evaluator = evaluator)
         return host
@@ -33,6 +42,8 @@ object EvalScript : KLogging() {
         host: BasicJvmScriptingHost,
         scriptFile: File,
         vararg args: Any?,
+//        noinline ktScriptCallback: ((KtScript?) -> Unit)? = null,
+        noinline ktScriptCallback: ((KtFile?) -> Unit)? = null,
         compilationConfig: ScriptCompilationConfiguration = createJvmCompilationConfigurationFromTemplate<T> {
             jvm {
                 // when you can run your script-host from a fat jar, you can set this to
@@ -42,6 +53,9 @@ object EvalScript : KLogging() {
 //            val JDK_HOME = System.getProperty("jdkHome") ?: System.getenv("JAVA_HOME")
 //                ?: throw IllegalStateException("please pass -DjdkHome=path/to/jdk or please set JAVA_HOME to the installed jdk")
 //            jdkHome(File(JDK_HOME))
+            }
+            if(ktScriptCallback != null) {
+                ktScriptCallbackHandler(ktScriptCallback)
             }
         }
     ): Pair<T?, List<ScriptDiagnostic>> = evalScriptNoInline<T>(
@@ -130,7 +144,7 @@ object EvalScript : KLogging() {
                 logger.trace("resultValue.value::class = '${resultValue.value!!::class}'")
                 logger.trace("resultValue.value::class.supertypes = '${resultValue.value!!::class.supertypes}'")
 
-                val env = resultValue.value as T
+                val env = resultValue.scriptInstance as T
                 logger.debug { env }
                 env to resultWithDiagnostics.reports
             }

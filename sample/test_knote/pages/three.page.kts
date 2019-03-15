@@ -1,5 +1,3 @@
-//@file:FromPage("two")
-
 import kotlinx.html.body
 import kotlinx.html.html
 import kotlinx.html.stream.createHTML

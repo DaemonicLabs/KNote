@@ -50,7 +50,8 @@ class PageViewModel(val page: Page, dirtyState: Boolean = false) {
         value.toString()
     }
     val resultString by resultStringProperty
-
+    val ktScriptProperty = page.ktScriptObject.asProperty
+    val ktScript by ktScriptProperty
 }
 
 class NotebookScope(val notebook: Notebook,
