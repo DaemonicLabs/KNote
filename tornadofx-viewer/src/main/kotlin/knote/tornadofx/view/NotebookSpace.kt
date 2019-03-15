@@ -3,6 +3,7 @@ package knote.tornadofx.view
 import javafx.beans.property.SimpleStringProperty
 import javafx.collections.ListChangeListener
 import javafx.geometry.Side
+import javafx.scene.Node
 import javafx.scene.control.TabPane
 import javafx.scene.input.KeyCode
 import javafx.scene.layout.Priority
@@ -10,49 +11,106 @@ import javafx.scene.paint.Color
 import javafx.scene.text.Font
 import knote.KNote
 import knote.tornadofx.Styles
+import knote.tornadofx.controller.NotebookSpaceController
 import knote.tornadofx.model.NotebookScope
 import knote.tornadofx.model.PageViewModel
+import knote.util.codearea
 import mu.KotlinLogging
+import org.fxmisc.richtext.CodeArea
+import org.fxmisc.richtext.model.StyleSpans
 import tornadofx.*
+import java.time.Duration
+import java.util.*
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+
 
 class NotebookSpace : View() {
 
-    val logger = KotlinLogging.logger {}
+    private val logger = KotlinLogging.logger {}
     private val tools = (1..10).toList()
 
-    override val scope = super.scope as NotebookScope
+    /**
+     * TODO -
+     * 1) Kotlin highlighting
+     * 2) Create a more flexible input area -- Diagram model design
+     * 3) Jump to page dependencies and dependents at the drawer navigation
+     * 4) List file imports
+     * 5) Declare different result types - SPIKE
+     *    - string
+     *    - plot
+     *    - pie chart
+     *    - bar graph
+     *    (study Jupyter to find other types of input)
+     * 6) Restructure result output area -- Diagram model design
+     * 7) Include file inputs as tabs (i.e. csv/editor)
+     */
 
-    fun TabPane.tabPage(page: PageViewModel) {
+    var codeArea = CodeArea()
+    var executor: ExecutorService = Executors.newSingleThreadExecutor()
+
+    override val scope = super.scope as NotebookScope
+    private val controller: NotebookSpaceController by inject()
+
+    private fun Node.grow(priority: Priority = Priority.ALWAYS) {
+        hgrow = priority
+        vgrow = priority
+    }
+
+    private fun TabPane.tabPage(page: PageViewModel) {
         logger.info("adding tab for page: ${page.pageId}")
-        val tab = tab(page.pageId) {
+
+        tabClosingPolicy = TabPane.TabClosingPolicy.UNAVAILABLE
+        tab(page.pageId) {
             borderpane {
                 center {
                     vbox {
                         vbox {
-                            textarea(page.fileContent) {
+                            grow()
+
+                            codearea(page.fileContent) {
+                                grow()
+
                                 textProperty().addListener { _, _, new ->
                                     page.dirtyState = true
-//                                                it.fileContent = new
                                     val pageManager = KNote.NOTEBOOK_MANAGER.pageManager
                                     pageManager.updateSourceCode(page.pageId, new)
                                 }
-                                font = Font.font("monospaced", font.size)
+
+                                multiPlainChanges()
+                                        .successionEnds(Duration.ofMillis(500))
+                                        .supplyTask(controller::computeHighlightingAsync)
+                                        .awaitLatest(codeArea.multiPlainChanges())
+                                        .filterMap { t ->
+                                            if (t.isSuccess) {
+                                                Optional.of(codeArea.multiPlainChanges()
+                                                        .successionEnds(Duration.ofMillis(500))
+                                                        .supplyTask(controller::computeHighlightingAsync)
+                                                        .awaitLatest(codeArea.multiPlainChanges())
+                                                        .filterMap { Optional.of(t.get()) })
+                                            } else {
+                                                t.failure.printStackTrace()
+                                                Optional.of(codeArea.multiPlainChanges()
+                                                        .successionEnds(Duration.ofMillis(500))
+                                                        .supplyTask(controller::computeHighlightingAsync)
+                                                        .awaitLatest(codeArea.multiPlainChanges())
+                                                        .filterMap { Optional.empty<StyleSpans<Collection<String>>>() })
+                                            }
+                                        }
+                                        .subscribe { controller::applyHighlighting }
+
                             }
-                            // TODO() redo results to accept any, check NikkyAi's branch update for that
+
                             vbox {
+                                grow(Priority.SOMETIMES)
+
                                 textarea(page.resultStringProperty) {
+                                    grow(Priority.SOMETIMES)
+
                                     isEditable = false
                                     font = Font.font("monospaced", font.size)
-                                    style {
-                                        hgrow = Priority.ALWAYS
-                                        vgrow = Priority.ALWAYS
-                                    }
                                 }
-                                style {
-                                    hgrow = Priority.ALWAYS
-                                    vgrow = Priority.ALWAYS
-                                }
-                                minHeight = 280.0
+
                             }.addClass(Styles.evaluationConsole)
 
                             hbox {
@@ -71,7 +129,7 @@ class NotebookSpace : View() {
 
                 right {
                     vbox {
-                        maxWidth = 300.0
+                        maxWidth = 600.0
                         drawer(side = Side.RIGHT) {
                             item("Tools", expanded = true) {
                                 datagrid(tools) {
@@ -93,25 +151,29 @@ class NotebookSpace : View() {
                                     }
                                 }
                             }
-                            item("JVM Dependencies") {
-                                text("List of JVM dependencies here")
+                            item("Page Dependencies") {
+
+                                label("File Imports")
+
+                                style {
+                                    padding = box(10.px)
+                                }
                             }
                         }
                     }
                 }
             }
         }
-        this.selectionModel.select(tab)
     }
 
     override val root = tabpane {
         scope.pageViewModels.addListener(ListChangeListener { change ->
-            while(change.next()) {
+            while (change.next()) {
                 logger.debug("change: $change")
                 if (change.wasAdded()) {
                     logger.debug("added: ${change.addedSubList}")
                     change.addedSubList.forEach { addedPage ->
-                       tabPage(addedPage)
+                        tabPage(addedPage)
                     }
                 }
                 if (change.wasRemoved()) {
@@ -120,15 +182,6 @@ class NotebookSpace : View() {
                         val tab = tabs.find { it.text == removedPage.pageId }
                         tabs.remove(tab)
                     }
-                }
-                if(change.wasUpdated()) {
-                    logger.debug("updated: ${change}")
-                }
-                if(change.wasReplaced()) {
-                    logger.debug("replaced: ${change}")
-                }
-                if(change.wasPermutated()) {
-                    logger.debug("permutated: ${change}")
                 }
             }
         })
@@ -154,14 +207,5 @@ class NotebookSpace : View() {
                 }
             }
         }
-    }
-
-    override fun onDelete() {
-        logger.info("clicked delete")
-        val text = root.selectionModel.selectedItem.text
-        val toRemove = scope.pageViewModels.first { it.pageId == text }
-
-        scope.pageManager.removePage(toRemove.pageId)
-//        scope.pageViewModels.remove()
     }
 }

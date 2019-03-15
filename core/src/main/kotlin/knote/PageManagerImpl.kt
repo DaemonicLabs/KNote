@@ -139,9 +139,6 @@ internal class PageManagerImpl(
 
         page.errored = false
         page.result = null
-        if (page.text != pageScript.text) {
-            page.text = pageScript.text
-        }
         return page
     }
 
@@ -149,11 +146,11 @@ internal class PageManagerImpl(
         val page = pages[id] as? PageImpl ?: return null
         page.compiledScript?.invalidate()
         page.compiledScript = null
-        page.text = ""
         page.fileInputs.clear()
 
         invalidateResult(id)
 
+        pages.remove(id)
         return page.dependencies
     }
 
@@ -285,11 +282,6 @@ internal class PageManagerImpl(
                         val result = executePageCached(pageId)
                         logger.info("[$pageId] => $result")
                     }
-//                    notebookScript.pageFiles.forEach {
-//                        val id = it.name.substringBeforeLast(".page.kts")
-//                        val result = executePageCached(id)
-//                        logger.info("[$id] => $result")
-//                    }
                 }
             }
         }

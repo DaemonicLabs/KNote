@@ -1,17 +1,18 @@
 package knote.tornadofx
 
+import javafx.scene.layout.Priority
 import javafx.scene.paint.Color
 import tornadofx.*
 
-class Styles: Stylesheet() {
-    companion object {
-        val evaluationConsole by cssclass()
-    }
+object Styles: Stylesheet() {
+
+    val evaluationConsole by cssclass()
 
     init {
         evaluationConsole {
             backgroundColor += Color.WHITE
             padding = box(10.px)
         }
+
     }
 }
