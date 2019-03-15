@@ -13,7 +13,37 @@ import knote.tornadofx.Styles
 import knote.tornadofx.model.NotebookScope
 import knote.tornadofx.model.PageViewModel
 import mu.KotlinLogging
-import tornadofx.*
+import org.fxmisc.richtext.CodeArea
+import org.fxmisc.richtext.model.StyleSpans
+import tornadofx.ChangeListener
+import tornadofx.View
+import tornadofx.addClass
+import tornadofx.borderpane
+import tornadofx.button
+import tornadofx.center
+import tornadofx.circle
+import tornadofx.datagrid
+import tornadofx.drawer
+import tornadofx.enableWhen
+import tornadofx.hbox
+import tornadofx.hgrow
+import tornadofx.label
+import tornadofx.paddingLeft
+import tornadofx.paddingTop
+import tornadofx.pane
+import tornadofx.right
+import tornadofx.stackpane
+import tornadofx.tab
+import tornadofx.tabpane
+import tornadofx.text
+import tornadofx.textarea
+import tornadofx.textfield
+import tornadofx.vbox
+import tornadofx.vgrow
+import java.time.Duration
+import java.util.Optional
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 class NotebookSpace : View() {
 
