@@ -56,7 +56,12 @@ class NotebookSpace : View() {
                 center {
                     vbox {
                         vbox {
-                            textarea(page.fileContent) {
+                            grow()
+
+                            codearea(page.fileContent) {
+
+                                controller.parseAST(page.fileContent)
+
                                 textProperty().addListener { _, _, new ->
                                     page.dirtyState = true
 //                                                it.fileContent = new

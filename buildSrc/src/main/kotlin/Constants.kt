@@ -52,17 +52,17 @@ object Constants {
 
     object KastreeCommon {
         const val version = "0.3.0"
-        const val dependency = "com.github.cretz.kastree:kastree-ast-common::$version"
+        const val dependency = "com.github.cretz.kastree:kastree-ast-common:$version"
     }
 
     object KastreeJvm {
         const val version = "0.3.0"
-        const val dependency = "com.github.cretz.kastree:kastree-ast-jvm::$version"
+        const val dependency = "com.github.cretz.kastree:kastree-ast-jvm:$version"
     }
 
     object KastreePsi {
         const val version = "0.3.0"
-        const val dependency = "com.github.cretz.kastree:kastree-ast-psi::$version"
+        const val dependency = "com.github.cretz.kastree:kastree-ast-psi:$version"
     }
 
 

@@ -1,6 +1,10 @@
 package knote.tornadofx.controller
 
-import mu.KLogging
+import tornadofx.*
+import java.util.regex.Pattern
+import javafx.concurrent.Task
+import kastree.ast.psi.Parser
+import knote.tornadofx.view.NotebookSpace
 import org.fxmisc.richtext.model.StyleSpans
 import org.fxmisc.richtext.model.StyleSpansBuilder
 import org.jetbrains.kotlin.psi.KtFile
@@ -16,7 +20,7 @@ class NotebookSpaceController: Controller() {
     private val view: NotebookSpace by inject()
 
     fun parseAST(textFile: String) {
-        // val file = Parser.parseFile(textFile, true)
+        val file = Parser.parseFile(textFile, true)
     }
 
     fun computeHighlightingAsync(): Task<StyleSpans<Collection<String>>> {
