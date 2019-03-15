@@ -27,9 +27,6 @@ allprojects {
     repositories {
         mavenCentral()
         jcenter()
-        maven(url = "https://jitpack.io/") {
-            name = "jitpack"
-        }
     }
 
     group = "daemoniclabs.knote${Env.branch}"

@@ -8,16 +8,13 @@ import javafx.scene.input.KeyCode
 import javafx.scene.layout.Priority
 import javafx.scene.paint.Color
 import javafx.scene.text.Font
-import kastree.ast.psi.Parser
 import knote.KNote
-import knote.script.KNConverter
 import knote.tornadofx.Styles
 import knote.tornadofx.model.NotebookScope
 import knote.tornadofx.model.PageViewModel
 import mu.KotlinLogging
 import org.fxmisc.richtext.CodeArea
 import org.fxmisc.richtext.model.StyleSpans
-import tornadofx.ChangeListener
 import tornadofx.View
 import tornadofx.addClass
 import tornadofx.borderpane
@@ -42,8 +39,6 @@ import tornadofx.textarea
 import tornadofx.textfield
 import tornadofx.vbox
 import tornadofx.vgrow
-import java.time.Duration
-import java.util.Optional
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 

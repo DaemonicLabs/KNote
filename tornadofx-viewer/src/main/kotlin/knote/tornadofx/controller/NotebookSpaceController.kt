@@ -1,7 +1,5 @@
 package knote.tornadofx.controller
 
-import kastree.ast.psi.Parser
-import knote.script.KNConverter
 import mu.KLogging
 import org.fxmisc.richtext.model.StyleSpans
 import org.fxmisc.richtext.model.StyleSpansBuilder
@@ -14,32 +12,6 @@ import java.util.Random
 import java.util.regex.Pattern
 
 class NotebookSpaceController : Controller() {
-
-    fun parseAST(textFile: String) {
-        try {
-            val ast = KNConverter.convertScript(Parser.parsePsiFile(textFile))
-            logger.debug("ast: $ast")
-        } catch (e: Parser.ParseError) {
-            logger.error("ParseError on $textFile")
-            logger.error("parsing failed", e)
-        } catch (e: IllegalStateException) {
-            logger.error("IllegalStateException on $textFile")
-            logger.error("parsing failed", e)
-        }
-    }
-
-//    fun computeHighlightingAsync(): Task<StyleSpans<Collection<String>>> {
-//        val text = view.codeArea.text
-//        val task = object : Task<StyleSpans<Collection<String>>>() {
-//            @Throws(Exception::class)
-//            override fun call(): StyleSpans<Collection<String>> {
-//                return computeHighlighting(text)
-//            }
-//        }
-//        view.executor.execute(task)
-//        return task
-//    }
-
     fun computeHighlighting(ktFile: KtFile): StyleSpans<Collection<String>> {
         var index: Int = 0
         val spansBuilder = StyleSpansBuilder<Collection<String>>()
