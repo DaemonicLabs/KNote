@@ -33,18 +33,17 @@ class NotebookSpace : View() {
     /**
      * TODO -
      * 1) Kotlin highlighting
-     * 2) Remove "close" from tabs"
-     * 3) Create a more flexible input area -- Diagram model design
-     * 4) Jump to page dependencies and dependents at the drawer navigation
-     * 5) List file imports
-     * 6) Declare different result types - SPIKE
+     * 2) Create a more flexible input area -- Diagram model design
+     * 3) Jump to page dependencies and dependents at the drawer navigation
+     * 4) List file imports
+     * 5) Declare different result types - SPIKE
      *    - string
      *    - plot
      *    - pie chart
      *    - bar graph
      *    (study Jupyter to find other types of input)
-     * 7) Restructure result output area -- Diagram model design
-     * 8) Include file inputs as tabs (i.e. csv/editor)
+     * 6) Restructure result output area -- Diagram model design
+     * 7) Include file inputs as tabs (i.e. csv/editor)
      */
 
     var codeArea = CodeArea()
@@ -70,13 +69,13 @@ class NotebookSpace : View() {
                             grow()
 
                             codearea(page.fileContent) {
+                                grow()
+
                                 textProperty().addListener { _, _, new ->
                                     page.dirtyState = true
                                     val pageManager = KNote.NOTEBOOK_MANAGER.pageManager
                                     pageManager.updateSourceCode(page.pageId, new)
                                 }
-
-                                grow()
 
                                 multiPlainChanges()
                                         .successionEnds(Duration.ofMillis(500))
@@ -103,13 +102,15 @@ class NotebookSpace : View() {
                             }
 
                             vbox {
+                                grow(Priority.SOMETIMES)
+
                                 textarea(page.resultStringProperty) {
+                                    grow(Priority.SOMETIMES)
+
                                     isEditable = false
                                     font = Font.font("monospaced", font.size)
-                                    grow(Priority.SOMETIMES)
                                 }
-                                grow(Priority.SOMETIMES)
-                                // minHeight = 280.0
+
                             }.addClass(Styles.evaluationConsole)
 
                             hbox {
@@ -128,7 +129,7 @@ class NotebookSpace : View() {
 
                 right {
                     vbox {
-                        maxWidth = 300.0
+                        maxWidth = 600.0
                         drawer(side = Side.RIGHT) {
                             item("Tools", expanded = true) {
                                 datagrid(tools) {
@@ -151,7 +152,12 @@ class NotebookSpace : View() {
                                 }
                             }
                             item("Page Dependencies") {
-                                text("List of page dependencies here")
+
+                                label("File Imports")
+
+                                style {
+                                    padding = box(10.px)
+                                }
                             }
                         }
                     }
