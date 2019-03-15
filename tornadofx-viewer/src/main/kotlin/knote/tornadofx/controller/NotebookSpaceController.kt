@@ -1,23 +1,19 @@
 package knote.tornadofx.controller
 
-import javafx.concurrent.Task
 import kastree.ast.psi.Parser
 import knote.script.KNConverter
-import knote.tornadofx.view.NotebookSpace
 import mu.KLogging
 import org.fxmisc.richtext.model.StyleSpans
 import org.fxmisc.richtext.model.StyleSpansBuilder
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.psiUtil.endOffset
-import org.jetbrains.kotlin.psi.psiUtil.nextLeaf
 import org.jetbrains.kotlin.psi.psiUtil.startOffset
 import tornadofx.Controller
 import java.util.Collections
+import java.util.Random
 import java.util.regex.Pattern
 
 class NotebookSpaceController : Controller() {
-
-    private val view: NotebookSpace by inject()
 
     fun parseAST(textFile: String) {
         try {
@@ -44,10 +40,6 @@ class NotebookSpaceController : Controller() {
 //        return task
 //    }
 
-    fun applyHighlighting(highlighting: StyleSpans<Collection<String>>) {
-        view.codeArea.setStyleSpans(0, highlighting)
-    }
-
     fun computeHighlighting(ktFile: KtFile): StyleSpans<Collection<String>> {
         var index: Int = 0
         val spansBuilder = StyleSpansBuilder<Collection<String>>()
@@ -63,7 +55,13 @@ class NotebookSpaceController : Controller() {
 //            index += element.
             spansBuilder.add(Collections.emptyList(),  element.startOffset - lastKwEnd)
             //TODO: switch on element type and use the appropriate style classes here
-            spansBuilder.add(Collections.singleton("keyword"), element.endOffset - element.startOffset)
+            val styleClass = when(Random().nextInt(3)) {
+                0 -> "keyword"
+                1 -> "string"
+                2 -> "comment"
+                else -> ""
+            }
+            spansBuilder.add(Collections.singleton(styleClass), element.endOffset - element.startOffset)
             index = element.endOffset
             lastKwEnd = element.endOffset
         }

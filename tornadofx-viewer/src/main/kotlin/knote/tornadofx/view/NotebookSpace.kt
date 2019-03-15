@@ -54,7 +54,16 @@ class NotebookSpace : View() {
 
     override val scope = super.scope as NotebookScope
 
-    fun TabPane.tabPage(page: PageViewModel) {
+    private fun Node.grow(priority: Priority = Priority.ALWAYS) {
+        hgrow = priority
+        vgrow = priority
+    }
+
+    fun applyHighlighting(highlighting: StyleSpans<Collection<String>>) {
+        codeArea.setStyleSpans(0, highlighting)
+    }
+
+    private fun TabPane.tabPage(page: PageViewModel) {
         logger.info("adding tab for page: ${page.pageId}")
         val tab = tab(page.pageId) {
             borderpane {
@@ -64,13 +73,6 @@ class NotebookSpace : View() {
                             grow()
 
                             codearea(page.fileContent) {
-                                logger.info("ktScript initial: ${page.ktScript}")
-                                var ast = page.ktScript?.let {
-                                    KNConverter.convertScript(it)
-                                    val highlighting = controller.computeHighlighting(it)
-                                    controller.applyHighlighting(highlighting)
-                                }
-                                logger.info("ast: $ast")
 
 //                                page.ktScriptProperty.addListener(ChangeListener { change, old, new ->
 //                                    logger.info("ktScript change: $old -> $new")
@@ -113,7 +115,15 @@ class NotebookSpace : View() {
 //                                    .subscribe { controller::applyHighlighting }
 
                             }
-                            // TODO() redo results to accept any, check NikkyAi's branch update for that
+                            logger.info("ktScript initial: ${page.ktScript}")
+                            page.ktScript?.let {
+//                                KNConverter.convertScript(it)
+                                val highlighting = controller.computeHighlighting(it)
+                                logger.debug("current text length is: ${page.fileContent.length}")
+                                logger.info("styles: ${highlighting.length()} $highlighting")
+                                applyHighlighting(highlighting)
+                            }
+
                             vbox {
                                 textarea(page.resultStringProperty) {
                                     isEditable = false
